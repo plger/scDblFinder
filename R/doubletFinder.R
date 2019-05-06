@@ -87,7 +87,7 @@ plDoubletFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClu
   d$type <- ctype
   
   if(verbose) message("Finding threshold...")
-  th <- doubletThresholding(d$ratio, dbr, dbr.sd, clusters, do.plot=verbose)
+  th <- doubletThresholding(d$ratio, d$type, dbr, dbr.sd, clusters, do.plot=verbose)
   if(verbose) message("Threshold found:", round(th,3))
   d$classification <- ifelse(d$ratio >= th, "doublet", "singlet")
   if(fullTable) return(d)
