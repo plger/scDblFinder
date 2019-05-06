@@ -22,10 +22,7 @@ This is used to make doublets more efficiently.}
 
 \item{d}{The number of dimensions used to build the KNN network (default 10)}
 
-\item{dbr}{The expected doublet rate, defaults to 0.021 on the basis of the 
-on the basis of the mixology 10x datasets results, where the proportion of
-demuxlet doublet is estimated respectively at 0.012 and 0.029 (after accounting
-for homotypic doublets).}
+\item{dbr}{The expected doublet rate, see `doubletThresholding` for more information.}
 
 \item{dbr.sd}{The standard deviation of the doublet rate, defaults to 0.01.}
 
@@ -37,16 +34,18 @@ doublets (default FALSE), rather than the table for real cells only.}
 \item{verbose}{Logical; whether to print messages and the thresholding plot (default
 TRUE).}
 
-\item{...}{arguments passed to `scran::buildSNNGraph`; can for instance be used to
-pass `BPPARAM` and speed up the graph building.}
+\item{...}{arguments passed to `scran::build*NNGraph`; can for instance be used to
+pass `BPPARAM` and speed up the graph building through multithreading.}
 }
 \value{
-A data.frame including, for each cells, the number of neighbors considered,
-the number of these neighbors that are from artificial doublets, the ratio of 
-neighbors that are from artificial doublets, the enrichment in artificial doublets,
- and the classification (after applying the threshold).
+A data.frame including, for each cells (rows, in the order in which they appear
+in the `sce` object), the number of neighbors considered, the number of these neighbors
+ that are from artificial doublets, the ratio of neighbors that are from artificial 
+ doublets (which represents a quantitative doublet the score), the enrichment in 
+ artificial doublets, and the classification (after applying the threshold).
 }
 \description{
 An approach similar to `DoubletFinder` for identifying doublets, but much 
-simpler/faster and independent from normalization (executed directly on counts).
+simpler/faster, independent from normalization (executed directly on counts), and
+arguably more accurate.
 }
