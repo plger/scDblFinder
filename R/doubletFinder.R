@@ -19,7 +19,8 @@
 #' @param verbose Logical; whether to print messages and the thresholding plot (default
 #' TRUE).
 #' @param ... arguments passed to `scran::build*NNGraph`; can for instance be used to
-#' pass `BPPARAM` and speed up the graph building through multithreading.
+#' pass `BPPARAM` and speed up the graph building through multithreading, or to pass 
+#' another value of `k` for the KNN.
 #'
 #' @return A data.frame including, for each cells (rows, in the order in which they appear
 #' in the `sce` object), the number of neighbors considered, the number of these neighbors
