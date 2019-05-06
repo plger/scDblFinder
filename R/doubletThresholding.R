@@ -51,15 +51,15 @@ doubletThresholding <- function(scores, celltypes, dbr=0.021, dbr.sd=0.01, clust
     # we plot the thresholding data
     x <- 1:99/100
     acc <- sapply(x, accfn)
-    plot(x, acc, type="l", lty="dashed", col="blue", ylim=c(0,max(acc)), lwd=2,
-         main="Thresholding", ylab="Error rate", 
+    plot(x, acc, type="l", lty=ifelse(is.null(clusters),1,2), col="blue", ylim=c(0,max(acc)), lwd=2,
+         main="Thresholding", ylab="Proportion", 
          xlab="Ratio of artificial doublets in neighborhood")
     if(!is.null(clusters)) lines(x, sapply(x, accfn2), col="blue", lwd=2)
     lines(x, sapply(x, dbr.dev), col="red", lwd=2)
     lines(x, sapply(x, FUN=function(x) sum(scores>=x & celltypes=="real")/sum(celltypes=="real")), col="darkgrey")
     abline(v=th, lty="dashed")
-    leg <- c( "Accuracy in classifying real cells vs artificial doublets",
-              "Accuracy in classifying artificial doublets, adjusted for homotypy",
+    leg <- c( "Error in classifying real cells vs artificial doublets",
+              "Error in classifying artificial doublets, adjusted for homotypy",
               "Deviation from expected doublet rate",
               "Proportion of real cells considered doublet" )
     if(is.null(clusters)){
