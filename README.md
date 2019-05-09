@@ -18,4 +18,4 @@ library(plDoubletFinder)
 res <- plDoubletFinder(sce)
 ```
 
-`res$ratio` contains the scores, and `res$classification` the final calls.
+`res$ratio` contains the scores, and `res$classification` the final calls, in the order in which the cells appear in `sce`.
