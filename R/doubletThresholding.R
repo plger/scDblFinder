@@ -34,8 +34,12 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.021, dbr
     celltypes <- celltypes[-w]
     warning(length(w)," cells with NA scores were discarded.")
   }
+  if(!is.null(clusters) && length(unique(clusters))>1){
+    homotypic.prop <- sum((table(clusters)/length(clusters))^2)
+  }else{
+    homotypic.prop <- 0
+  }
   # if clusters given, adjust expected doublet proportion for expected homotypic doublets
-  homotypic.prop <- ifelse(is.null(clusters), 0, sum((table(clusters)/length(clusters))^2))
   dbr <- dbr*(1-homotypic.prop)
   f1 <- ecdf(scores[which(celltypes!="artificial")])
   f2 <- ecdf(scores[which(celltypes=="artificial")])

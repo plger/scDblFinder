@@ -37,7 +37,7 @@ We test it on the mixology datasets, where doublets are known from the SNPs (mul
 
 ```{r}
 set.seed(1234)
-sce <- readRDS("datasets/mixology10x3cl.SCE.rds")
+sce <- readRDS("../comparison/datasets/mixology10x3cl.SCE.rds")
 # the command:
 system.time(d <- plDoubletFinder(sce, 2000))
 # evaluation:
@@ -55,7 +55,7 @@ That's somewhat too easy...
 Scran's `quickCluster` at the beginning is actually the time-consuming part; if already ran (e.g. in the context of scran normalization), it can be provided:
 
 ```{r}
-sce <- readRDS("datasets/mixology10x5cl.SCE.rds")
+sce <- readRDS("../comparison/datasets/mixology10x5cl.SCE.rds")
 system.time(d <- plDoubletFinder(sce, clusters=sce$quickClusters))
 d$truth <- factor(as.character(sce$demuxlet_cls), levels=c("SNG","DBL"))
 plot(rocit(d$ratio, d$truth), main="mixology 10x 5 cell lines")
