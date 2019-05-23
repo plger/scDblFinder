@@ -4,8 +4,8 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(scores, celltypes, dbr = 0.021, dbr.sd = 0.01,
-  clusters = NULL, do.plot = TRUE)
+doubletThresholding(scores, celltypes, clusters = NULL, dbr = 0.025,
+  dbr.sd = 0.02, prop.fullyRandom = 0, do.plot = TRUE)
 }
 \arguments{
 \item{scores}{A vector of the doublet score for each cell (real and artificial); can be
@@ -15,16 +15,17 @@ doublet.}
 \item{celltypes}{A vector of the same length as `scores` indicating, for each cell,
 whether it is a 'real' cell or an 'artificial' doublet. Missing values not allowed.}
 
-\item{dbr}{The expected (mean) doublet rate, defaults to 0.021 on the basis of the 
-mixology 10x datasets demuxlet results, where the proportion of demuxlet doublet is
-estimated respectively at 0.012 and 0.029 (after accounting adding expected homotypic 
-doublets).}
-
-\item{dbr.sd}{The deviation of the doublet rate, representing the uncertainty in the 
-estimate. Effectively the scale of a Cauchy distribution. Defaults to 0.01.}
-
 \item{clusters}{Optional vector of cluster assignment for each (real) cell, used for
 homotypic doublet correction.}
+
+\item{dbr}{The expected (mean) doublet rate.}
+
+\item{dbr.sd}{The standard deviation of the doublet rate, representing the uncertainty
+in the estimate.}
+
+\item{prop.fullyRandom}{The proportion of artificical doublets that are fully random,
+used for homotypy correction. Default 0.25 (the default value in 
+`getArtificialDoublets`). Ignored if `clusters=NULL`}
 
 \item{do.plot}{Logical; whether to plot the thresholding data (default TRUE).}
 }
