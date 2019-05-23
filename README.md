@@ -1,15 +1,3 @@
----
-title: "scDblFinder"
-author:
-- name: Pierre-Luc Germain
-package: scDblFinder
-output:
-  html_document:
-    keep_md: true
----
-
-
-
 # scDblFinder
 
 ## Introduction
@@ -22,6 +10,7 @@ scDblFinder  identifies doublets in single-cell RNAseq directly by creating arti
 
 ## Installation
 
+scDblFinder was developed under R 3.6. Install with:
 
 ```r
 devtools::install_github('plger/scDblFinder')
@@ -74,6 +63,7 @@ The method is compared to:
 
 ![Accuracy of the doublet detection in the mixology10x3cl dataset (a mixture of 3 cancer cell lines). All methods perform very well.](scDblFinder_files/figure-html/ds1-1.png)
 
+(DoubletFinder failed on the Mixology10x3cl dataset)
 
 ## Mixology10x5cl
 
@@ -91,48 +81,5 @@ The method is compared to:
 ```
 
 ![Running time for each method/dataset](scDblFinder_files/figure-html/runtime-1.png)
-^[DoubletFinder failed on the mixology10x3cl dataset]
 
 Note that by far most of the running time of `scDblFinder` is actually the clustering.
-
-# Session info {.unnumbered}
-
-
-```
-## R version 3.6.0 (2019-04-26)
-## Platform: x86_64-pc-linux-gnu (64-bit)
-## Running under: Ubuntu 18.04.2 LTS
-## 
-## Matrix products: default
-## BLAS:   /usr/lib/x86_64-linux-gnu/openblas/libblas.so.3
-## LAPACK: /usr/lib/x86_64-linux-gnu/libopenblasp-r0.2.20.so
-## 
-## locale:
-##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-##  [3] LC_TIME=de_CH.UTF-8        LC_COLLATE=en_US.UTF-8    
-##  [5] LC_MONETARY=de_CH.UTF-8    LC_MESSAGES=en_US.UTF-8   
-##  [7] LC_PAPER=de_CH.UTF-8       LC_NAME=C                 
-##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-## [11] LC_MEASUREMENT=de_CH.UTF-8 LC_IDENTIFICATION=C       
-## 
-## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  methods   base     
-## 
-## other attached packages:
-## [1] ROCit_1.1.1      scDblFinder_1.0  cowplot_0.9.4    ggplot2_3.1.1   
-## [5] BiocStyle_2.12.0
-## 
-## loaded via a namespace (and not attached):
-##  [1] Rcpp_1.0.1         highr_0.8          pillar_1.3.1      
-##  [4] compiler_3.6.0     BiocManager_1.30.4 plyr_1.8.4        
-##  [7] tools_3.6.0        digest_0.6.18      evaluate_0.13     
-## [10] tibble_2.1.1       gtable_0.3.0       pkgconfig_2.0.2   
-## [13] rlang_0.3.4        yaml_2.2.0         xfun_0.6          
-## [16] withr_2.1.2        stringr_1.4.0      dplyr_0.8.0.1     
-## [19] knitr_1.22         grid_3.6.0         tidyselect_0.2.5  
-## [22] glue_1.3.1         R6_2.4.0           rmarkdown_1.12    
-## [25] purrr_0.3.2        magrittr_1.5       scales_1.0.0      
-## [28] htmltools_0.3.6    assertthat_0.2.1   colorspace_1.4-1  
-## [31] labeling_0.3       stringi_1.4.3      lazyeval_0.2.2    
-## [34] munsell_0.5.0      crayon_1.3.4
-```
