@@ -1,26 +1,33 @@
-#' plDoubletFinder
+#' scDblFinder
 #' 
-#' An approach similar to `DoubletFinder` for identifying doublets, but much 
-#' simpler/faster, independent from normalization (executed directly on counts), and
-#' arguably more accurate.
+#' Identification of doublets in single-cell RNAseq directly from counts using 
+#' overclustering-based generation of artifical doublets.
 #'
 #' @param sce An object of class `SingleCellExperiment`
 #' @param artificialDoublets The approximate number of artificial doublets to create. If
 #' NULL, will be the maximum of the number of cells or `3*nbClusters^2`.
 #' @param clusters The optional cluster assignments (if ommitted, will run `quickCluster`).
 #' This is used to make doublets more efficiently.
-#' @param minClusSize The minimum cluster size for `quickCluster` (default 50)
+#' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
+#' (default 50); ignored if `clusters` is given.
+#' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if `clusters` is
+#' given. If NULL or NA, clustering will be performed using `quickCluster`, otherwise via
+#' `overcluster`. The default value is `ncol(sce)/20`.
 #' @param d The number of dimensions used to build the KNN network (default 10)
-#' @param dbr The expected doublet rate, see `doubletThresholding` for more information.
-#' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.01.
+#' @param dbr The expected doublet rate. Defaults to 0.025 the basis of the mixology 10x 
+#' datasets demuxlet results, where the proportion of demuxlet doublet is estimated 
+#' respectively at 0.012 and 0.029 (after accounting adding expected homotypic doublets). 
+#' However, note that this value might not be appropriate for all datasets, especially 
+#' older 10x datasets, where the proportion of doublets can go up to 0.1.
+#' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.02.
+#' @param k Number of nearest neighbors (for KNN graph).
 #' @param graph.type Either 'snn' or 'knn' (default).
 #' @param fullTable Logical; whether to return the full table including artificial 
 #' doublets (default FALSE), rather than the table for real cells only.
+#' @param trans 
 #' @param verbose Logical; whether to print messages and the thresholding plot (default
 #' TRUE).
-#' @param ... arguments passed to `scran::build*NNGraph`; can for instance be used to
-#' pass `BPPARAM` and speed up the graph building through multithreading, or to pass 
-#' another value of `k` for the KNN.
+#' @param BPPARAM Passed to scran; doesn't work so well...
 #'
 #' @return A data.frame including, for each cells (rows, in the order in which they appear
 #' in the `sce` object), the number of neighbors considered, the number of these neighbors
@@ -29,62 +36,99 @@
 #'  artificial doublets, and the classification (after applying the threshold).
 #' 
 #' @export
-plDoubletFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSize=50,
-                             d=10, dbr=0.021, dbr.sd=0.01, graph.type=c("knn","snn"), 
-                             fullTable=FALSE, verbose=TRUE, ...){
+scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSize=50,
+                          maxClusSize=ceiling(ncol(sce)/20), d=10, dbr=0.025, 
+                          dbr.sd=0.015, k=5, graph.type=c("knn","snn"), fullTable=FALSE, 
+                          trans="scran", verbose=TRUE, BPPARAM=SerialParam()){
+  library(BiocParallel)
   graph.type <- match.arg(graph.type)
+  sce2 <- sce
   if(is.null(clusters)){
     # we first simplify the dataset and identify rough clusters
-    # for reasons of speed, we'll use the fast greedif there are 
-    clust.method <- ifelse(ncol(sce)>=5000,"igraph","hclust")
-    if(verbose) message("Quick ", clust.method, " clustering:")
     if(nrow(sce)>3000){
-      sce <- sce[order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)[1:3000],]
+      sce2 <- sce[order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)[1:3000],]
     }
-    clusters <- scran::quickCluster(sce, min.size=minClusSize, method=clust.method)
-    if(verbose) print(table(clusters))
+    if(!is.null(maxClusSize) && !is.na(maxClusSize)){
+      if(verbose) message("Overclustering...")
+      clusters <- overcluster(counts(sce2), min.size=minClusSize, max.size=maxClusSize)
+      tt <- table(clusters)
+      if(verbose) message(length(tt), " clusters of sizes ranging from ", min(tt)," to ", max(tt))
+    }else{
+      # for reasons of speed, we'll use the fast greedy algorithm if there are many cells
+      clust.method <- ifelse(ncol(sce2)>=5000,"igraph","hclust")
+      if(verbose) message("Quick ", clust.method, " clustering:")
+      clusters <- scran::quickCluster(sce2, min.size=minClusSize, method=clust.method, use.ranks=TRUE, BPPARAM=BPPARAM)
+      if(verbose) print(table(clusters))
+    }
   }
-  cli <- split(1:ncol(sce), clusters)
+  maxSameDoublets <- prod(sort(table(clusters), decreasing=TRUE)[1:2]/length(clusters))*length(clusters)*(dbr+2*dbr.sd)
+  if(min(table(clusters)) <= maxSameDoublets){
+    warning("In light of the expected rate of doublets given, and of the size of the ",
+            "clusters, it is possible that some of the smaller clusters are composed of ",
+            "doublets of the same type.\n Consider increasing `min.sze`, or breaking down",
+            " the larger clusters (e.g. see `?overcluster`).")
+  }
+  cli <- split(1:ncol(sce2), clusters)
   
-  if(verbose) message("Identifying top genes per cluster...")
-  # get mean expression across clusters
-  cl.means <- sapply(cli, FUN=function(x) Matrix::rowMeans(counts(sce[,x])) )
-  # grab the top genes in each cluster
-  g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
-    order(x, decreasing=TRUE)[1:1500]
-  })))
-  sce <- sce[g,]
-  cells <- colnames(sce)
+  if(nrow(sce2)>2000){
+    if(verbose) message("Identifying top genes per cluster...")
+    # get mean expression across clusters
+    cl.means <- sapply(cli, FUN=function(x) Matrix::rowMeans(counts(sce2[,x])) )
+    # grab the top genes in each cluster
+    g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
+      order(x, decreasing=TRUE)[1:1500]
+    })))
+    sce2 <- sce2[g,]
+  }
   
+  # get the artificial doublets
   if(is.null(artificialDoublets)){
-    artificialDoublets <- max(ncol(sce), 3*length(unique(clusters))^2)
+    artificialDoublets <- max(ncol(sce2), min(40000, 3*length(unique(clusters))^2))
   }
-  if(verbose) message("Creating ~", artificialDoublets, " artifical doublets...")
-  ad <- getArtificialDoublets(counts(sce), n=artificialDoublets, clusters=clusters)
-  
-  if(verbose) message("Building ", toupper(graph.type), " graph...")
-  if(graph.type=="knn"){
-    qr <- scran::scaledColRanks(cbind(counts(sce), ad))
-    sce <- sce[,intersect(colnames(sce),colnames(qr))]
-    ad <- ad[,intersect(colnames(ad),colnames(qr))]
-    graph <- suppressWarnings(scran::buildKNNGraph(qr, d=10, pc.approx=TRUE, ...))
+  if(verbose){
+    message("Creating ~", artificialDoublets, " artifical doublets...")
+    ad <- getArtificialDoublets(counts(sce2), n=artificialDoublets, clusters=clusters)
   }else{
-    graph <- suppressWarnings(scran::buildSNNGraph(cbind(counts(sce), ad), type="rank", ...))
+    ad <- suppressWarnings(getArtificialDoublets( counts(sce2), n=artificialDoublets, 
+                                                  clusters=clusters))
   }
-  ctype <- rep(c("real","artificial"), c(ncol(sce),ncol(ad)))
+  
+  # build graph and evaluate neigbhorhood
+  if(verbose) message("Building ", toupper(graph.type), " graph...")
+  if(trans=="scran"){
+    qr <- scran::scaledColRanks(cbind(counts(sce2), ad))
+  }else{
+    qr <- rankTrans(cbind(counts(sce2), ad))
+    colnames(qr) <- c(colnames(counts(sce2)), colnames(ad))
+  }
+  sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
+  ad <- ad[,intersect(colnames(ad),colnames(qr))]
+  if(graph.type=="knn"){
+    graph <- suppressWarnings(scran::buildKNNGraph(qr, d=10, k=k, pc.approx=TRUE, BPPARAM=BPPARAM))
+  }else{
+    graph <- suppressWarnings(scran::buildSNNGraph(qr, type="rank", BPPARAM=BPPARAM))
+  }
+  ctype <- rep(c("real","artificial"), c(ncol(sce2),ncol(ad)))
   
   if(verbose) message("Evaluating cell neighborhoods...")
   graph <- igraph::get.adjlist(graph)
-  d <- t(sapply(graph,FUN=function(x){
+
+  # d <- bplapply(graph, BPPARAM=BPPARAM, FUN=function(x){
+  #   x <- as.numeric(x)
+  #   c(length(x), sum(ctype[x]=="artificial"))
+  # })
+  # d <- as.data.frame(matrix(unlist(d),ncol=2,byrow=TRUE))
+  
+  d <- as.data.frame(t(sapply(graph, FUN=function(x){
     x <- as.numeric(x)
     c(length(x), sum(ctype[x]=="artificial"))
-  }))
+  })))
+
   rm(graph)
   
-  d <- as.data.frame(d)
   colnames(d) <- c("nb.neighbors", "artificial.neighbors")
   d$ratio <- d[,2]/d[,1]
-  d$enrichment <- d[,2]/(d[,1]*ncol(ad)/c(ncol(ad)+ncol(sce)))
+  d$enrichment <- d[,2]/(d[,1]*ncol(ad)/c(ncol(ad)+ncol(sce2)))
   d$type <- ctype
   
   if(verbose) message("Finding threshold...")
@@ -92,9 +136,13 @@ plDoubletFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClu
   if(verbose) message("Threshold found:", round(th,3))
   d$classification <- ifelse(d$ratio >= th, "doublet", "singlet")
   if(fullTable) return(d)
-  d <- d[1:ncol(sce),]
+  
+  d <- d[1:ncol(sce2),]
   d$type <- NULL
-  row.names(d) <- colnames(sce)
-  d <- d[cells,]
-  d
+  row.names(d) <- colnames(sce2)
+  d <- d[colnames(sce),]
+  sce$scDblFinder.neighbors <- d$nb.neighbors
+  sce$scDblFinder.ratio <- d$ratio
+  sce$scDblFinder.class <- d$classification
+  sce
 }

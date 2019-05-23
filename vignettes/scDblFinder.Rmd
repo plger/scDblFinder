@@ -1,0 +1,126 @@
+---
+title: "scDblFinder"
+author:
+- name: Pierre-Luc Germain
+  affiliation: University and ETH Zürich
+package: scDblFinder
+output:
+  BiocStyle::html_document
+abstract: |
+  An introduction to the scDblFinder package, which identifies doublets in single-cell 
+  RNAseq directly from counts using overclustering-based generation of artifical doublets.
+vignette: |
+  %\VignetteIndexEntry{scDblFinder}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# scDblFinder
+
+## Introduction
+
+scDblFinder  identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their prevalence in the neighborhood of each cell. The rough logic is very similar to `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")`, but it much simpler and more efficient. In a nutshell:
+
+* scDblFinder works directly on a reduced count matrix (using rank correlation on top expressed genes), making the detection independent of downstream processing. This avoids the need for all the Seurat pre-processing, making the detection faster and compatible with other analytic choices.
+* instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids creating homotypic doublets and enables the detection of most doublets with much fewer artificial doublets.
+* while we also rely on the expected proportion of doublets to threshold the scores, we include a variability in the estimate of the doublet proportion (`dbr.sd`), and use the error rate of the real/artificial predicition in conjunction with the deviation in global doublet rate to set the threshold.
+
+## Installation
+
+```{r, eval=FALSE}
+devtools::install_github('plger/scDblFinder')
+```
+
+## Usage
+
+Given an object `sce` of class `SingleCellExperiment`:
+```{r, eval=FALSE}
+library(scDblFinder)
+sce <- scDblFinder(sce)
+```
+
+This will add the following columns to the colData of `sce`:
+
+* `sce$scDblFinder.neighbors` : the number of neighbors considered
+* `sce$scDblFinder.ratio` :  the proportion of artificial doublets among the neighborhood (the higher, the more chances that the cell is a doublet)
+* `sce$scDblFinder.class` : the classification (doublet or singlet)
+
+### Parameters
+
+The important sets of parameters in `scDblFinder` refer respectively to the expected proportion of doublets, to the clustering, and to the number of artificial doublets used.
+
+#### Expected proportion of doublets
+
+The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). By default, the expected doublet rate is set to 0.025 (2.5\%) with a standard deviation of 0.015, which is reasonable for recent 10x datasets. However, note that some older protocols or higher concentrations of cells create considerably more doublets, and that this should be updated accordingly.
+
+#### Clustering
+
+Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we rely on an over-clustering approach which is similar to `r Biocpkg("scran")`'s `quickCluster`, but splits clusters above a certain size. This is implemented by scDblFinder's `overcluster` function. By default, the maximum cluster size will be 1/20 of the number of cells. While this is reasonable for most datasets (i.e. all those used for benchmark), so many clusters might be unnecessary when the cell population has a simple structure, and more clusters might be needed in a very complex population (e.g. whole brain).
+
+#### Number of artificial doublets
+
+`scDblFinder` itself determines a reasonable number of artificial doublets to create on the basis of the size of the population and the number of clusters, but increasing this number can only increase the accuracy. If you increase the number above default settings, you might also consider increasing parameter `k` - i.e. the number of neighbors considered.
+
+<br/><br/>
+
+# Comparison with other tools
+
+To benchmark scDblFinder against alternatives, we used datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via `r Githubpkg("statgen/demuxlet")`), which also enables the identification of doublets from different individuals.
+
+The method is compared to:
+
+* `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")`
+* `r Biocpkg("scran")`'s `doubletCells` function
+* `r Biocpkg("scds")` (hybrid method)
+
+## Mixology10x3cl
+
+```{r ds1, fig.cap="Accuracy of the doublet detection in the mixology10x3cl dataset (a mixture of 3 cancer cell lines). All methods perform very well.", echo=FALSE}
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(cowplot)
+  library(scDblFinder)
+})
+data("doubletsComparison")
+datasets <- doubletsComparison
+scoresNames <- c("scran.score"="scran", "scDblFinder.ratio"="scDblFinder", "DF.score"="DoubletFinder", "hybrid_score"="scds")
+scores <- datasets[[1]][,intersect(names(scoresNames),colnames(datasets[[1]]))]
+plotROCs(scores, factor(datasets[[1]]$demuxlet_cls, c("SNG","DBL")))
+```
+
+
+## Mixology10x5cl
+
+```{r ds2, fig.cap="Accuracy of the doublet detection in the mixology10x5cl dataset (a mixture of 5 cancer cell lines).", echo=FALSE}
+scores <- datasets[[2]][,intersect(names(scoresNames),colnames(datasets[[2]]))]
+plotROCs(scores, factor(datasets[[2]]$demuxlet_cls, c("SNG","DBL")))
+```
+
+## Demuxlet controls
+
+```{r ds3, fig.cap="Accuracy of the doublet detection in the demuxlet control (Batch 2) dataset (GSM2560248).", echo=FALSE}
+scores <- datasets[[3]][,intersect(names(scoresNames),colnames(datasets[[3]]))]
+plotROCs(scores, factor(datasets[[3]]$multiplets, c("singlet","doublet")))
+```
+
+## Running time
+
+```{r runtime, fig.cap="Running time for each method/dataset", echo=FALSE}
+rt <- data.frame( time=c(14.52, 26.36, 22.88, NA, 42.74, 250.14, 269.03, 678.81, 100.05, 
+                          823.09, 999.94, 956.63), 
+                  method=rep(c("scds", "scran", "scDblFinder", "DoubletFinder"),3),
+                  dataset=rep(c("mixology10x3cl", "mixology10x5cl", "demuxlet"),each=4) )
+ggplot(rt, aes(method, time, fill=method)) + geom_col() + 
+  scale_color_manual(values=colors) + facet_wrap(~dataset, scale="free", nrow=2) + 
+  coord_flip() + ylab("Wall-time, in seconds") + 
+  theme(legend.position="none", axis.title.y=element_blank())
+```
+^[DoubletFinder failed on the mixology10x3cl dataset]
+
+Note that by far most of the running time of `scDblFinder` is actually the clustering.
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

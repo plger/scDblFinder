@@ -1,7 +1,4 @@
-
 #' doubletThresholding
-#'
-#' 
 #'
 #' @param scores A vector of the doublet score for each cell (real and artificial); can be
 #' anything ranging from 0 to 1, with higher scores indicating higher change of being a 
@@ -10,12 +7,9 @@
 #' whether it is a 'real' cell or an 'artificial' doublet. Missing values not allowed.
 #' @param clusters Optional vector of cluster assignment for each (real) cell, used for
 #' homotypic doublet correction.
-#' @param dbr The expected (mean) doublet rate, defaults to 0.021 on the basis of the 
-#'  mixology 10x datasets demuxlet results, where the proportion of demuxlet doublet is
-#'  estimated respectively at 0.012 and 0.029 (after accounting adding expected homotypic 
-#'  doublets).
-#' @param dbr.sd The deviation of the doublet rate, representing the uncertainty in the 
-#' estimate. Effectively the scale of a Cauchy distribution. Defaults to 0.01.
+#' @param dbr The expected (mean) doublet rate.
+#' @param dbr.sd The standard deviation of the doublet rate, representing the uncertainty
+#'  in the estimate.
 #' @param prop.fullyRandom The proportion of artificical doublets that are fully random,
 #' used for homotypy correction. Default 0.25 (the default value in 
 #' `getArtificialDoublets`). Ignored if `clusters=NULL`
@@ -23,8 +17,8 @@
 #'
 #' @return A scaler indicating the decided threshold.
 #' @export
-doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.021, dbr.sd=0.01, 
-                                prop.fullyRandom=0.25, do.plot=TRUE){
+doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025, dbr.sd=0.02, 
+                                prop.fullyRandom=0, do.plot=TRUE){
   if(!all(sort(unique(celltypes))==c("artificial","real"))){
     stop("`celltypes` should be either 'real' or 'artificial'.")
   }

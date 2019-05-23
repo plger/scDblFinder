@@ -1,11 +1,13 @@
-Package: plDoubletFinder
+Package: scDblFinder
 Type: Package
-Title: plDoubletFinder
-Version: 0.1
+Title: scDblFinder
+Version: 1.0
 Authors@R: as.person("Pierre-Luc Germain <pierre-luc.germain@hest.ethz.chh> [aut, cre]")
-Description: Detects doublet cells in scRNAseq in a manner very similar to `DoubletFinder`, but more efficiently and working directly on count data.
+Description: Efficient identification of doublets in single-cell RNAseq directly from counts using overclustering-based generation of artifical doublets.
 License: GPL
-Imports: igraph, SingleCellExperiment, scran
+Imports: igraph, Matrix, BiocParallel, SingleCellExperiment, scran, data.table
+Suggests: ggplot2, ROCit,  BiocStyle, knitr, rmarkdown
+VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
