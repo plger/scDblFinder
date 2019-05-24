@@ -41,7 +41,7 @@ The expected proportion of doublets has no impact on the score (the `ratio` abov
 
 #### Clustering
 
-Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we rely on an over-clustering approach which is similar to *[scran](https://bioconductor.org/packages/3.9/scran)*'s `quickCluster`, but splits clusters above a certain size. This is implemented by scDblFinder's `overcluster` function. By default, the maximum cluster size will be 1/20 of the number of cells. While this is reasonable for most datasets (i.e. all those used for benchmark), so many clusters might be unnecessary when the cell population has a simple structure, and more clusters might be needed in a very complex population (e.g. whole brain).
+Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we rely on an over-clustering approach which is similar to *[scran](https://bioconductor.org/packages/3.9/scran)*'s `quickCluster`, but splits clusters above a certain size. This is implemented by scDblFinder's `overcluster` function. The default maximum cluster size is estimated from the population size and number of cells. While this estimate is reasonable for most datasets (i.e. all those used for benchmark), so many clusters might be unnecessary when the cell population has a simple structure, and more clusters might be needed in a very complex population.
 
 #### Number of artificial doublets
 

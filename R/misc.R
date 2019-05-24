@@ -8,8 +8,10 @@
 #' @return rank-transformed x.
 #' @export
 rankTrans <- function(x){
-  x <- apply(x,2,ties.method="dense",FUN=data.table::frank)-1
-  x <- matrix(as.integer(t(max(x)*t(x)/colMaxs(x))),nrow=nrow(x))
+  y <- apply(x,2,ties.method="dense",FUN=data.table::frank)-1
+  y <- matrix(as.integer(t(max(y)*t(y)/colMaxs(y))),nrow=nrow(y))
+  dimnames(y) <- dimnames(x)
+  y
 }
 
 #' plotROCs
@@ -22,10 +24,14 @@ rankTrans <- function(x){
 #' @return a ggplot
 #' @export
 plotROCs <- function(scores, truth){
-  library(ROCit)
+  truth <- as.integer(as.factor(truth))-1
   library(ggplot2)
   scores <- as.data.frame(scores)
-  roclist <- lapply(scores, FUN=function(x){ rocit(x, truth) })
+  roclist <- lapply(scores, FUN=function(x){
+    labels <- truth[order(x, decreasing=TRUE)]
+    data.frame(FPR=cumsum(!labels)/sum(!labels),
+               TPR=cumsum(labels)/sum(labels))
+  })
   d <- data.frame( method=factor( rep(names(roclist), sapply(roclist, FUN=function(x) length(x$TPR))), levels=names(roclist)),
                    FPR=unlist(lapply(roclist,FUN=function(x) x$FPR)),
                    TPR=unlist(lapply(roclist,FUN=function(x) x$TPR)) )
