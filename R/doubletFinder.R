@@ -11,8 +11,8 @@
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
 #' (default 50); ignored if `clusters` is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if `clusters` is
-#' given. If NULL or NA, clustering will be performed using `quickCluster`, otherwise via
-#' `overcluster`. The default value is `ncol(sce)/20`.
+#' given. If NA, clustering will be performed using `quickCluster`, otherwise via
+#' `overcluster`. If missing, the default value will be estimated by `overcluster`.
 #' @param d The number of dimensions used to build the KNN network (default 10)
 #' @param dbr The expected doublet rate. Defaults to 0.025 the basis of the mixology 10x 
 #' datasets demuxlet results, where the proportion of demuxlet doublet is estimated 
@@ -24,7 +24,8 @@
 #' @param graph.type Either 'snn' or 'knn' (default).
 #' @param fullTable Logical; whether to return the full table including artificial 
 #' doublets (default FALSE), rather than the table for real cells only.
-#' @param trans 
+#' @param trans The transformation to use before computing the KNN network. The default,
+#' `scran::scaledColRanks`, gave the best result in our hands.
 #' @param verbose Logical; whether to print messages and the thresholding plot (default
 #' TRUE).
 #' @param BPPARAM Passed to scran; doesn't work so well...
@@ -37,9 +38,10 @@
 #' 
 #' @export
 scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSize=50,
-                          maxClusSize=ceiling(ncol(sce)/20), d=10, dbr=0.025, 
-                          dbr.sd=0.015, k=5, graph.type=c("knn","snn"), fullTable=FALSE, 
-                          trans="scran", verbose=TRUE, BPPARAM=SerialParam()){
+                          maxClusSize=NULL, d=10, dbr=0.025, dbr.sd=0.015, k=5, 
+                          graph.type=c("knn","snn"), fullTable=FALSE, 
+                          trans=c("scran", "rankTrans", "none", "lognorm"), verbose=TRUE, 
+                          BPPARAM=SerialParam()){
   library(BiocParallel)
   graph.type <- match.arg(graph.type)
   sce2 <- sce
@@ -48,7 +50,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSiz
     if(nrow(sce)>3000){
       sce2 <- sce[order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)[1:3000],]
     }
-    if(!is.null(maxClusSize) && !is.na(maxClusSize)){
+    if(is.null(maxClusSize) || !is.na(maxClusSize)){
       if(verbose) message("Overclustering...")
       clusters <- overcluster(counts(sce2), min.size=minClusSize, max.size=maxClusSize)
       tt <- table(clusters)
@@ -83,7 +85,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSiz
   
   # get the artificial doublets
   if(is.null(artificialDoublets)){
-    artificialDoublets <- max(ncol(sce2), min(40000, 3*length(unique(clusters))^2))
+    artificialDoublets <- max(ncol(sce2), min(40000, 5*length(unique(clusters))^2))
   }
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
@@ -95,29 +97,23 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSiz
   
   # build graph and evaluate neigbhorhood
   if(verbose) message("Building ", toupper(graph.type), " graph...")
-  if(trans=="scran"){
-    qr <- scran::scaledColRanks(cbind(counts(sce2), ad))
-  }else{
-    qr <- rankTrans(cbind(counts(sce2), ad))
-    colnames(qr) <- c(colnames(counts(sce2)), colnames(ad))
-  }
+  qr <- switch(trans,
+               scran=scran::scaledColRanks(cbind(counts(sce2), ad)),
+               rankTrans=rankTrans(cbind(counts(sce2), ad)),
+               none=cbind(counts(sce2), ad),
+               norm=logcounts(scater::normalize(SingleCellExperiment(list(counts=cbind(counts(sce2),ad))))) )
   sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
   ad <- ad[,intersect(colnames(ad),colnames(qr))]
   if(graph.type=="knn"){
     graph <- suppressWarnings(scran::buildKNNGraph(qr, d=10, k=k, pc.approx=TRUE, BPPARAM=BPPARAM))
   }else{
-    graph <- suppressWarnings(scran::buildSNNGraph(qr, type="rank", BPPARAM=BPPARAM))
+    graph <- suppressWarnings(scran::buildSNNGraph(qr, BPPARAM=BPPARAM, 
+                                type=ifelse(trans %in% c("norm","none"),"number","rank")))
   }
   ctype <- rep(c("real","artificial"), c(ncol(sce2),ncol(ad)))
   
   if(verbose) message("Evaluating cell neighborhoods...")
   graph <- igraph::get.adjlist(graph)
-
-  # d <- bplapply(graph, BPPARAM=BPPARAM, FUN=function(x){
-  #   x <- as.numeric(x)
-  #   c(length(x), sum(ctype[x]=="artificial"))
-  # })
-  # d <- as.data.frame(matrix(unlist(d),ncol=2,byrow=TRUE))
   
   d <- as.data.frame(t(sapply(graph, FUN=function(x){
     x <- as.numeric(x)
@@ -130,7 +126,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSiz
   d$ratio <- d[,2]/d[,1]
   d$enrichment <- d[,2]/(d[,1]*ncol(ad)/c(ncol(ad)+ncol(sce2)))
   d$type <- ctype
-  
+
   if(verbose) message("Finding threshold...")
   th <- doubletThresholding(d$ratio, d$type, clusters=clusters, dbr=dbr, dbr.sd=dbr.sd, do.plot=verbose)
   if(verbose) message("Threshold found:", round(th,3))

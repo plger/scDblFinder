@@ -5,10 +5,10 @@
 \title{scDblFinder}
 \usage{
 scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
-  minClusSize = 50, maxClusSize = ceiling(ncol(sce)/20), d = 10,
-  dbr = 0.025, dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
-  fullTable = FALSE, trans = "scran", verbose = TRUE,
-  BPPARAM = SerialParam())
+  minClusSize = 50, maxClusSize = NULL, d = 10, dbr = 0.025,
+  dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
+  fullTable = FALSE, trans = c("scran", "rankTrans", "none",
+  "lognorm"), verbose = TRUE, BPPARAM = SerialParam())
 }
 \arguments{
 \item{sce}{An object of class `SingleCellExperiment`}
@@ -23,8 +23,8 @@ This is used to make doublets more efficiently.}
 (default 50); ignored if `clusters` is given.}
 
 \item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if `clusters` is
-given. If NULL or NA, clustering will be performed using `quickCluster`, otherwise via
-`overcluster`. The default value is `ncol(sce)/20`.}
+given. If NA, clustering will be performed using `quickCluster`, otherwise via
+`overcluster`. If missing, the default value will be estimated by `overcluster`.}
 
 \item{d}{The number of dimensions used to build the KNN network (default 10)}
 
@@ -43,7 +43,8 @@ older 10x datasets, where the proportion of doublets can go up to 0.1.}
 \item{fullTable}{Logical; whether to return the full table including artificial 
 doublets (default FALSE), rather than the table for real cells only.}
 
-\item{trans}{}
+\item{trans}{The transformation to use before computing the KNN network. The default,
+`scran::scaledColRanks`, gave the best result in our hands.}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot (default
 TRUE).}

@@ -4,8 +4,8 @@
 \alias{overcluster}
 \title{overcluster}
 \usage{
-overcluster(e, rtrans = c("scran", "rankTrans", "none"), min.size = 20,
-  max.size = 300)
+overcluster(e, rtrans = c("rankTrans", "scran", "none"), min.size = 50,
+  max.size = NULL)
 }
 \arguments{
 \item{e}{A numeric matrix, with entities (e.g. cells) as columns and features (e.g. 
@@ -13,12 +13,13 @@ genes) as rows.}
 
 \item{rtrans}{Transformation to apply, either 'rankTrans' (default, dense step-
 preserving rank transformation, see `rankTrans`), 'scran' (default; see 
-`scran::scaledColRanks`), or 'none' (data taken as-is)}
+`scran::scaledColRanks`), or 'none' (data taken as-is).}
 
 \item{min.size}{The minimum cluster size (applies after splitting, and hence overrides
 `max.size`)}
 
-\item{max.size}{The maximum cluster size}
+\item{max.size}{The maximum cluster size. If omitted, will be calculated on the basis 
+of the population size and initial number of clusters.}
 }
 \value{
 A vector of cluster labels.
@@ -27,5 +28,7 @@ A vector of cluster labels.
 This function deliberately overclusters based on the desired range of cluster size.
 It first calculates a SNN network viar `scran::buildSNNGraph`, then runs 
 `igraph::cluster_fast_greedy` until no cluster is above the size limits, and merges 
-clusters that are too small.
+clusters that are too small. By default, `rankTrans` is used on the counts before, 
+because it tends to produce over-clustering influenced by library size, which happens
+to be desirable for producing artificial doublets.
 }
