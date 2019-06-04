@@ -37,7 +37,7 @@ The important sets of parameters in `scDblFinder` refer respectively to the expe
 
 #### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). By default, the expected doublet rate is set to 0.025 (2.5\%) with a standard deviation of 0.015, which is reasonable for recent 10x datasets. However, note that some older protocols or higher concentrations of cells create considerably more doublets, and that this should be updated accordingly.
+The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). By default, the expected doublet rate is set to 0.025 (2.5\%) with a standard deviation of 0.015. For 10x data the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets; in recent studies it appears to be rather closer to 8\%).
 
 #### Clustering
 
