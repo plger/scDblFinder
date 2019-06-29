@@ -44,6 +44,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, minClusSiz
                           BPPARAM=SerialParam()){
   library(BiocParallel)
   graph.type <- match.arg(graph.type)
+  trans <- match.arg(trans)
   sce2 <- sce
   if(is.null(clusters)){
     # we first simplify the dataset and identify rough clusters
