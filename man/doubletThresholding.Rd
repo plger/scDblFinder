@@ -8,23 +8,24 @@ doubletThresholding(scores, celltypes, clusters = NULL, dbr = 0.025,
   dbr.sd = 0.02, prop.fullyRandom = 0, do.plot = TRUE)
 }
 \arguments{
-\item{scores}{A vector of the doublet score for each cell (real and artificial); can be
-anything ranging from 0 to 1, with higher scores indicating higher change of being a 
-doublet.}
+\item{scores}{A vector of the doublet score for each cell (real and 
+artificial); can be anything ranging from 0 to 1, with higher scores 
+indicating higher change of being a doublet.}
 
-\item{celltypes}{A vector of the same length as `scores` indicating, for each cell,
-whether it is a 'real' cell or an 'artificial' doublet. Missing values not allowed.}
+\item{celltypes}{A vector of the same length as `scores` indicating, for each
+cell, whether it is a 'real' cell or an 'artificial' doublet. Missing values
+ not allowed.}
 
-\item{clusters}{Optional vector of cluster assignment for each (real) cell, used for
-homotypic doublet correction.}
+\item{clusters}{Optional vector of cluster assignment for each (real) cell, 
+used for homotypic doublet correction.}
 
 \item{dbr}{The expected (mean) doublet rate.}
 
-\item{dbr.sd}{The standard deviation of the doublet rate, representing the uncertainty
-in the estimate.}
+\item{dbr.sd}{The standard deviation of the doublet rate, representing the 
+uncertainty in the estimate.}
 
-\item{prop.fullyRandom}{The proportion of artificical doublets that are fully random,
-used for homotypy correction. Default 0.25 (the default value in 
+\item{prop.fullyRandom}{The proportion of artificical doublets that are fully
+ random, used for homotypy correction. Default 0.25 (the default value in 
 `getArtificialDoublets`). Ignored if `clusters=NULL`}
 
 \item{do.plot}{Logical; whether to plot the thresholding data (default TRUE).}

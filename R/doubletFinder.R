@@ -3,7 +3,7 @@
 #' Identification of doublets in single-cell RNAseq directly from counts using 
 #' overclustering-based generation of artifical doublets.
 #'
-#' @param sce An object of class `SingleCellExperiment`
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
 #' @param artificialDoublets The approximate number of artificial doublets to 
 #' create. If NULL, will be the maximum of the number of cells or 
 #' `3*nbClusters^2`.
@@ -42,15 +42,16 @@
 #' `fullTable=TRUE`, a data.frame will be returned with information about real 
 #' and artificial cells.
 #' 
-#' @import SingleCellExperiment scran Matrix BiocParallel testthat
-#' @importFrom scater normalize
+#' @import SingleCellExperiment scran Matrix BiocParallel
+#' @importFrom dplyr bind_rows
+#' @importFrom testthat test_that expect_equal
 #' @export
 scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, 
                          samples=NULL, minClusSize=50, maxClusSize=NULL, d=10, 
                          dbr=NULL, dbr.sd=0.015, k=5, graph.type=c("knn","snn"), 
                          fullTable=FALSE, 
                          trans=c("scran", "rankTrans", "none", "lognorm"), 
-                         verbose=TRUE, BPPARAM=SerialParam()){
+                         verbose=is.null(samples), BPPARAM=SerialParam()){
   graph.type <- match.arg(graph.type)
   trans <- match.arg(trans)
   if(!is.null(samples)){
@@ -61,15 +62,15 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                expect_equal(ncol(sce), length(samples)) )
     if(fullTable) warning("`fullTable` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
-    cs <- split(seq_along(samples),samples)
-    CD <- dplyr::bind_rows(bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
-        if(!is.null(clusters)) clusters <- clusters[x]
+    cs <- split(seq_along(samples), samples, drop=TRUE)
+    CD <- bind_rows(bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
+        if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         x <- colData( scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
                                   clusters=clusters, minClusSize=minClusSize, 
                                   maxClusSize=maxClusSize, d=d, dbr=dbr, 
                                   dbr.sd=dbr.sd, k=k, graph.type=graph.type, 
-                                  trans=trans, verbose=FALSE))
-        x[,paste0("scDblFinder.",c("neighbors","ratio", "class"))]
+                                  trans=trans, verbose=FALSE) )
+        as.data.frame(x[,paste0("scDblFinder.",c("neighbors","ratio","class"))])
     }))
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
@@ -144,7 +145,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                scran=scran::scaledColRanks(cbind(counts(sce2), ad)),
                rankTrans=rankTrans(cbind(counts(sce2), ad)),
                none=cbind(counts(sce2), ad),
-               norm=logcounts(normalize(SingleCellExperiment(
+               norm=logcounts(scater::normalize(SingleCellExperiment(
                    list(counts=cbind(counts(sce2),ad)))))
                )
   sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
@@ -178,6 +179,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   th <- doubletThresholding( d$ratio, d$type, clusters=clusters, dbr=dbr, 
                              dbr.sd=dbr.sd, do.plot=verbose )
   if(verbose) message("Threshold found:", round(th,3))
+
   d$classification <- ifelse(d$ratio >= th, "doublet", "singlet")
   if(fullTable) return(d)
   

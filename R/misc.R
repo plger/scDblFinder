@@ -1,14 +1,15 @@
 #' rankTrans
 #'
-#' A dense rank transformation that preserves 0 and rank step size in the presence of many
-#' ties.
+#' A dense rank transformation that preserves 0 and rank step size in the 
+#' presence of many ties.
 #'
 #' @param x A matrix, with samples/cells as columns and genes/features as rows.
 #'
 #' @return rank-transformed x.
+#' @importFrom data.table frank
 #' @export
 rankTrans <- function(x){
-  y <- apply(x,2,ties.method="dense",FUN=data.table::frank)-1
+  y <- apply(x,2,ties.method="dense",FUN=frank)-1
   y <- matrix(as.integer(t(max(y)*t(y)/colMaxs(y))),nrow=nrow(y))
   dimnames(y) <- dimnames(x)
   y
@@ -22,17 +23,20 @@ rankTrans <- function(x){
 #' @param truth A vector of the true class corresponding to each row of `scores`
 #'
 #' @return a ggplot
+#' @import ggplot2
 #' @export
 plotROCs <- function(scores, truth){
   truth <- as.integer(as.factor(truth))-1
-  library(ggplot2)
   scores <- as.data.frame(scores)
   roclist <- lapply(scores, FUN=function(x){
     labels <- truth[order(x, decreasing=TRUE)]
     data.frame(FPR=cumsum(!labels)/sum(!labels),
                TPR=cumsum(labels)/sum(labels))
   })
-  d <- data.frame( method=factor( rep(names(roclist), sapply(roclist, FUN=function(x) length(x$TPR))), levels=names(roclist)),
+  methods <- factor( rep(names(roclist), 
+                         sapply(roclist, FUN=function(x) length(x$TPR))),
+                     levels=names(roclist) )
+  d <- data.frame( method=methods,
                    FPR=unlist(lapply(roclist,FUN=function(x) x$FPR)),
                    TPR=unlist(lapply(roclist,FUN=function(x) x$TPR)) )
   ggplot(d, aes(FPR, TPR, colour=method)) + geom_line(size=1.2)
@@ -40,10 +44,12 @@ plotROCs <- function(scores, truth){
 
 # get random cross-cluster pairs of cells from a cluster assignment vector
 .getCellPairs <- function(clusters, n=1000){
-  cli <- split(1:length(clusters), clusters)
+  cli <- split(seq_along(clusters), clusters)
   ca <- expand.grid(unique(clusters), unique(clusters))
   ca <- ca[which(ca[,1]!=ca[,2]),]
-  ca <- do.call(rbind, lapply(1:nrow(ca), n=ceiling(n/nrow(ca)), FUN=function(i,n){ 
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), 
+                               n=ceiling(n/nrow(ca)), 
+                               FUN=function(i,n){ 
     cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
            sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
   }))
@@ -65,8 +71,8 @@ plotROCs <- function(scores, truth){
 
 #' scdsWrapper
 #' 
-#' A wrapper around scds's hybrid score, used for comparison (requires the `scds` package 
-#' to be installed)
+#' A wrapper around scds's hybrid score, used for comparison (requires the 
+#' `scds` package to be installed)
 #'
 #' @param sce An object of class `SingleCellExperiment`
 #'
@@ -83,8 +89,8 @@ scdsWrapper <- function(sce){
 #' dblFinderWrapper
 #'
 #' A wrapper around \url{https://github.com/chris-mcginnis-ucsf/DoubletFinder}[DoubletFinder],
-#' used for comparison. Requires the `DoubletFinder` and `Seurat` version 3 packages to be
-#'  installed.
+#' used for comparison. Requires the `DoubletFinder` and `Seurat` version 3 
+#' packages to be installed.
 #' 
 #' @param sce An object of class `SingleCellExperiment`
 #' @param doublet.formation.rate The expected doublet rate, default 0.025

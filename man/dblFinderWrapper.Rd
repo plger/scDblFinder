@@ -18,6 +18,6 @@ The updated `sce` object, with the colData field `DF.score`
 }
 \description{
 A wrapper around \url{https://github.com/chris-mcginnis-ucsf/DoubletFinder}[DoubletFinder],
-used for comparison. Requires the `DoubletFinder` and `Seurat` version 3 packages to be
- installed.
+used for comparison. Requires the `DoubletFinder` and `Seurat` version 3 
+packages to be installed.
 }

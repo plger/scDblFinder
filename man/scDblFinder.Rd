@@ -11,7 +11,7 @@ scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
   "lognorm"), verbose = TRUE, BPPARAM = SerialParam())
 }
 \arguments{
-\item{sce}{An object of class `SingleCellExperiment`}
+\item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
 
 \item{artificialDoublets}{The approximate number of artificial doublets to 
 create. If NULL, will be the maximum of the number of cells or 

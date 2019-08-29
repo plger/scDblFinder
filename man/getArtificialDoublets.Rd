@@ -12,17 +12,18 @@ getArtificialDoublets(x, n = 3000, prop.fullyRandom = 0,
 
 \item{n}{The approximate number of doublet to generate (default 3000).}
 
-\item{prop.fullyRandom}{The proportion of the created doublets that are fully random 
-(default 0); the rest will be doublets created across clusters. Ignored if `clusters`
-is NULL.}
+\item{prop.fullyRandom}{The proportion of the created doublets that are fully
+random (default 0); the rest will be doublets created across clusters. 
+Ignored if `clusters` is NULL.}
 
-\item{clusters}{The optional clusters labels to use to build cross-cluster doublets.}
+\item{clusters}{The optional clusters labels to use to build cross-cluster 
+doublets.}
 
 \item{n.meta.cells}{The number of meta-cell per cluster to create. If given,
 additional doublets will be created from cluster meta-cells.}
 
-\item{meta.triplets}{Logical; whether to create triplets from meta cells. Ignored if 
-`clusters` is missing.}
+\item{meta.triplets}{Logical; whether to create triplets from meta cells. 
+Ignored if `clusters` is missing.}
 }
 \value{
 A count matrix for artificial doublets.

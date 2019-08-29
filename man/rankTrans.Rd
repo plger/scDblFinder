@@ -13,6 +13,6 @@ rankTrans(x)
 rank-transformed x.
 }
 \description{
-A dense rank transformation that preserves 0 and rank step size in the presence of many
-ties.
+A dense rank transformation that preserves 0 and rank step size in the 
+presence of many ties.
 }

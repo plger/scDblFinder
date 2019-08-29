@@ -10,22 +10,24 @@ resplitClusters(g, cl = NULL, max.size = 500, min.size = 50,
 \arguments{
 \item{g}{An object of class `igraph`}
 
-\item{cl}{A vector of cluster labels corresponding to the nodes of `g`. If ommited,
-a new clustering will be run using `igraph::cluster_fast_greedy`.}
+\item{cl}{A vector of cluster labels corresponding to the nodes of `g`. If 
+ommited, a new clustering will be run using `igraph::cluster_fast_greedy`.}
 
 \item{max.size}{The maximum cluster size}
 
-\item{min.size}{The minimum cluster size (default none). If given, this overrides 
-`max.size`.}
+\item{min.size}{The minimum cluster size (default none). If given, this 
+overrides `max.size`.}
 
 \item{renameClusters}{Logical; whether to rename clusters}
 
-\item{iterative}{Logical; whether to resplit until no cluster is above the size limit 
-or no improvement is made (default TRUE). If FALSE, splits each cluster once.}
+\item{iterative}{Logical; whether to resplit until no cluster is above the 
+size limit or no improvement is made (default TRUE). If FALSE, splits each 
+cluster once.}
 }
 \value{
 A vector of cluster assignments.
 }
 \description{
-Split (re-cluster) clusters of an existing graph-based clustering that are above a certain size
+Split (re-cluster) clusters of an existing graph-based clustering that are 
+above a certain size
 }

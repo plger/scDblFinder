@@ -13,6 +13,6 @@ scdsWrapper(sce)
 The updated `sce` object, with the colData field `hybrid_score`
 }
 \description{
-A wrapper around scds's hybrid score, used for comparison (requires the `scds` package 
-to be installed)
+A wrapper around scds's hybrid score, used for comparison (requires the 
+`scds` package to be installed)
 }

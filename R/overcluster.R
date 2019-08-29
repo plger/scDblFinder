@@ -1,31 +1,33 @@
 #' overcluster
 #'
-#' This function deliberately overclusters based on the desired range of cluster size.
-#' It first calculates a SNN network viar `scran::buildSNNGraph`, then runs 
-#' `igraph::cluster_fast_greedy` until no cluster is above the size limits, and merges 
-#' clusters that are too small. By default, `rankTrans` is used on the counts before, 
-#' because it tends to produce over-clustering influenced by library size, which happens
-#' to be desirable for producing artificial doublets.
+#' This function deliberately overclusters based on the desired range of cluster
+#' size. It first calculates a SNN network viar `scran::buildSNNGraph`, then runs 
+#' `igraph::cluster_fast_greedy` until no cluster is above the size limits, and 
+#' merges clusters that are too small. By default, `rankTrans` is used on the 
+#' counts before, because it tends to produce over-clustering influenced by 
+#' library size, which happens to be desirable for producing artificial doublets.
 #'
-#' @param e A numeric matrix, with entities (e.g. cells) as columns and features (e.g. 
-#' genes) as rows.
-#' @param rtrans Transformation to apply, either 'rankTrans' (default, dense step-
-#' preserving rank transformation, see `rankTrans`), 'scran' (default; see 
+#' @param e A numeric matrix, with entities (e.g. cells) as columns and features
+#'  (e.g. genes) as rows.
+#' @param rtrans Transformation to apply, either 'rankTrans' (default, dense 
+#' step-preserving rank transformation, see `rankTrans`), 'scran' (default; see 
 #' `scran::scaledColRanks`), or 'none' (data taken as-is).
-#' @param min.size The minimum cluster size (applies after splitting, and hence overrides
-#' `max.size`)
-#' @param max.size The maximum cluster size. If omitted, will be calculated on the basis 
-#' of the population size and initial number of clusters.
+#' @param min.size The minimum cluster size (applies after splitting, and hence 
+#' overrides `max.size`)
+#' @param max.size The maximum cluster size. If omitted, will be calculated on 
+#' the basis of the population size and initial number of clusters.
 #'
 #' @return A vector of cluster labels.
+#' @importFrom scran buildSNNGraph scaledColRanks
+#' @import igraph
 #' @export
-overcluster <- function(e, rtrans=c("rankTrans","scran","none"), min.size=50, max.size=NULL){
-  library(igraph)
+overcluster <- function( e, rtrans=c("rankTrans","scran","none"), min.size=50, 
+                         max.size=NULL){
   e <- switch( match.arg(rtrans),
-               scran=scran::scaledColRanks(e),
+               scran=scaledColRanks(e),
                rankTrans=rankTrans(e),
                e)
-  g <- scran::buildSNNGraph(e)
+  g <- buildSNNGraph(e)
   cl <- membership(cluster_fast_greedy(g))
   if(is.null(max.size)){
     max.size <- ncol(e)/(2*length(unique(cl)))
@@ -37,27 +39,32 @@ overcluster <- function(e, rtrans=c("rankTrans","scran","none"), min.size=50, ma
 
 #' resplitClusters
 #' 
-#' Split (re-cluster) clusters of an existing graph-based clustering that are above a certain size
+#' Split (re-cluster) clusters of an existing graph-based clustering that are 
+#' above a certain size
 #'
 #' @param g An object of class `igraph`
-#' @param cl A vector of cluster labels corresponding to the nodes of `g`. If ommited,
-#' a new clustering will be run using `igraph::cluster_fast_greedy`.
+#' @param cl A vector of cluster labels corresponding to the nodes of `g`. If 
+#' ommited, a new clustering will be run using `igraph::cluster_fast_greedy`.
 #' @param max.size The maximum cluster size
-#' @param min.size The minimum cluster size (default none). If given, this overrides 
-#' `max.size`.
+#' @param min.size The minimum cluster size (default none). If given, this 
+#' overrides `max.size`.
 #' @param renameClusters Logical; whether to rename clusters
-#' @param iterative Logical; whether to resplit until no cluster is above the size limit 
-#' or no improvement is made (default TRUE). If FALSE, splits each cluster once.
+#' @param iterative Logical; whether to resplit until no cluster is above the 
+#' size limit or no improvement is made (default TRUE). If FALSE, splits each 
+#' cluster once.
 #'
 #' @return A vector of cluster assignments.
+#' 
+#' @import igraph scran
 #' @export
-resplitClusters <- function(g, cl=NULL, max.size=500, min.size=50, renameClusters=TRUE, iterative=TRUE){
+resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50, 
+                             renameClusters=TRUE, iterative=TRUE ){
     if(is.null(cl)){
       # no initial clustering provided - run one
     	cl <- membership(cluster_fast_greedy(g))
     }
     ll1 <- split(1:length(V(g)), cl) # split nodes by cluster
-    ll1 <- ll1[which(sapply(ll1,length)>max.size)] # restrict to cluster above size limit
+    ll1 <- ll1[which(sapply(ll1,length)>max.size)] # restrict to clusters >limit
     # run clustering of clusters above size limit:
     ll2 <- lapply(ll1, FUN=function(x){
     	membership(cluster_fast_greedy(suppressWarnings(subgraph(g, x))))
@@ -70,7 +77,8 @@ resplitClusters <- function(g, cl=NULL, max.size=500, min.size=50, renameCluster
     }
     # repeat until no more improvement or no cluster is above limit
     while(iterative && max(table(cl))>max.size){
-    	newcl <- resplitClusters(g, cl, max.size=max.size, min.size=NULL, renameClusters=FALSE, iterative=FALSE)
+    	newcl <- resplitClusters( g, cl, max.size=max.size, min.size=NULL, 
+    	                          renameClusters=FALSE, iterative=FALSE )
     	if(identical(cl, newcl)) iterative <- FALSE
     	cl <- newcl
     }
