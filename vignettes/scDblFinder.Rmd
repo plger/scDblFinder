@@ -45,13 +45,27 @@ This will add the following columns to the colData of `sce`:
 * `sce$scDblFinder.ratio` :  the proportion of artificial doublets among the neighborhood (the higher, the more chances that the cell is a doublet)
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
+### Multiple samples
+
+If you have multiple samples (understood as different cell captures), then it is
+preferable to look for doublets separately for each sample. You can do this by 
+simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or,
+if these are stored in a column of `colData`, the name of the column. In this case,
+you might also consider multithreading it using the `BPPARAM` parameter. For example:
+
+```{r, eval=FALSE}
+library(BiocParallel)
+sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
+```
+
+
 ### Parameters
 
 The important sets of parameters in `scDblFinder` refer respectively to the expected proportion of doublets, to the clustering, and to the number of artificial doublets used.
 
 #### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). By default, the expected doublet rate is set to 0.025 (2.5\%) with a standard deviation of 0.015, which is reasonable for recent 10x datasets. However, note that some older protocols or higher concentrations of cells create considerably more doublets, and that this should be updated accordingly.
+The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
 
 #### Clustering
 

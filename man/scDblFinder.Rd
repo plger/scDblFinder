@@ -5,36 +5,42 @@
 \title{scDblFinder}
 \usage{
 scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
-  minClusSize = 50, maxClusSize = NULL, d = 10, dbr = 0.025,
-  dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
+  samples = NULL, minClusSize = 50, maxClusSize = NULL, d = 10,
+  dbr = NULL, dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
   fullTable = FALSE, trans = c("scran", "rankTrans", "none",
   "lognorm"), verbose = TRUE, BPPARAM = SerialParam())
 }
 \arguments{
 \item{sce}{An object of class `SingleCellExperiment`}
 
-\item{artificialDoublets}{The approximate number of artificial doublets to create. If
-NULL, will be the maximum of the number of cells or `3*nbClusters^2`.}
+\item{artificialDoublets}{The approximate number of artificial doublets to 
+create. If NULL, will be the maximum of the number of cells or 
+`3*nbClusters^2`.}
 
-\item{clusters}{The optional cluster assignments (if ommitted, will run `quickCluster`).
-This is used to make doublets more efficiently.}
+\item{clusters}{The optional cluster assignments (if ommitted, will run 
+`quickCluster`). This is used to make doublets more efficiently.}
+
+\item{samples}{A vector of the same length as cells (or the name of a column of 
+`colData(sce)`), indicating to which sample each cell belongs. Here, a sample
+is understood as being processed independently. If ommitted, doublets will be
+searched for with all cells together. If given, doublets will be searched for 
+independently for each sample, which is preferable if they represent different
+captures.}
 
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
 (default 50); ignored if `clusters` is given.}
 
-\item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if `clusters` is
-given. If NA, clustering will be performed using `quickCluster`, otherwise via
-`overcluster`. If missing, the default value will be estimated by `overcluster`.}
+\item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if 
+`clusters` is given. If NA, clustering will be performed using `quickCluster`,
+otherwise via `overcluster`. If missing, the default value will be estimated 
+by `overcluster`.}
 
 \item{d}{The number of dimensions used to build the KNN network (default 10)}
 
-\item{dbr}{The expected doublet rate. Defaults to 0.025 the basis of the mixology 10x 
-datasets demuxlet results, where the proportion of demuxlet doublet is estimated 
-respectively at 0.012 and 0.029 (after accounting adding expected homotypic doublets). 
-However, note that this value might not be appropriate for all datasets, especially 
-older 10x datasets, where the proportion of doublets can go up to 0.1.}
+\item{dbr}{The expected doublet rate. By default this is assumed to be 
+0.1*nbCells percent, which is appropriate for 10x datasets.}
 
-\item{dbr.sd}{The standard deviation of the doublet rate, defaults to 0.02.}
+\item{dbr.sd}{The standard deviation of the doublet rate, defaults to 0.015.}
 
 \item{k}{Number of nearest neighbors (for KNN graph).}
 
@@ -43,20 +49,21 @@ older 10x datasets, where the proportion of doublets can go up to 0.1.}
 \item{fullTable}{Logical; whether to return the full table including artificial 
 doublets (default FALSE), rather than the table for real cells only.}
 
-\item{trans}{The transformation to use before computing the KNN network. The default,
-`scran::scaledColRanks`, gave the best result in our hands.}
+\item{trans}{The transformation to use before computing the KNN network. The 
+default, `scran::scaledColRanks`, gave the best result in our hands.}
 
-\item{verbose}{Logical; whether to print messages and the thresholding plot (default
-TRUE).}
+\item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
-\item{BPPARAM}{Passed to scran; doesn't work so well...}
+\item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
+`samples!=NULL`); otherwise passed to scran (which doesn't work so well)...}
 }
 \value{
-A data.frame including, for each cells (rows, in the order in which they appear
-in the `sce` object), the number of neighbors considered, the number of these neighbors
- that are from artificial doublets, the ratio of neighbors that are from artificial 
- doublets (which represents a quantitative doublet the score), the enrichment in 
- artificial doublets, and the classification (after applying the threshold).
+The `sce` object with the following additional colData columns: 
+`scDblFinder.neighbors` (number of neighbors considered), `scDblFinder.ratio`
+(ratio of aritifical doublets among neighbors), and `scDblFinder.class` 
+(whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
+`fullTable=TRUE`, a data.frame will be returned with information about real 
+and artificial cells.
 }
 \description{
 Identification of doublets in single-cell RNAseq directly from counts using 
