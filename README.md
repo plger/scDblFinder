@@ -2,7 +2,7 @@
 
 ## Introduction
 
-scDblFinder  identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their prevalence in the neighborhood of each cell. The rough logic is very similar to *[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*, but it much simpler and more efficient. In a nutshell:
+scDblFinder  identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their prevalence in the neighborhood of each cell. The rough logic is very similar to *[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*, but it is much simpler and more efficient. In a nutshell:
 
 * scDblFinder works directly on a reduced count matrix (using rank correlation on top expressed genes), making the detection independent of downstream processing. This avoids the need for all the Seurat pre-processing, making the detection faster and compatible with other analytic choices.
 * instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids creating homotypic doublets and enables the detection of most doublets with much fewer artificial doublets.
