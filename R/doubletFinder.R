@@ -151,7 +151,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
   ad <- ad[,intersect(colnames(ad),colnames(qr))]
   if(graph.type=="knn"){
-    graph <- suppressWarnings(buildKNNGraph( qr, d=10, k=k, pc.approx=TRUE,
+    graph <- suppressWarnings(buildKNNGraph( qr, d=10, k=k,
                                              BPPARAM=BPPARAM))
   }else{
     graph <- suppressWarnings(buildSNNGraph(qr, BPPARAM=BPPARAM, 
