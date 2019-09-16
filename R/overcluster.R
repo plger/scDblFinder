@@ -75,7 +75,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         stop("max.size and min.size are incompatible")
     if(is.null(cl)){
       # no initial clustering provided - run one
-    	cl <- membership(cluster_fast_greedy(g))
+        cl <- membership(cluster_fast_greedy(g))
     }
     ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
     ll1 <- ll1[which(sapply(ll1,length)>max.size)] # restrict to clusters >limit
@@ -87,16 +87,16 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     })
     # update global cluster labels
     for(i in names(ll2)){
-    	if(length(unique(ll2[[i]]))>1){
-    		cl[ll1[[i]]] <- max(cl)+ll2[[i]]
-    	}
+        if(length(unique(ll2[[i]]))>1){
+            cl[ll1[[i]]] <- max(cl)+ll2[[i]]
+        }
     }
     # repeat until no more improvement or no cluster is above limit
     while(iterative && max(table(cl))>max.size){
-    	newcl <- resplitClusters( g, cl, max.size=max.size, min.size=NULL, 
-    	                          renameClusters=FALSE, iterative=FALSE )
-    	if(identical(cl, newcl)) iterative <- FALSE
-    	cl <- newcl
+        newcl <- resplitClusters( g, cl, max.size=max.size, min.size=NULL, 
+                                  renameClusters=FALSE, iterative=FALSE )
+        if(identical(cl, newcl)) iterative <- FALSE
+        cl <- newcl
     }
     if(!is.null(min.size)){
         # merge clusters below minimum
@@ -120,7 +120,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         }
     }
     if(renameClusters){
-    	cl <- as.integer(as.factor(cl))
+        cl <- as.integer(as.factor(cl))
     }
     cl
 }
