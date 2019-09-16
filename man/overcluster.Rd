@@ -32,3 +32,10 @@ merges clusters that are too small. By default, `rankTrans` is used on the
 counts before, because it tends to produce over-clustering influenced by 
 library size, which happens to be desirable for producing artificial doublets.
 }
+\examples{
+m <- t(sapply( seq(from=0, to=5, length.out=50), 
+               FUN=function(x) rpois(50,x) ) )
+cc <- suppressWarnings(overcluster(m,min.size=5))
+table(cc)
+
+}

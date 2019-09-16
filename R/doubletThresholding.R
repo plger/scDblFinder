@@ -1,5 +1,8 @@
 #' doubletThresholding
 #'
+#' Sets the doublet scores threshold; typically called by 
+#' \code{\link[scDblFinder]{scDblFinder}}.
+#'
 #' @param scores A vector of the doublet score for each cell (real and 
 #' artificial); can be anything ranging from 0 to 1, with higher scores 
 #' indicating higher change of being a doublet.
@@ -17,6 +20,21 @@
 #' @param do.plot Logical; whether to plot the thresholding data (default TRUE).
 #'
 #' @return A scaler indicating the decided threshold.
+#' 
+#' @examples
+#' # random data
+#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#'                FUN=function(x) rpois(30,x) ) )
+#' # generate doublets and merge them with real cells
+#' doublets <- getArtificialDoublets(m, 30)
+#' celltypes <- rep(c("real","artificial"), c(ncol(m), ncol(doublets)))
+#' m <- cbind(m,doublets)
+#' # dummy doublet scores:
+#' scores <- abs(jitter(1:ncol(m),amount=10))
+#' scores <- scores/max(scores)
+#' # get threshold
+#' doubletThresholding(scores, celltypes)
+#' 
 #' @export
 doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025, 
                                 dbr.sd=0.02, prop.fullyRandom=0, do.plot=TRUE){
@@ -55,8 +73,8 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
     x <- 1:99/100
     acc <- sapply(x, accfn)
     plot(x, acc, type="l", lty=ifelse(is.null(clusters),1,2), col="blue", 
-         ylim=c(0,max(acc)), lwd=2, main="Thresholding", ylab="Proportion", 
-         xlab="Ratio of artificial doublets in neighborhood")
+         ylim=c(0,max(c(acc,dbr.dev))), lwd=2, main="Thresholding", 
+         ylab="Proportion", xlab="Ratio of artificial doublets in neighborhood")
     if(!is.null(clusters)) lines(x, sapply(x, accfn2), col="blue", lwd=2)
     lines(x, sapply(x, dbr.dev), col="red", lwd=2)
     lines(x, sapply(x, FUN=function(x){

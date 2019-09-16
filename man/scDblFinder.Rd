@@ -8,7 +8,7 @@ scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
   samples = NULL, minClusSize = 50, maxClusSize = NULL, d = 10,
   dbr = NULL, dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
   fullTable = FALSE, trans = c("scran", "rankTrans", "none",
-  "lognorm"), verbose = TRUE, BPPARAM = SerialParam())
+  "lognorm"), verbose = is.null(samples), BPPARAM = SerialParam())
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
@@ -68,4 +68,12 @@ and artificial cells.
 \description{
 Identification of doublets in single-cell RNAseq directly from counts using 
 overclustering-based generation of artifical doublets.
+}
+\examples{
+library(SingleCellExperiment)
+m <- t(sapply( seq(from=0, to=5, length.out=50), 
+               FUN=function(x) rpois(50,x) ) )
+sce <- SingleCellExperiment( list(counts=m) )
+sce <- scDblFinder(sce, minClusSize = 2, maxClusSize = 20)
+
 }

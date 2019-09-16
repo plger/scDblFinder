@@ -14,5 +14,6 @@ The updated `sce` object, with the colData field `hybrid_score`
 }
 \description{
 A wrapper around scds's hybrid score, used for comparison (requires the 
-`scds` package to be installed)
+`scds` package to be installed). This function is not exported, and is there
+solely as a record of the specific way the comparisons where made.
 }

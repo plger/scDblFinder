@@ -17,3 +17,9 @@ a ggplot
 \description{
 Plot ROC curves for given scores.
 }
+\examples{
+myscores <- list( test=1:10 )
+truth <- sample(c(TRUE,FALSE), 10, TRUE)
+plotROCs(  myscores, truth )
+
+}

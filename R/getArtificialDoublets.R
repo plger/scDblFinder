@@ -16,6 +16,11 @@
 #'
 #' @return A count matrix for artificial doublets.
 #' 
+#' @examples
+#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#'                FUN=function(x) rpois(30,x) ) )
+#' doublets <- getArtificialDoublets(m, 30)
+#' 
 #' @import Matrix
 #' @export
 getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
@@ -25,7 +30,7 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     nr <- ifelse(is.null(clusters), n, ceiling(prop.fullyRandom*n))
     if(ncol(x)^2 <= nr){
       # few combinations, get them all
-      ad <- expand.grid(1:ncol(x),1:ncol(x))
+      ad <- expand.grid(seq_len(ncol(x)),seq_len(ncol(x)))
     }else{
       ad <- matrix(sample.int(ncol(x), 2*nr, replace=(2*nr >= ncol(x))),ncol=2)
     }
@@ -40,12 +45,14 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     ad.m <- NULL
   }
   
+  if(is.null(clusters) || length(unique(clusters))<3) n.meta.cells <- 0
+    
   # create doublets across clusters:
   n <- ceiling(n*(1-prop.fullyRandom))
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
   colnames(m2) <- paste0( "arificialDoublet.",
-                          ifelse(is.null(ad.m),0,ncol(ad.m))+1:ncol(m2) )
+                          ifelse(is.null(ad.m),0,ncol(ad.m))+seq_len(ncol(m2)) )
   if(is.null(ad.m)){
     ad.m <- m2
   }else{
@@ -59,7 +66,7 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     clusters <- rep(unique(clusters),each=n.meta.cells)
     ca <- .getCellPairs(clusters, n=ceiling(n*0.2))
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]
-    colnames(m2) <- paste0("arificialMetaDoublet.",ncol(ad.m)+1:ncol(m2))
+    colnames(m2) <- paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
   }
   
@@ -80,7 +87,7 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     ca <- expand.grid(i, i, i)
     ca <- ca[apply(ca,1,FUN=function(x){ length(unique(x)) })==3,]
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]+meta[,ca[,3]]
-    colnames(m2) <- paste0("arificialTriplet.", ncol(ad.m)+1:ncol(m2))
+    colnames(m2) <- paste0("arificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
   }
   ad.m

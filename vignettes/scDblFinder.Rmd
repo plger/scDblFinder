@@ -15,6 +15,10 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include=FALSE}
+library(BiocStyle)
+```
+
 # scDblFinder
 
 ## Introduction

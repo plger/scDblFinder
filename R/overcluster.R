@@ -18,6 +18,13 @@
 #' the basis of the population size and initial number of clusters.
 #'
 #' @return A vector of cluster labels.
+#' 
+#' @examples
+#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#'                FUN=function(x) rpois(50,x) ) )
+#' cc <- suppressWarnings(overcluster(m,min.size=5))
+#' table(cc)
+#' 
 #' @importFrom scran buildSNNGraph scaledColRanks
 #' @import igraph
 #' @export
@@ -30,10 +37,9 @@ overcluster <- function( e, rtrans=c("rankTrans","scran","none"), min.size=50,
   g <- buildSNNGraph(e)
   cl <- membership(cluster_fast_greedy(g))
   if(is.null(max.size)){
-    max.size <- ncol(e)/(2*length(unique(cl)))
+    max.size <- ceiling(max(ncol(e)/(2*length(unique(cl))),min.size+1))
   }
   resplitClusters(g, cl=cl, min.size=min.size, max.size=max.size)
-  
 }
 
 
@@ -55,19 +61,29 @@ overcluster <- function( e, rtrans=c("rankTrans","scran","none"), min.size=50,
 #'
 #' @return A vector of cluster assignments.
 #' 
-#' @import igraph scran
+#' @examples
+#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#'                FUN=function(x) rpois(50,x) ) )
+#' g <- buildSNNGraph(rankTrans(m))
+#' table(resplitCluster(g, min.size=2, max.size=20))
+#' 
+#' @import igraph
 #' @export
 resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50, 
                              renameClusters=TRUE, iterative=TRUE ){
+    if(!is.null(max.size) && !is.null(min.size) && max.size<min.size) 
+        stop("max.size and min.size are incompatible")
     if(is.null(cl)){
       # no initial clustering provided - run one
     	cl <- membership(cluster_fast_greedy(g))
     }
-    ll1 <- split(1:length(V(g)), cl) # split nodes by cluster
+    ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
     ll1 <- ll1[which(sapply(ll1,length)>max.size)] # restrict to clusters >limit
     # run clustering of clusters above size limit:
     ll2 <- lapply(ll1, FUN=function(x){
-    	membership(cluster_fast_greedy(suppressWarnings(subgraph(g, x))))
+        membership(cluster_fast_greedy(
+            suppressWarnings(subgraph(g, x))
+        ))
     })
     # update global cluster labels
     for(i in names(ll2)){
@@ -83,9 +99,26 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     	cl <- newcl
     }
     if(!is.null(min.size)){
-      # merge clusters below minimum size
-    	cl <- scran:::.merge_closest_graph(g, cl, min.size=min.size)
-    }	
+        # merge clusters below minimum
+        # adapted from scran:::.merge_closest_graph()
+        oldcl <- NULL
+        while(min(table(cl))<min.size && !identical(oldcl, cl)){
+            cs <- table(cl)
+            oldcl <- cl
+            min.cs <- names(cs)[which.min(cs)]
+            other.cl <- setdiff(names(cs), min.cs)
+            mod <- sapply(other.cl, FUN=function(x){
+                cl2 <- cl
+                cl2[which(cl2==min.cs)] <- x
+                suppressWarnings(modularity(g, cl2, weights = E(g)$weight))
+            })
+            cl[which(cl==min.cs)] <- other.cl[which.max(mod)]
+            if(identical(cl,oldcl)){
+                warning("Clusters could not meet criteria.")
+                break
+            }
+        }
+    }
     if(renameClusters){
     	cl <- as.integer(as.factor(cl))
     }

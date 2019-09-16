@@ -31,3 +31,9 @@ A count matrix for artificial doublets.
 \description{
 Create expression profiles of random artificial doublets.
 }
+\examples{
+m <- t(sapply( seq(from=0, to=5, length.out=50), 
+               FUN=function(x) rpois(30,x) ) )
+doublets <- getArtificialDoublets(m, 30)
+
+}

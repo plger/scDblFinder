@@ -16,3 +16,9 @@ rank-transformed x.
 A dense rank transformation that preserves 0 and rank step size in the 
 presence of many ties.
 }
+\examples{
+m <- t(sapply( seq(from=0, to=5, length.out=30), 
+               FUN=function(x) rpois(30,x) ) )
+m2 <- rankTrans(m)
+
+}

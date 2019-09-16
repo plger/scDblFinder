@@ -44,7 +44,15 @@
 #' 
 #' @import SingleCellExperiment scran Matrix BiocParallel
 #' @importFrom dplyr bind_rows
-#' @importFrom testthat test_that expect_equal
+#' @importFrom testthat test_that expect_equal expect_that is_a
+#' 
+#' @examples
+#' library(SingleCellExperiment)
+#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#'                FUN=function(x) rpois(50,x) ) )
+#' sce <- SingleCellExperiment( list(counts=m) )
+#' sce <- scDblFinder(sce, minClusSize = 2, maxClusSize = 20)
+#' 
 #' @export
 scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, 
                          samples=NULL, minClusSize=50, maxClusSize=NULL, d=10, 
@@ -54,7 +62,12 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          verbose=is.null(samples), BPPARAM=SerialParam()){
   graph.type <- match.arg(graph.type)
   trans <- match.arg(trans)
+  expect_that(sce, is_a("SingleCellExperiment"))
+  if( !("counts" %in% assayNames(sce)) ) 
+      stop("`sce` should have an assay named 'counts'")
   if(!is.null(samples)){
+    test_that( "Samples vector matches number of cells", 
+               expect_equal(ncol(sce), length(samples)) )
     # splitting by samples
     if(length(samples)==1 && samples %in% colnames(colData(sce)))
         samples <- colData(sce)[[samples]]
@@ -79,29 +92,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
       dbr <- (0.01*ncol(sce)/1000)
   }
-  sce2 <- sce
-  if(is.null(clusters)){
-    # we first simplify the dataset and identify rough clusters
-    if(nrow(sce)>3000){
-      sce2 <- sce[order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)[1:3000],]
-    }
-    if(is.null(maxClusSize) || !is.na(maxClusSize)){
-      if(verbose) message("Overclustering...")
-      clusters <- overcluster( counts(sce2), 
-                               min.size=minClusSize, max.size=maxClusSize)
-      tt <- table(clusters)
-      if(verbose) message( length(tt), " clusters of sizes ranging from ", 
-                           min(tt)," to ", max(tt) )
-    }else{
-      # for reasons of speed, with many cells we use the fast greedy algorithm
-      clust.method <- ifelse(ncol(sce2)>=5000,"igraph","hclust")
-      if(verbose) message("Quick ", clust.method, " clustering:")
-      clusters <- scran::quickCluster( sce2, min.size=minClusSize, 
-                                       method=clust.method, use.ranks=TRUE, 
-                                       BPPARAM=BPPARAM)
-      if(verbose) print(table(clusters))
-    }
-  }
+  if(is.null(clusters)) clusters <- .getClusters(sce, maxClusSize, minClusSize)
   maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
       prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
   if(min(table(clusters)) <= maxSameDoublets){
@@ -111,8 +102,11 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
             "Consider increasing `min.sze`, or breaking down the larger ",
             "clusters (e.g. see `?overcluster`).")
   }
-  cli <- split(1:ncol(sce2), clusters)
+  cli <- split(1:ncol(sce), clusters)
   
+  if(is.null(colnames(sce2)))
+      colnames(sce2) <- paste0("cell",seq_len(ncol(sce2)))
+  sce2 <- sce
   if(nrow(sce2)>2000){
     if(verbose) message("Identifying top genes per cluster...")
     # get mean expression across clusters
@@ -191,4 +185,25 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   sce$scDblFinder.ratio <- d$ratio
   sce$scDblFinder.class <- d$classification
   sce
+}
+
+
+.getClusters <- function(sce, maxClusSize, minClusSize, ngenes=3000, verbose=TRUE){
+    # we first simplify the dataset and identify rough clusters
+    o <- order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)
+    sce <- sce[o[seq_len(min(nrow(sce),ngenes))],]
+    if(is.null(maxClusSize) || !is.na(maxClusSize)){
+        if(verbose) message("Overclustering...")
+        clusters <- overcluster( counts(sce), 
+                                 min.size=minClusSize, max.size=maxClusSize)
+    }else{
+        # for reasons of speed, with many cells we use the fast greedy algorithm
+        clust.method <- ifelse(ncol(sce)>=5000,"igraph","hclust")
+        if(verbose) message("Quick ", clust.method, " clustering:")
+        clusters <- scran::quickCluster( sce, min.size=minClusSize, 
+                                         method=clust.method, use.ranks=TRUE, 
+                                         BPPARAM=BPPARAM)
+    }
+    if(verbose) print(table(clusters))
+    clusters
 }

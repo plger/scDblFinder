@@ -34,5 +34,21 @@ uncertainty in the estimate.}
 A scaler indicating the decided threshold.
 }
 \description{
-doubletThresholding
+Sets the doublet scores threshold; typically called by 
+\code{\link[scDblFinder]{scDblFinder}}.
+}
+\examples{
+# random data
+m <- t(sapply( seq(from=0, to=5, length.out=50), 
+               FUN=function(x) rpois(30,x) ) )
+# generate doublets and merge them with real cells
+doublets <- getArtificialDoublets(m, 30)
+celltypes <- rep(c("real","artificial"), c(ncol(m), ncol(doublets)))
+m <- cbind(m,doublets)
+# dummy doublet scores:
+scores <- abs(jitter(1:ncol(m),amount=10))
+scores <- scores/max(scores)
+# get threshold
+doubletThresholding(scores, celltypes)
+
 }

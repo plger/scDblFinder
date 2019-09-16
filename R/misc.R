@@ -6,6 +6,12 @@
 #' @param x A matrix, with samples/cells as columns and genes/features as rows.
 #'
 #' @return rank-transformed x.
+#' 
+#' @examples
+#' m <- t(sapply( seq(from=0, to=5, length.out=30), 
+#'                FUN=function(x) rpois(30,x) ) )
+#' m2 <- rankTrans(m)
+#' 
 #' @importFrom data.table frank
 #' @export
 rankTrans <- function(x){
@@ -24,6 +30,12 @@ rankTrans <- function(x){
 #'
 #' @return a ggplot
 #' @import ggplot2
+#' 
+#' @examples
+#' myscores <- list( test=1:10 )
+#' truth <- sample(c(TRUE,FALSE), 10, TRUE)
+#' plotROCs(  myscores, truth )
+#' 
 #' @export
 plotROCs <- function(scores, truth){
   truth <- as.integer(as.factor(truth))-1
@@ -58,26 +70,26 @@ plotROCs <- function(scores, truth){
 
 # creates within-cluster meta-cells from a count matrix
 .getMetaCells <- function(x, clusters, n.meta.cells=20, meta.cell.size=20){
-  cli <- split(1:length(clusters), clusters)
+  cli <- split(seq_along(clusters), clusters)
   meta <- unlist(lapply(cli, FUN=function(x){
-    lapply(1:n.meta.cells, FUN=function(y){
+    lapply(seq_len(n.meta.cells), FUN=function(y){
       sample(x,min(ceiling(0.6*length(x)),meta.cell.size),replace=FALSE)
     })
   }), recursive=FALSE)
   meta <- sapply(meta, FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
-  colnames(meta) <- paste0("metacell.",1:ncol(meta))
+  colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
   meta
 }
 
 #' scdsWrapper
 #' 
 #' A wrapper around scds's hybrid score, used for comparison (requires the 
-#' `scds` package to be installed)
+#' `scds` package to be installed). This function is not exported, and is there
+#' solely as a record of the specific way the comparisons where made.
 #'
 #' @param sce An object of class `SingleCellExperiment`
 #'
 #' @return The updated `sce` object, with the colData field `hybrid_score`
-#' @export
 scdsWrapper <- function(sce){
   require(scds)
   sce <- scds::cxds(sce)
@@ -90,14 +102,14 @@ scdsWrapper <- function(sce){
 #'
 #' A wrapper around \url{https://github.com/chris-mcginnis-ucsf/DoubletFinder}[DoubletFinder],
 #' used for comparison. Requires the `DoubletFinder` and `Seurat` version 3 
-#' packages to be installed.
+#' packages to be installed. This function is not exported, and is there
+#' solely as a record of the specific way the comparisons where made.
 #' 
 #' @param sce An object of class `SingleCellExperiment`
 #' @param doublet.formation.rate The expected doublet rate, default 0.025
 #' @param dims The dimensions ot use, default 1:10
 #'
 #' @return The updated `sce` object, with the colData field `DF.score`
-#' @export
 dblFinderWrapper <- function(sce, doublet.formation.rate=0.025, dims=1:10){
   se <- CreateSeuratObject(counts(sce))    
   se <- NormalizeData(se, verbose=FALSE)
@@ -110,7 +122,9 @@ dblFinderWrapper <- function(sce, doublet.formation.rate=0.025, dims=1:10){
   sweep.res <- paramSweep_v3(se, PCs=dims)
   
   bcmvn <- find.pK(summarizeSweep(sweep.res, GT=FALSE))
-  pK <- as.numeric(as.character(bcmvn[order(bcmvn$BCmetric,decreasing=T)[1],2]))
+  pK <- as.numeric(as.character(
+        bcmvn[order(bcmvn$BCmetric,decreasing=TRUE)[1],2]
+      ))
   message("pK=",pK)
   
   ## Homotypic Doublet Proportion Estimate
