@@ -1,7 +1,7 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 0.99.1
+Version: 0.99.2
 Depends: R (>= 3.6)
 Authors@R: person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218"))
 Description: Efficient identification of doublets in single-cell RNAseq directly from counts using overclustering-based generation of artifical doublets.
