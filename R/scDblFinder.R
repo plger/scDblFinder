@@ -104,9 +104,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   }
   cli <- split(1:ncol(sce), clusters)
   
+  sce2 <- sce
   if(is.null(colnames(sce2)))
       colnames(sce2) <- paste0("cell",seq_len(ncol(sce2)))
-  sce2 <- sce
   if(nrow(sce2)>2000){
     if(verbose) message("Identifying top genes per cluster...")
     # get mean expression across clusters
