@@ -49,6 +49,6 @@ m <- cbind(m,doublets)
 scores <- abs(jitter(1:ncol(m),amount=10))
 scores <- scores/max(scores)
 # get threshold
-doubletThresholding(scores, celltypes)
+doubletThresholding(scores, celltypes, do.plot=FALSE)
 
 }
