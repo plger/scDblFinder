@@ -65,7 +65,7 @@ overcluster <- function( e, rtrans=c("rankTrans","scran","none"), min.size=50,
 #' m <- t(sapply( seq(from=0, to=5, length.out=50), 
 #'                FUN=function(x) rpois(50,x) ) )
 #' g <- scran::buildSNNGraph(rankTrans(m))
-#' table(resplitCluster(g, min.size=2, max.size=20))
+#' table(resplitClusters(g, min.size=2, max.size=20))
 #' 
 #' @import igraph
 #' @export
