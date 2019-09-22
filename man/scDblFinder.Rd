@@ -74,6 +74,6 @@ library(SingleCellExperiment)
 m <- t(sapply( seq(from=0, to=5, length.out=50), 
                FUN=function(x) rpois(50,x) ) )
 sce <- SingleCellExperiment( list(counts=m) )
-sce <- scDblFinder(sce, minClusSize = 2, maxClusSize = 20)
+sce <- scDblFinder(sce, minClusSize=2, maxClusSize=20, verbose=FALSE)
 
 }
