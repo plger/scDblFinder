@@ -74,7 +74,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     if(!is.null(max.size) && !is.null(min.size) && max.size<min.size) 
         stop("max.size and min.size are incompatible")
     if(is.null(cl)){
-      # no initial clustering provided - run one
+        ## no initial clustering provided - run one
         cl <- membership(cluster_fast_greedy(g))
     }
     ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
@@ -85,13 +85,13 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
             suppressWarnings(subgraph(g, x))
         ))
     })
-    # update global cluster labels
+    ## update global cluster labels
     for(i in names(ll2)){
         if(length(unique(ll2[[i]]))>1){
             cl[ll1[[i]]] <- max(cl)+ll2[[i]]
         }
     }
-    # repeat until no more improvement or no cluster is above limit
+    ## repeat until no more improvement or no cluster is above limit
     while(iterative && max(table(cl))>max.size){
         newcl <- resplitClusters( g, cl, max.size=max.size, min.size=NULL, 
                                   renameClusters=FALSE, iterative=FALSE )
@@ -99,8 +99,8 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         cl <- newcl
     }
     if(!is.null(min.size)){
-        # merge clusters below minimum
-        # adapted from scran:::.merge_closest_graph()
+        ## merge clusters below minimum
+        ## adapted from scran:::.merge_closest_graph()
         oldcl <- NULL
         while(min(table(cl))<min.size && !identical(oldcl, cl)){
             cs <- table(cl)
