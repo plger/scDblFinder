@@ -51,13 +51,14 @@
 #' m <- t(sapply( seq(from=0, to=5, length.out=50), 
 #'                FUN=function(x) rpois(50,x) ) )
 #' sce <- SingleCellExperiment( list(counts=m) )
-#' sce <- scDblFinder(sce, minClusSize=2, maxClusSize=20, verbose=FALSE)
+#' sce <- scDblFinder(sce, verbose=FALSE)
+#' table(sce$scDblFinder.class)
 #' 
 #' @export
 scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, 
-                         samples=NULL, minClusSize=50, maxClusSize=NULL, d=10, 
-                         dbr=NULL, dbr.sd=0.015, k=5, graph.type=c("knn","snn"), 
-                         fullTable=FALSE, 
+                         samples=NULL, minClusSize=min(50,ncol(sce)/5), 
+                         maxClusSize=NULL, d=10, dbr=NULL, dbr.sd=0.015, k=5, 
+                         graph.type=c("knn","snn"), fullTable=FALSE, 
                          trans=c("scran", "rankTrans", "none", "lognorm"), 
                          verbose=is.null(samples), BPPARAM=SerialParam()){
   graph.type <- match.arg(graph.type)
@@ -88,6 +89,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
   }
+  if(ncol(sce)<100) warning("scDblFinder might not work well with very low 
+numbers of cells.")
+
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
       dbr <- (0.01*ncol(sce)/1000)
@@ -104,9 +108,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   }
   cli <- split(1:ncol(sce), clusters)
   
+  if(is.null(colnames(sce)))
+      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   sce2 <- sce
-  if(is.null(colnames(sce2)))
-      colnames(sce2) <- paste0("cell",seq_len(ncol(sce2)))
   if(nrow(sce2)>2000){
     if(verbose) message("Identifying top genes per cluster...")
     # get mean expression across clusters

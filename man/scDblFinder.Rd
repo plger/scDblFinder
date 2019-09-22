@@ -5,10 +5,11 @@
 \title{scDblFinder}
 \usage{
 scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
-  samples = NULL, minClusSize = 50, maxClusSize = NULL, d = 10,
-  dbr = NULL, dbr.sd = 0.015, k = 5, graph.type = c("knn", "snn"),
-  fullTable = FALSE, trans = c("scran", "rankTrans", "none",
-  "lognorm"), verbose = is.null(samples), BPPARAM = SerialParam())
+  samples = NULL, minClusSize = min(50, ncol(sce)/5),
+  maxClusSize = NULL, d = 10, dbr = NULL, dbr.sd = 0.015, k = 5,
+  graph.type = c("knn", "snn"), fullTable = FALSE, trans = c("scran",
+  "rankTrans", "none", "lognorm"), verbose = is.null(samples),
+  BPPARAM = SerialParam())
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
@@ -74,6 +75,7 @@ library(SingleCellExperiment)
 m <- t(sapply( seq(from=0, to=5, length.out=50), 
                FUN=function(x) rpois(50,x) ) )
 sce <- SingleCellExperiment( list(counts=m) )
-sce <- scDblFinder(sce, minClusSize=2, maxClusSize=20, verbose=FALSE)
+sce <- scDblFinder(sce, verbose=FALSE)
+table(sce$scDblFinder.class)
 
 }

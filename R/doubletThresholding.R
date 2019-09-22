@@ -57,8 +57,10 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
   f1 <- ecdf(scores[which(celltypes!="artificial")])
   f2 <- ecdf(scores[which(celltypes=="artificial")])
   # accuracy functions
-  accfn <- function(x){ (1-f1(x))+max(0,f2(x)-prop.fullyRandom*homotypic.prop) }
-  accfn2 <- function(x){ (1-f1(x))+f2(x) }
+  accfn <- function(x){ 
+      min(1,(1-f1(x))+max(0,f2(x)-prop.fullyRandom*homotypic.prop))
+  }
+  accfn2 <- function(x){ min(1,(1-f1(x))+f2(x)) }
   # deviation from expected doublet proportion
   dbr.dev <- function(x){
     p <- sum(scores>=x & celltypes=="real")/sum(celltypes=="real")
@@ -73,8 +75,9 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
     x <- 1:99/100
     acc <- sapply(x, accfn)
     dev <- sapply(x, dbr.dev)
+    ymax <- min(1,max(c(acc,dev)))
     plot(x, acc, type="l", lty=ifelse(is.null(clusters),1,2), col="blue", 
-         ylim=c(0,max(c(acc,dev))), lwd=2, main="Thresholding", 
+         ylim=c(0,ymax), lwd=2, main="Thresholding", 
          ylab="Proportion", xlab="Ratio of artificial doublets in neighborhood")
     if(!is.null(clusters)) lines(x, sapply(x, accfn2), col="blue", lwd=2)
     lines(x, dev, col="red", lwd=2)
