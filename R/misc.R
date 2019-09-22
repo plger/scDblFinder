@@ -13,6 +13,7 @@
 #' m2 <- rankTrans(m)
 #' 
 #' @importFrom data.table frank
+#' @importFrom matrixStats colMaxs
 #' @export
 rankTrans <- function(x){
   y <- apply(x,2,ties.method="dense",FUN=frank)-1
