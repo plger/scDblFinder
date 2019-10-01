@@ -7,8 +7,9 @@
 scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
   samples = NULL, minClusSize = min(50, ncol(sce)/5),
   maxClusSize = NULL, d = 10, dbr = NULL, dbr.sd = 0.015, k = 5,
-  graph.type = c("knn", "snn"), fullTable = FALSE, trans = c("scran",
-  "rankTrans", "none", "lognorm"), verbose = is.null(samples),
+  graph.type = c("knn", "snn"), fullTable = FALSE,
+  trans = c("rankTrans", "scran", "none", "lognorm"),
+  verbose = is.null(samples), hybridScore = TRUE,
   BPPARAM = SerialParam())
 }
 \arguments{
@@ -21,12 +22,12 @@ create. If NULL, will be the maximum of the number of cells or
 \item{clusters}{The optional cluster assignments (if ommitted, will run 
 `quickCluster`). This is used to make doublets more efficiently.}
 
-\item{samples}{A vector of the same length as cells (or the name of a column of 
-`colData(sce)`), indicating to which sample each cell belongs. Here, a sample
-is understood as being processed independently. If ommitted, doublets will be
-searched for with all cells together. If given, doublets will be searched for 
-independently for each sample, which is preferable if they represent different
-captures.}
+\item{samples}{A vector of the same length as cells (or the name of a column 
+of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
+sample is understood as being processed independently. If ommitted, doublets 
+will be searched for with all cells together. If given, doublets will be 
+searched for independently for each sample, which is preferable if they 
+represent different captures.}
 
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
 (default 50); ignored if `clusters` is given.}
@@ -55,13 +56,17 @@ default, `scran::scaledColRanks`, gave the best result in our hands.}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
+\item{hybridScore}{Logical; whether to combine similarity to artificial 
+doublets with information about library size and detection rate (default)}
+
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
 `samples!=NULL`); otherwise passed to scran (which doesn't work so well)...}
 }
 \value{
 The `sce` object with the following additional colData columns: 
 `scDblFinder.neighbors` (number of neighbors considered), `scDblFinder.ratio`
-(ratio of aritifical doublets among neighbors), and `scDblFinder.class` 
+(ratio of aritifical doublets among neighbors), `scDblFinder.score` (an 
+integrated doublet score, if `hybridScore=TRUE`), and `scDblFinder.class` 
 (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
 `fullTable=TRUE`, a data.frame will be returned with information about real 
 and artificial cells.

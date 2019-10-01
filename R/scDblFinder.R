@@ -9,12 +9,12 @@
 #' `3*nbClusters^2`.
 #' @param clusters The optional cluster assignments (if ommitted, will run 
 #' `quickCluster`). This is used to make doublets more efficiently.
-#' @param samples A vector of the same length as cells (or the name of a column of 
-#' `colData(sce)`), indicating to which sample each cell belongs. Here, a sample
-#' is understood as being processed independently. If ommitted, doublets will be
-#' searched for with all cells together. If given, doublets will be searched for 
-#' independently for each sample, which is preferable if they represent different
-#' captures.
+#' @param samples A vector of the same length as cells (or the name of a column 
+#' of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
+#' sample is understood as being processed independently. If ommitted, doublets 
+#' will be searched for with all cells together. If given, doublets will be 
+#' searched for independently for each sample, which is preferable if they 
+#' represent different captures.
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
 #' (default 50); ignored if `clusters` is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
@@ -32,18 +32,22 @@
 #' @param trans The transformation to use before computing the KNN network. The 
 #' default, `scran::scaledColRanks`, gave the best result in our hands.
 #' @param verbose Logical; whether to print messages and the thresholding plot.
+#' @param hybridScore Logical; whether to combine similarity to artificial 
+#' doublets with information about library size and detection rate (default)
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
 #' `samples!=NULL`); otherwise passed to scran (which doesn't work so well)...
 #'
 #' @return The `sce` object with the following additional colData columns: 
 #' `scDblFinder.neighbors` (number of neighbors considered), `scDblFinder.ratio`
-#' (ratio of aritifical doublets among neighbors), and `scDblFinder.class` 
+#' (ratio of aritifical doublets among neighbors), `scDblFinder.score` (an 
+#' integrated doublet score, if `hybridScore=TRUE`), and `scDblFinder.class` 
 #' (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
 #' `fullTable=TRUE`, a data.frame will be returned with information about real 
 #' and artificial cells.
 #' 
 #' @import SingleCellExperiment scran Matrix BiocParallel
 #' @importFrom dplyr bind_rows
+#' @importFrom randomForest randomForest
 #' @importFrom testthat test_that expect_equal expect_that is_a
 #' 
 #' @examples
@@ -59,8 +63,10 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          samples=NULL, minClusSize=min(50,ncol(sce)/5), 
                          maxClusSize=NULL, d=10, dbr=NULL, dbr.sd=0.015, k=5, 
                          graph.type=c("knn","snn"), fullTable=FALSE, 
-                         trans=c("scran", "rankTrans", "none", "lognorm"), 
-                         verbose=is.null(samples), BPPARAM=SerialParam()){
+                         trans=c("rankTrans", "scran", "none", "lognorm"), 
+                         verbose=is.null(samples), hybridScore=TRUE,
+                         BPPARAM=SerialParam()
+                        ){
   graph.type <- match.arg(graph.type)
   trans <- match.arg(trans)
   expect_that(sce, is_a("SingleCellExperiment"))
@@ -110,42 +116,51 @@ numbers of cells.")
   
   if(is.null(colnames(sce)))
       colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
-  sce2 <- sce
-  if(nrow(sce2)>2000){
-    if(verbose) message("Identifying top genes per cluster...")
-    # get mean expression across clusters
-    cl.means <- sapply(cli, FUN=function(x) Matrix::rowMeans(counts(sce2[,x])) )
-    # grab the top genes in each cluster
-    g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
-      order(x, decreasing=TRUE)[1:1500]
-    })))
-    sce2 <- sce2[g,]
-  }
-  
+
   # get the artificial doublets
   if(is.null(artificialDoublets)){
-    artificialDoublets <- max( ncol(sce2), 
+    artificialDoublets <- max( ncol(sce), 
                                min(40000, 5*length(unique(clusters))^2))
   }
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
-    ad <- getArtificialDoublets( counts(sce2), n=artificialDoublets, 
+    ad <- getArtificialDoublets( counts(sce), n=artificialDoublets, 
                                  clusters=clusters )
   }else{
-    ad <- suppressWarnings( getArtificialDoublets(counts(sce2), 
+    ad <- suppressWarnings( getArtificialDoublets(counts(sce), 
                                                   n=artificialDoublets, 
                                                   clusters=clusters ) )
   }
   
+  # evaluate by library size and non-zero features
+  lsizes <- c(colSums(counts(sce)),colSums(ad))
+  nfeatures <- c(colSums(counts(sce)>0), colSums(ad>0))
+  
+  sce2 <- sce
+  if(nrow(sce2)>2000){
+      if(verbose) message("Identifying top genes per cluster...")
+      # get mean expression across clusters
+      cl.means <- sapply(cli, FUN=function(x) Matrix::rowMeans(counts(sce2[,x])) )
+      # grab the top genes in each cluster
+      g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
+          order(x, decreasing=TRUE)[1:1500]
+      })))
+      sce2 <- sce2[g,]
+  }
+  ad <- ad[row.names(sce2),]
+  e <- cbind(counts(sce2), ad)
+
   # build graph and evaluate neigbhorhood
   if(verbose) message("Building ", toupper(graph.type), " graph...")
   qr <- switch(trans,
-               scran=scran::scaledColRanks(cbind(counts(sce2), ad)),
-               rankTrans=rankTrans(cbind(counts(sce2), ad)),
-               none=cbind(counts(sce2), ad),
-               norm=logcounts(scater::normalize(SingleCellExperiment(
-                   list(counts=cbind(counts(sce2),ad)))))
+               scran=scran::scaledColRanks(e),
+               rankTrans=rankTrans(e),
+               none=e,
+               norm=logcounts(scater::normalize(
+                   SingleCellExperiment(list(counts=e)) ))
                )
+  rm(e)
+  
   sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
   ad <- ad[,intersect(colnames(ad),colnames(qr))]
   if(graph.type=="knn"){
@@ -171,14 +186,24 @@ numbers of cells.")
   colnames(d) <- c("nb.neighbors", "artificial.neighbors")
   d$ratio <- d[,2]/d[,1]
   d$enrichment <- d[,2]/(d[,1]*ncol(ad)/c(ncol(ad)+ncol(sce2)))
+  d$lsizes <- lsizes
+  d$nfeatures <- nfeatures
   d$type <- ctype
 
+  if(hybridScore){
+      rf <- randomForest(x=d[,-ncol(d)],y=as.factor(d$type), ntree=300, mtry=3)
+      d$score <- rf$votes[,"artificial"]
+      fscores <- d$score
+  }else{
+      fscores <- d$ratio
+  }
+
   if(verbose) message("Finding threshold...")
-  th <- doubletThresholding( d$ratio, d$type, clusters=clusters, dbr=dbr, 
+  th <- doubletThresholding( fscores, d$type, clusters=clusters, dbr=dbr, 
                              dbr.sd=dbr.sd, do.plot=verbose )
   if(verbose) message("Threshold found:", round(th,3))
 
-  d$classification <- ifelse(d$ratio >= th, "doublet", "singlet")
+  d$classification <- ifelse(fscores >= th, "doublet", "singlet")
   if(fullTable) return(d)
   
   d <- d[seq_len(ncol(sce2)),]
@@ -187,6 +212,7 @@ numbers of cells.")
   d <- d[colnames(sce),]
   sce$scDblFinder.neighbors <- d$nb.neighbors
   sce$scDblFinder.ratio <- d$ratio
+  if(hybridScore) sce$scDblFinder.score <- d$score
   sce$scDblFinder.class <- d$classification
   sce
 }
