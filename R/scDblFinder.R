@@ -116,6 +116,8 @@ numbers of cells.")
   
   if(is.null(colnames(sce)))
       colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(is.null(row.names(sce)))
+      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
 
   # get the artificial doublets
   if(is.null(artificialDoublets)){
@@ -148,6 +150,8 @@ numbers of cells.")
       sce2 <- sce2[g,]
   }
   ad <- ad[row.names(sce2),]
+  print(dim(ad))
+  print(dim(sce2))
   e <- cbind(counts(sce2), ad)
 
   # build graph and evaluate neigbhorhood
