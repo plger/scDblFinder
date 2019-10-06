@@ -19,12 +19,12 @@ scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
 create. If NULL, will be the maximum of the number of cells or 
 `3*nbClusters^2`.}
 
-\item{clusters}{The optional cluster assignments (if ommitted, will run 
+\item{clusters}{The optional cluster assignments (if omitted, will run 
 `quickCluster`). This is used to make doublets more efficiently.}
 
 \item{samples}{A vector of the same length as cells (or the name of a column 
 of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
-sample is understood as being processed independently. If ommitted, doublets 
+sample is understood as being processed independently. If omitted, doublets 
 will be searched for with all cells together. If given, doublets will be 
 searched for independently for each sample, which is preferable if they 
 represent different captures.}
