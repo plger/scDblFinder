@@ -7,11 +7,11 @@
 #' @param artificialDoublets The approximate number of artificial doublets to 
 #' create. If NULL, will be the maximum of the number of cells or 
 #' `3*nbClusters^2`.
-#' @param clusters The optional cluster assignments (if ommitted, will run 
+#' @param clusters The optional cluster assignments (if omitted, will run 
 #' `quickCluster`). This is used to make doublets more efficiently.
 #' @param samples A vector of the same length as cells (or the name of a column 
 #' of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
-#' sample is understood as being processed independently. If ommitted, doublets 
+#' sample is understood as being processed independently. If omitted, doublets 
 #' will be searched for with all cells together. If given, doublets will be 
 #' searched for independently for each sample, which is preferable if they 
 #' represent different captures.
@@ -73,8 +73,6 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   if( !("counts" %in% assayNames(sce)) ) 
       stop("`sce` should have an assay named 'counts'")
   if(!is.null(samples)){
-    test_that( "Samples vector matches number of cells", 
-               expect_equal(ncol(sce), length(samples)) )
     # splitting by samples
     if(length(samples)==1 && samples %in% colnames(colData(sce)))
         samples <- colData(sce)[[samples]]
@@ -103,6 +101,7 @@ numbers of cells.")
       dbr <- (0.01*ncol(sce)/1000)
   }
   if(is.null(clusters)) clusters <- .getClusters(sce, maxClusSize, minClusSize)
+  if(length(unique(clusters)) == 1) stop("Only one cluster generated")
   maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
       prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
   if(min(table(clusters)) <= maxSameDoublets){

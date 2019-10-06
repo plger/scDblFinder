@@ -70,7 +70,7 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     ad.m <- cbind(ad.m, m2)
   }
   
-  if(meta.triplets){
+  if(meta.triplets && length(unique(clusters)) >= 3){
     # create triplets from meta cells:
     if(length(unique(clusters))^3 > n){
       tt <- table(clusters)
@@ -87,7 +87,7 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     ca <- expand.grid(i, i, i)
     ca <- ca[apply(ca,1,FUN=function(x){ length(unique(x)) })==3,]
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]+meta[,ca[,3]]
-    colnames(m2) <- paste0("arificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
+    colnames(m2) <- paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
   }
   ad.m
