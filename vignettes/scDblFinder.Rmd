@@ -70,7 +70,7 @@ you might also consider multithreading it using the `BPPARAM` parameter. For exa
 ```{r, eval=FALSE}
 library(BiocParallel)
 sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
-table(sce$scDblFinder.score)
+table(sce$scDblFinder.class)
 ```
 
 
