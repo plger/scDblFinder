@@ -87,8 +87,11 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   clusters=clusters, minClusSize=minClusSize, 
                                   maxClusSize=maxClusSize, d=d, dbr=dbr, 
                                   dbr.sd=dbr.sd, k=k, graph.type=graph.type, 
-                                  trans=trans, verbose=FALSE) )
-        as.data.frame(x[,paste0("scDblFinder.",c("neighbors","ratio","class"))])
+                                  trans=trans, verbose=FALSE, 
+				  hybridScore=hybridScore) )
+	fields <- paste0("scDblFinder.",c("neighbors","ratio","class"))
+	if(hybridScore) fields <- c(fields, "scDblFinder.score")
+        as.data.frame(x[,fields])
     }))
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
