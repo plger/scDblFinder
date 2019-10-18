@@ -36,7 +36,7 @@ This will add the following columns to the colData of `sce`:
 
 * `sce$scDblFinder.neighbors` : the number of neighbors considered
 * `sce$scDblFinder.ratio` :  the proportion of artificial doublets among the neighborhood (the higher, the more chances that the cell is a doublet)
-* `sce$scDblFinder.score` :  a doublet score integration the ratio in a probability of the cell being a doublet
+* `sce$scDblFinder.score` :  a doublet score integrating the ratio in a probability of the cell being a doublet
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
 ### Multiple samples
@@ -50,7 +50,7 @@ you might also consider multithreading it using the `BPPARAM` parameter. For exa
 ```{r, eval=FALSE}
 library(BiocParallel)
 sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
-table(sce$scDblFinder.score)
+table(sce$scDblFinder.class)
 ```
 
 ### Parameters
