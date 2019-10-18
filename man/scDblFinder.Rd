@@ -39,8 +39,9 @@ by `overcluster`.}
 
 \item{d}{The number of dimensions used to build the KNN network (default 10)}
 
-\item{dbr}{The expected doublet rate. By default this is assumed to be 
-0.1*nbCells percent, which is appropriate for 10x datasets.}
+\item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
+per thousand cells captured (so 4\% among 4000 thousand cells), which is 
+appropriate for 10x datasets.}
 
 \item{dbr.sd}{The standard deviation of the doublet rate, defaults to 0.015.}
 

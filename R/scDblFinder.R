@@ -22,8 +22,9 @@
 #' otherwise via `overcluster`. If missing, the default value will be estimated 
 #' by `overcluster`.
 #' @param d The number of dimensions used to build the KNN network (default 10)
-#' @param dbr The expected doublet rate. By default this is assumed to be 
-#' 0.1*nbCells percent, which is appropriate for 10x datasets.
+#' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
+#' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
+#' appropriate for 10x datasets.
 #' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
 #' @param k Number of nearest neighbors (for KNN graph).
 #' @param graph.type Either 'snn' or 'knn' (default).
@@ -48,7 +49,6 @@
 #' @import SingleCellExperiment scran Matrix BiocParallel
 #' @importFrom dplyr bind_rows
 #' @importFrom randomForest randomForest
-#' @importFrom testthat test_that expect_equal expect_that is_a
 #' 
 #' @examples
 #' library(SingleCellExperiment)
@@ -69,15 +69,15 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                         ){
   graph.type <- match.arg(graph.type)
   trans <- match.arg(trans)
-  expect_that(sce, is_a("SingleCellExperiment"))
+  stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
       stop("`sce` should have an assay named 'counts'")
   if(!is.null(samples)){
     # splitting by samples
     if(length(samples)==1 && samples %in% colnames(colData(sce)))
         samples <- colData(sce)[[samples]]
-    test_that( "Samples vector matches number of cells", 
-               expect_equal(ncol(sce), length(samples)) )
+    if(ncol(sce)!=length(samples))
+        stop("Samples vector matches number of cells")
     if(fullTable) warning("`fullTable` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
     cs <- split(seq_along(samples), samples, drop=TRUE)
@@ -152,8 +152,6 @@ numbers of cells.")
       sce2 <- sce2[g,]
   }
   ad <- ad[row.names(sce2),]
-  print(dim(ad))
-  print(dim(sce2))
   e <- cbind(counts(sce2), ad)
 
   # build graph and evaluate neigbhorhood
