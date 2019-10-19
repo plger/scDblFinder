@@ -89,7 +89,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   maxClusSize=maxClusSize, d=d, dbr=dbr, 
                                   dbr.sd=dbr.sd, k=k, graph.type=graph.type, 
                                   trans=trans, verbose=FALSE, 
-				  hybridScore=hybridScore) )
+				                  hybridScore=hybridScore) )
 	fields <- paste0("scDblFinder.",c("neighbors","ratio","class"))
 	if(hybridScore) fields <- c(fields, "scDblFinder.score")
         as.data.frame(x[,fields])
@@ -104,7 +104,8 @@ numbers of cells.")
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
       dbr <- (0.01*ncol(sce)/1000)
   }
-  if(is.null(clusters)) clusters <- .getClusters(sce, maxClusSize, minClusSize)
+  if(is.null(clusters)) clusters <- .getClusters( sce, maxClusSize, minClusSize, 
+                                                  BPPARAM=BPPARAM)
   if(length(unique(clusters)) == 1) stop("Only one cluster generated")
   maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
       prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
@@ -223,7 +224,9 @@ numbers of cells.")
 }
 
 
-.getClusters <- function(sce, maxClusSize, minClusSize, ngenes=3000, verbose=TRUE){
+#' @import SingleCellExperiment scran Matrix BiocParallel
+.getClusters <- function(sce, maxClusSize, minClusSize, ngenes=3000, 
+                         verbose=TRUE, BPPARAM=SerialParam()){
     # we first simplify the dataset and identify rough clusters
     o <- order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)
     sce <- sce[o[seq_len(min(nrow(sce),ngenes))],]
