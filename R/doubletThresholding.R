@@ -35,6 +35,8 @@
 #' # get threshold
 #' doubletThresholding(scores, celltypes, do.plot=FALSE)
 #' 
+#' @importFrom stats pcauchy optimize ecdf
+#' @importFrom graphics abline legend lines plot
 #' @export
 doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025, 
                                 dbr.sd=0.02, prop.fullyRandom=0, do.plot=TRUE){

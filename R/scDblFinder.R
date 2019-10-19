@@ -49,6 +49,7 @@
 #' @import SingleCellExperiment scran Matrix BiocParallel
 #' @importFrom dplyr bind_rows
 #' @importFrom randomForest randomForest
+#' @importFrom methods is
 #' 
 #' @examples
 #' library(SingleCellExperiment)
