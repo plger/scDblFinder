@@ -1,11 +1,11 @@
 #' overcluster
 #'
 #' This function deliberately overclusters based on the desired range of cluster
-#' size. It first calculates a SNN network viar `scran::buildSNNGraph`, then runs 
-#' `igraph::cluster_fast_greedy` until no cluster is above the size limits, and 
-#' merges clusters that are too small. By default, `rankTrans` is used on the 
-#' counts before, because it tends to produce over-clustering influenced by 
-#' library size, which happens to be desirable for producing artificial doublets.
+#' size. It first calculates a SNN network viar `scran::buildSNNGraph`, then 
+#' runs `igraph::cluster_fast_greedy` until no cluster is above the size limits,
+#'  and merges clusters that are too small. By default, `rankTrans` is used on 
+#'  the counts before, because it tends to produce over-clustering influenced by 
+#' library size, which is desirable for producing artificial doublets.
 #'
 #' @param e A numeric matrix, with entities (e.g. cells) as columns and features
 #'  (e.g. genes) as rows.
@@ -78,7 +78,8 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         cl <- membership(cluster_fast_greedy(g))
     }
     ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
-    ll1 <- ll1[which(sapply(ll1,length)>max.size)] # restrict to clusters >limit
+    # restrict to clusters >limit
+    ll1 <- ll1[which(vapply(ll1,FUN.VALUE=integer(1),FUN=length)>max.size)]
     # run clustering of clusters above size limit:
     ll2 <- lapply(ll1, FUN=function(x){
         membership(cluster_fast_greedy(
@@ -107,7 +108,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
             oldcl <- cl
             min.cs <- names(cs)[which.min(cs)]
             other.cl <- setdiff(names(cs), min.cs)
-            mod <- sapply(other.cl, FUN=function(x){
+            mod <- vapply(other.cl, FUN.VALUE=double(1), FUN=function(x){
                 cl2 <- cl
                 cl2[which(cl2==min.cs)] <- x
                 suppressWarnings(modularity(g, cl2, weights = E(g)$weight))

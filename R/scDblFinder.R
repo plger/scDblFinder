@@ -18,9 +18,9 @@
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
 #' (default 50); ignored if `clusters` is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
-#' `clusters` is given. If NA, clustering will be performed using `quickCluster`,
-#' otherwise via `overcluster`. If missing, the default value will be estimated 
-#' by `overcluster`.
+#' `clusters` is given. If NA, clustering will be performed using 
+#' `quickCluster`, otherwise via `overcluster`. If missing, the default value 
+#' will be estimated by `overcluster`.
 #' @param d The number of dimensions used to build the KNN network (default 10)
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
@@ -28,8 +28,8 @@
 #' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
 #' @param k Number of nearest neighbors (for KNN graph).
 #' @param graph.type Either 'snn' or 'knn' (default).
-#' @param fullTable Logical; whether to return the full table including artificial 
-#' doublets (default FALSE), rather than the table for real cells only.
+#' @param fullTable Logical; whether to return the full table including 
+#' artificial doublets, rather than the table for real cells only (default).
 #' @param trans The transformation to use before computing the KNN network. The 
 #' default, `scran::scaledColRanks`, gave the best result in our hands.
 #' @param verbose Logical; whether to print messages and the thresholding plot.
@@ -47,6 +47,7 @@
 #' and artificial cells.
 #' 
 #' @import SingleCellExperiment scran Matrix BiocParallel
+#' @importFrom SummarizedExperiment colData<- assayNames
 #' @importFrom dplyr bind_rows
 #' @importFrom randomForest randomForest
 #' @importFrom methods is
@@ -116,7 +117,7 @@ numbers of cells.")
             "Consider increasing `min.sze`, or breaking down the larger ",
             "clusters (e.g. see `?overcluster`).")
   }
-  cli <- split(1:ncol(sce), clusters)
+  cli <- split(seq_len(ncol(sce)), clusters)
   
   if(is.null(colnames(sce)))
       colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
@@ -146,7 +147,9 @@ numbers of cells.")
   if(nrow(sce2)>2000){
       if(verbose) message("Identifying top genes per cluster...")
       # get mean expression across clusters
-      cl.means <- sapply(cli, FUN=function(x) Matrix::rowMeans(counts(sce2[,x])) )
+      cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce2)), FUN=function(x){
+        Matrix::rowMeans(counts(sce2)[,x,drop=FALSE])
+      })
       # grab the top genes in each cluster
       g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
           order(x, decreasing=TRUE)[1:1500]
@@ -182,10 +185,11 @@ numbers of cells.")
   if(verbose) message("Evaluating cell neighborhoods...")
   graph <- igraph::get.adjlist(graph)
   
-  d <- as.data.frame(t(sapply(graph, FUN=function(x){
+  d <- vapply(graph, FUN.VALUE=integer(2), FUN=function(x){
     x <- as.numeric(x)
-    c(length(x), sum(ctype[x]=="artificial"))
-  })))
+    as.integer(c(length(x), sum(ctype[x]=="artificial")))
+  })
+  d <- as.data.frame(t(d))
 
   rm(graph)
   

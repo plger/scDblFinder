@@ -75,15 +75,16 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
   if(do.plot){
     # we plot the thresholding data
     x <- 1:99/100
-    acc <- sapply(x, accfn)
-    dev <- sapply(x, dbr.dev)
+    acc <- vapply(x, FUN.VALUE=double(1), FUN=accfn)
+    dev <- vapply(x, FUN.VALUE=double(1), FUN=dbr.dev)
     ymax <- min(1,max(c(acc,dev)))
     plot(x, acc, type="l", lty=ifelse(is.null(clusters),1,2), col="blue", 
          ylim=c(0,ymax), lwd=2, main="Thresholding", 
          ylab="Proportion", xlab="Ratio of artificial doublets in neighborhood")
-    if(!is.null(clusters)) lines(x, sapply(x, accfn2), col="blue", lwd=2)
+    if(!is.null(clusters))
+      lines(x, vapply(x, FUN.VALUE=double(1), FUN=accfn2), col="blue", lwd=2)
     lines(x, dev, col="red", lwd=2)
-    lines(x, sapply(x, FUN=function(x){
+    lines(x, vapply(x, FUN.VALUE=double(length(scores)), FUN=function(x){
             sum(scores>=x & celltypes=="real")/sum(celltypes=="real")
         }), col="darkgrey")
     abline(v=th, lty="dashed")

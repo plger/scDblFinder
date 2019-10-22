@@ -47,7 +47,9 @@ plotROCs <- function(scores, truth){
                TPR=cumsum(labels)/sum(labels))
   })
   methods <- factor( rep(names(roclist), 
-                         sapply(roclist, FUN=function(x) length(x$TPR))),
+                         vapply(roclist, FUN.VALUE=integer(1), 
+                                FUN=function(x) length(x$TPR))
+                         ),
                      levels=names(roclist) )
   d <- data.frame( method=methods,
                    FPR=unlist(lapply(roclist,FUN=function(x) x$FPR)),
@@ -77,7 +79,8 @@ plotROCs <- function(scores, truth){
       sample(x,min(ceiling(0.6*length(x)),meta.cell.size),replace=FALSE)
     })
   }), recursive=FALSE)
-  meta <- sapply(meta, FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
+  meta <- vapply(meta, FUN.VALUE=double(nrow(x)), 
+                 FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
   colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
   meta
 }

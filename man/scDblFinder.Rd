@@ -33,9 +33,9 @@ represent different captures.}
 (default 50); ignored if `clusters` is given.}
 
 \item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if 
-`clusters` is given. If NA, clustering will be performed using `quickCluster`,
-otherwise via `overcluster`. If missing, the default value will be estimated 
-by `overcluster`.}
+`clusters` is given. If NA, clustering will be performed using 
+`quickCluster`, otherwise via `overcluster`. If missing, the default value 
+will be estimated by `overcluster`.}
 
 \item{d}{The number of dimensions used to build the KNN network (default 10)}
 
@@ -49,8 +49,8 @@ appropriate for 10x datasets.}
 
 \item{graph.type}{Either 'snn' or 'knn' (default).}
 
-\item{fullTable}{Logical; whether to return the full table including artificial 
-doublets (default FALSE), rather than the table for real cells only.}
+\item{fullTable}{Logical; whether to return the full table including 
+artificial doublets, rather than the table for real cells only (default).}
 
 \item{trans}{The transformation to use before computing the KNN network. The 
 default, `scran::scaledColRanks`, gave the best result in our hands.}

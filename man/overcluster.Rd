@@ -26,11 +26,11 @@ A vector of cluster labels.
 }
 \description{
 This function deliberately overclusters based on the desired range of cluster
-size. It first calculates a SNN network viar `scran::buildSNNGraph`, then runs 
-`igraph::cluster_fast_greedy` until no cluster is above the size limits, and 
-merges clusters that are too small. By default, `rankTrans` is used on the 
-counts before, because it tends to produce over-clustering influenced by 
-library size, which happens to be desirable for producing artificial doublets.
+size. It first calculates a SNN network viar `scran::buildSNNGraph`, then 
+runs `igraph::cluster_fast_greedy` until no cluster is above the size limits,
+ and merges clusters that are too small. By default, `rankTrans` is used on 
+ the counts before, because it tends to produce over-clustering influenced by 
+library size, which is desirable for producing artificial doublets.
 }
 \examples{
 m <- t(sapply( seq(from=0, to=5, length.out=50), 
