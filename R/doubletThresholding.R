@@ -84,7 +84,7 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
     if(!is.null(clusters))
       lines(x, vapply(x, FUN.VALUE=double(1), FUN=accfn2), col="blue", lwd=2)
     lines(x, dev, col="red", lwd=2)
-    lines(x, vapply(x, FUN.VALUE=double(length(scores)), FUN=function(x){
+    lines(x, vapply(x, FUN.VALUE=double(1), FUN=function(x){
             sum(scores>=x & celltypes=="real")/sum(celltypes=="real")
         }), col="darkgrey")
     abline(v=th, lty="dashed")
