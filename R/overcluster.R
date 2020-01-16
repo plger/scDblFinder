@@ -4,7 +4,7 @@
 #' size. It first calculates a SNN network viar `scran::buildSNNGraph`, then 
 #' runs `igraph::cluster_fast_greedy` until no cluster is above the size limits,
 #'  and merges clusters that are too small. By default, `rankTrans` is used on 
-#'  the counts before, because it tends to produce over-clustering influenced by 
+#' the counts before, because it tends to produce over-clustering influenced by 
 #' library size, which is desirable for producing artificial doublets.
 #'
 #' @param x A numeric matrix, with entities (e.g. cells) as columns and features
@@ -27,7 +27,7 @@
 #' table(cc)
 #' 
 #' @importFrom scran buildSNNGraph scaledColRanks
-#' @import igraph
+#' @importFrom igraph V cluster_fast_greedy membership
 #' @export
 overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50, 
                          max.size=NULL){
@@ -73,7 +73,7 @@ overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50,
 #' g <- scran::buildSNNGraph(rankTrans(m))
 #' table(resplitClusters(g, min.size=2, max.size=20))
 #' 
-#' @import igraph
+#' @importFrom igraph V E cluster_fast_greedy membership subgraph modularity
 #' @export
 resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50, 
                              renameClusters=TRUE, iterative=TRUE ){
@@ -148,7 +148,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
 #' scDblFinder.clusters
 #' 
 #' @importFrom scran buildSNNGraph buildKNNGraph
-#' @importFrom igraph cluster_fast_greedy cluster_louvain
+#' @importFrom igraph cluster_fast_greedy cluster_louvain is.igraph
 #' @export
 fastClust <- function( sce, nfeatures=1000, k=10, dims=20, 
                        graph.type=c("snn","knn"),
@@ -170,6 +170,8 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
     sce
 }
 
+#' @importFrom scater runPCA normalize
+#' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000){
     if(!("logcounts" %in% assayNames(sce))) sce <- scater::normalize(sce)
     if(!("PCA" %in% reducedDimNames(sce))){

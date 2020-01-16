@@ -108,7 +108,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   clust.graph.type=clust.graph.type, 
                                   score=score, nfeatures=nfeatures, 
                                   verbose=FALSE ) )
-	    fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
+        fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
         as.data.frame(x[,fields])
     }))
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
