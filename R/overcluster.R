@@ -7,11 +7,12 @@
 #'  the counts before, because it tends to produce over-clustering influenced by 
 #' library size, which is desirable for producing artificial doublets.
 #'
-#' @param e A numeric matrix, with entities (e.g. cells) as columns and features
-#'  (e.g. genes) as rows.
+#' @param x A numeric matrix, with entities (e.g. cells) as columns and features
+#'  (e.g. genes) as rows. Alternatively, an object of class `igraph`.
 #' @param rtrans Transformation to apply, either 'rankTrans' (default, dense 
 #' step-preserving rank transformation, see `rankTrans`), 'scran' (default; see 
-#' `scran::scaledColRanks`), or 'none' (data taken as-is).
+#' `scran::scaledColRanks`), or 'none' (data taken as-is). Ignored if `x` is an
+#' `igraph`.
 #' @param min.size The minimum cluster size (applies after splitting, and hence 
 #' overrides `max.size`)
 #' @param max.size The maximum cluster size. If omitted, will be calculated on 
@@ -28,17 +29,22 @@
 #' @importFrom scran buildSNNGraph scaledColRanks
 #' @import igraph
 #' @export
-overcluster <- function( e, rtrans=c("rankTrans","scran","none"), min.size=50, 
+overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50, 
                          max.size=NULL){
-  e <- switch( match.arg(rtrans),
-               scran=scaledColRanks(e),
-               rankTrans=rankTrans(e),
-               e)
-  g <- buildSNNGraph(e)
-  cl <- membership(cluster_fast_greedy(g))
-  if(is.null(max.size)){
-    max.size <- ceiling(max(ncol(e)/(2*length(unique(cl))),min.size+1))
+  if(is.igraph(x)){
+      N <- length(V(x))
+      g <- x
+  }else{
+      x <- switch( match.arg(rtrans),
+                   scran=scaledColRanks(x),
+                   rankTrans=rankTrans(x),
+                   x)
+      g <- buildSNNGraph(x)
+      N <- ncol(e)
   }
+  cl <- membership(cluster_fast_greedy(g))
+  if(is.null(max.size))
+      max.size <- ceiling(max(N/(2*length(unique(cl))),min.size+1))
   resplitClusters(g, cl=cl, min.size=min.size, max.size=max.size)
 }
 
@@ -126,3 +132,48 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     cl
 }
 
+
+#' fastClust
+#'
+#' @param sce An object of class `SingleCellExperiment`
+#' @param nfeatures For the PCA
+#' @param k number of nearest neighbors
+#' @param dims number of PCA dimensions
+#' @param graph.type either snn or knn
+#' @param method Either 'louvain' or 'fast_greedy'
+#' @param BPPARAM Passed to scran for KNN/SNN graph generation
+#' @param ... passed to `overcluster`
+#'
+#' @return The `SingleCellExperiment` object with an additional colData column
+#' scDblFinder.clusters
+#' 
+#' @importFrom scran buildSNNGraph buildKNNGraph
+#' @importFrom igraph cluster_fast_greedy cluster_louvain
+#' @export
+fastClust <- function( sce, nfeatures=1000, k=10, dims=20, 
+                       graph.type=c("snn","knn"),
+                       method=c("louvain","fast_greedy","overcluster"),
+                       BPPARAM=BiocParallel::SerialParam(), ...){
+    method <- match.arg(method)
+    if(graph.type=="snn"){ 
+        gfn <- buildSNNGraph
+    }else{
+        gfn <- buildKNNGraph
+    }
+    sce <- .prepSCE(sce, nfeatures=nfeatures, ndims=dims) 
+    g <- gfn(sce, BPPARAM=BPPARAM, use.dimred="PCA", k=k)
+    sce$scDblFinder.clusters <- switch(method,
+        louvain=igraph::cluster_louvain(g)$membership,
+        fast_greedy=igraph::cluster_fast_greedy(g)$membership,
+        overcluster=overcluster(g, ...)
+    )
+    sce
+}
+
+.prepSCE <- function(sce, ndims=30, nfeatures=1000){
+    if(!("logcounts" %in% assayNames(sce))) sce <- scater::normalize(sce)
+    if(!("PCA" %in% reducedDimNames(sce))){
+        sce <- runPCA(sce, ncomponents=ndims, ntop=max(nfeatures,nrow(sce)))
+    }
+    sce
+}

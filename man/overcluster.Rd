@@ -4,16 +4,17 @@
 \alias{overcluster}
 \title{overcluster}
 \usage{
-overcluster(e, rtrans = c("rankTrans", "scran", "none"), min.size = 50,
+overcluster(x, rtrans = c("rankTrans", "scran", "none"), min.size = 50,
   max.size = NULL)
 }
 \arguments{
-\item{e}{A numeric matrix, with entities (e.g. cells) as columns and features
-(e.g. genes) as rows.}
+\item{x}{A numeric matrix, with entities (e.g. cells) as columns and features
+(e.g. genes) as rows. Alternatively, an object of class `igraph`.}
 
 \item{rtrans}{Transformation to apply, either 'rankTrans' (default, dense 
 step-preserving rank transformation, see `rankTrans`), 'scran' (default; see 
-`scran::scaledColRanks`), or 'none' (data taken as-is).}
+`scran::scaledColRanks`), or 'none' (data taken as-is). Ignored if `x` is an
+`igraph`.}
 
 \item{min.size}{The minimum cluster size (applies after splitting, and hence 
 overrides `max.size`)}

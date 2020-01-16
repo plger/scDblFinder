@@ -5,22 +5,26 @@
 \title{scDblFinder}
 \usage{
 scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
+  clust.method = c("louvain", "overcluster", "fast_greedy"),
   samples = NULL, minClusSize = min(50, ncol(sce)/5),
-  maxClusSize = NULL, d = 10, dbr = NULL, dbr.sd = 0.015, k = 5,
-  graph.type = c("knn", "snn"), fullTable = FALSE,
-  trans = c("rankTrans", "scran", "none", "lognorm"),
-  verbose = is.null(samples), hybridScore = TRUE,
-  BPPARAM = SerialParam())
+  maxClusSize = NULL, nfeatures = 1000, dims = 20, dbr = NULL,
+  dbr.sd = 0.015, k = 20, clust.graph.type = c("snn", "knn"),
+  fullTable = FALSE, verbose = is.null(samples),
+  score = c("weighted", "ratio", "hybrid"), BPPARAM = SerialParam())
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
 
 \item{artificialDoublets}{The approximate number of artificial doublets to 
 create. If NULL, will be the maximum of the number of cells or 
-`3*nbClusters^2`.}
+`5*nbClusters^2`.}
 
 \item{clusters}{The optional cluster assignments (if omitted, will run 
-`quickCluster`). This is used to make doublets more efficiently.}
+clustering). This is used to make doublets more efficiently. `clusters` 
+should either be a vector of labels for each cell, or the name of a colData 
+column of `sce`.}
+
+\item{clust.method}{The clustering method if `clusters` is not given.}
 
 \item{samples}{A vector of the same length as cells (or the name of a column 
 of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
@@ -37,7 +41,9 @@ represent different captures.}
 `quickCluster`, otherwise via `overcluster`. If missing, the default value 
 will be estimated by `overcluster`.}
 
-\item{d}{The number of dimensions used to build the KNN network (default 10)}
+\item{nfeatures}{The number of top features to use (default 1000)}
+
+\item{dims}{The number of dimensions used to build the network (default 20)}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
 per thousand cells captured (so 4\% among 4000 thousand cells), which is 
@@ -47,27 +53,29 @@ appropriate for 10x datasets.}
 
 \item{k}{Number of nearest neighbors (for KNN graph).}
 
-\item{graph.type}{Either 'snn' or 'knn' (default).}
+\item{clust.graph.type}{Either 'snn' or 'knn'.}
 
 \item{fullTable}{Logical; whether to return the full table including 
 artificial doublets, rather than the table for real cells only (default).}
 
-\item{trans}{The transformation to use before computing the KNN network. The 
-default, `scran::scaledColRanks`, gave the best result in our hands.}
-
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
-\item{hybridScore}{Logical; whether to combine similarity to artificial 
-doublets with information about library size and detection rate (default)}
+\item{score}{Score to use for final classification; either 'weighted' 
+(default), 'ratio' or 'hybrid' (includes information about library size and 
+detection rate.}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
-`samples!=NULL`); otherwise passed to scran (which doesn't work so well)...}
+`samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
+
+\item{trans}{The transformation to use before computing the KNN network. The 
+default, `scran::scaledColRanks`, gave the best result in our hands.}
 }
 \value{
 The `sce` object with the following additional colData columns: 
-`scDblFinder.neighbors` (number of neighbors considered), `scDblFinder.ratio`
-(ratio of aritifical doublets among neighbors), `scDblFinder.score` (an 
-integrated doublet score, if `hybridScore=TRUE`), and `scDblFinder.class` 
+`scDblFinder.ratio` (ratio of aritifical doublets among neighbors), 
+`scDblFinder.weighted` (the ratio of artificial doublets among neighbors 
+weigted by their distance), `scDblFinder.score` (the final score used,
+by default the same as `scDblFinder.weighted`), and  `scDblFinder.class` 
 (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
 `fullTable=TRUE`, a data.frame will be returned with information about real 
 and artificial cells.

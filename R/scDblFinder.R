@@ -6,9 +6,12 @@
 #' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
 #' @param artificialDoublets The approximate number of artificial doublets to 
 #' create. If NULL, will be the maximum of the number of cells or 
-#' `3*nbClusters^2`.
+#' `5*nbClusters^2`.
 #' @param clusters The optional cluster assignments (if omitted, will run 
-#' `quickCluster`). This is used to make doublets more efficiently.
+#' clustering). This is used to make doublets more efficiently. `clusters` 
+#' should either be a vector of labels for each cell, or the name of a colData 
+#' column of `sce`.
+#' @param clust.method The clustering method if `clusters` is not given.
 #' @param samples A vector of the same length as cells (or the name of a column 
 #' of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
@@ -21,36 +24,42 @@
 #' `clusters` is given. If NA, clustering will be performed using 
 #' `quickCluster`, otherwise via `overcluster`. If missing, the default value 
 #' will be estimated by `overcluster`.
-#' @param d The number of dimensions used to build the KNN network (default 10)
+#' @param nfeatures The number of top features to use (default 1000)
+#' @param dims The number of dimensions used to build the network (default 20)
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
 #' appropriate for 10x datasets.
 #' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
 #' @param k Number of nearest neighbors (for KNN graph).
-#' @param graph.type Either 'snn' or 'knn' (default).
+#' @param clust.graph.type Either 'snn' or 'knn'.
 #' @param fullTable Logical; whether to return the full table including 
 #' artificial doublets, rather than the table for real cells only (default).
 #' @param trans The transformation to use before computing the KNN network. The 
 #' default, `scran::scaledColRanks`, gave the best result in our hands.
 #' @param verbose Logical; whether to print messages and the thresholding plot.
-#' @param hybridScore Logical; whether to combine similarity to artificial 
-#' doublets with information about library size and detection rate (default)
+#' @param score Score to use for final classification; either 'weighted' 
+#' (default), 'ratio' or 'hybrid' (includes information about library size and 
+#' detection rate.
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
-#' `samples!=NULL`); otherwise passed to scran (which doesn't work so well)...
+#' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
 #'
 #' @return The `sce` object with the following additional colData columns: 
-#' `scDblFinder.neighbors` (number of neighbors considered), `scDblFinder.ratio`
-#' (ratio of aritifical doublets among neighbors), `scDblFinder.score` (an 
-#' integrated doublet score, if `hybridScore=TRUE`), and `scDblFinder.class` 
+#' `scDblFinder.ratio` (ratio of aritifical doublets among neighbors), 
+#' `scDblFinder.weighted` (the ratio of artificial doublets among neighbors 
+#' weigted by their distance), `scDblFinder.score` (the final score used,
+#' by default the same as `scDblFinder.weighted`), and  `scDblFinder.class` 
 #' (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
 #' `fullTable=TRUE`, a data.frame will be returned with information about real 
 #' and artificial cells.
 #' 
-#' @import SingleCellExperiment scran Matrix BiocParallel
+#' @import SingleCellExperiment Matrix BiocParallel
 #' @importFrom SummarizedExperiment colData<- assayNames
+#' @importFrom scater normalizeCounts calculatePCA
 #' @importFrom dplyr bind_rows
 #' @importFrom randomForest randomForest
 #' @importFrom methods is
+#' @importFrom DelayedArray as.matrix
+#' @importFrom BiocNeighbors findKNN
 #' 
 #' @examples
 #' library(SingleCellExperiment)
@@ -61,16 +70,23 @@
 #' table(sce$scDblFinder.class)
 #' 
 #' @export
-scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL, 
+scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
+                         clust.method=c("louvain","overcluster","fast_greedy"),
                          samples=NULL, minClusSize=min(50,ncol(sce)/5), 
-                         maxClusSize=NULL, d=10, dbr=NULL, dbr.sd=0.015, k=5, 
-                         graph.type=c("knn","snn"), fullTable=FALSE, 
-                         trans=c("rankTrans", "scran", "none", "lognorm"), 
-                         verbose=is.null(samples), hybridScore=TRUE,
+                         maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
+                         dbr.sd=0.015, k=20, clust.graph.type=c("snn","knn"), 
+                         fullTable=FALSE, verbose=is.null(samples), 
+                         score=c("weighted","ratio","hybrid"),
                          BPPARAM=SerialParam()
                         ){
-  graph.type <- match.arg(graph.type)
-  trans <- match.arg(trans)
+  clust.graph.type <- match.arg(clust.graph.type)
+  clust.method <- match.arg(clust.method)
+  if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
+      if(!(clusters %in% colnames(colData(sce)))) 
+          stop("Could not find `clusters` column in colData!")
+      clusters <- colData(sce)[[clusters]]
+  }
+  score <- match.arg(score)
   stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
       stop("`sce` should have an assay named 'counts'")
@@ -86,13 +102,13 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     CD <- bind_rows(bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         x <- colData( scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                                  clusters=clusters, minClusSize=minClusSize, 
-                                  maxClusSize=maxClusSize, d=d, dbr=dbr, 
-                                  dbr.sd=dbr.sd, k=k, graph.type=graph.type, 
-                                  trans=trans, verbose=FALSE, 
-				                  hybridScore=hybridScore) )
-	fields <- paste0("scDblFinder.",c("neighbors","ratio","class"))
-	if(hybridScore) fields <- c(fields, "scDblFinder.score")
+                                  clusters=clusters[x], minClusSize=minClusSize, 
+                                  maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
+                                  dbr.sd=dbr.sd, k=k, clust.method=clust.method,
+                                  clust.graph.type=clust.graph.type, 
+                                  score=score, nfeatures=nfeatures, 
+                                  verbose=FALSE ) )
+	    fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
         as.data.frame(x[,fields])
     }))
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
@@ -105,8 +121,29 @@ numbers of cells.")
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
       dbr <- (0.01*ncol(sce)/1000)
   }
-  if(is.null(clusters)) clusters <- .getClusters( sce, maxClusSize, minClusSize, 
-                                                  BPPARAM=BPPARAM)
+  
+  orig <- sce
+  if(is.null(clusters)){
+      if(verbose) message("Clustering cells...")
+      sce <- fastClust( sce, method=clust.method, min.size=minClusSize, 
+                        max.size=maxClusSize, nfeatures = nfeatures,
+                        graph.type=clust.graph.type, BPPARAM=BPPARAM )
+      clusters <- sce$scDblFinder.clusters
+  }
+  if(nrow(sce)>nfeatures){
+      if(verbose) message("Identifying top genes per cluster...")
+      # get mean expression across clusters
+      cli <- split(seq_len(ncol(sce)), clusters)
+      cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce)), FUN=function(x){
+          Matrix::rowMeans(counts(sce)[,x,drop=FALSE])
+      })
+      # grab the top genes in each cluster
+      g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
+          order(x, decreasing=TRUE)[seq_len(nfeatures)]
+      })))
+      sce <- sce[g,]
+  }
+  
   if(length(unique(clusters)) == 1) stop("Only one cluster generated")
   maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
       prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
@@ -129,84 +166,55 @@ numbers of cells.")
     artificialDoublets <- max( ncol(sce), 
                                min(40000, 5*length(unique(clusters))^2))
   }
+  
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
-    ad <- getArtificialDoublets( counts(sce), n=artificialDoublets, 
+    ad <- getArtificialDoublets( as.matrix(counts(sce)), n=artificialDoublets, 
                                  clusters=clusters )
   }else{
-    ad <- suppressWarnings( getArtificialDoublets(counts(sce), 
+    ad <- suppressWarnings( getArtificialDoublets(as.matrix(counts(sce)), 
                                                   n=artificialDoublets, 
                                                   clusters=clusters ) )
   }
-  
+
+  e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
+  e <- normalizeCounts(e)
+  pca <- calculatePCA(e, dims, subset_row=seq_len(nrow(e)))
+
   # evaluate by library size and non-zero features
   lsizes <- c(colSums(counts(sce)),colSums(ad))
   nfeatures <- c(colSums(counts(sce)>0), colSums(ad>0))
   
-  sce2 <- sce
-  if(nrow(sce2)>2000){
-      if(verbose) message("Identifying top genes per cluster...")
-      # get mean expression across clusters
-      cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce2)), FUN=function(x){
-        Matrix::rowMeans(counts(sce2)[,x,drop=FALSE])
-      })
-      # grab the top genes in each cluster
-      g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
-          order(x, decreasing=TRUE)[1:1500]
-      })))
-      sce2 <- sce2[g,]
-  }
-  ad <- ad[row.names(sce2),]
-  e <- cbind(counts(sce2), ad)
-
-  # build graph and evaluate neigbhorhood
-  if(verbose) message("Building ", toupper(graph.type), " graph...")
-  qr <- switch(trans,
-               scran=scran::scaledColRanks(e),
-               rankTrans=rankTrans(e),
-               none=e,
-               norm=logcounts(scater::normalize(
-                   SingleCellExperiment(list(counts=e)) ))
-               )
-  rm(e)
-  
-  sce2 <- sce2[,intersect(colnames(sce2),colnames(qr))]
-  ad <- ad[,intersect(colnames(ad),colnames(qr))]
-  if(graph.type=="knn"){
-    graph <- suppressWarnings(buildKNNGraph( qr, d=10, k=k,
-                                             BPPARAM=BPPARAM))
-  }else{
-    graph <- suppressWarnings(buildSNNGraph(qr, BPPARAM=BPPARAM, 
-                              type=ifelse( trans %in% c("norm","none"),
-                                           "number","rank") ))
-  }
-  ctype <- rep(c("real","artificial"), c(ncol(sce2),ncol(ad)))
+  if(verbose) message("Finding KNN...")
+  ctype <- factor(rep(c("real","artificial"), c(ncol(sce),ncol(ad))))
+  knn <- suppressWarnings(findKNN(pca, k, BPPARAM=BPPARAM))
   
   if(verbose) message("Evaluating cell neighborhoods...")
-  graph <- igraph::get.adjlist(graph)
-  
-  d <- vapply(graph, FUN.VALUE=integer(2), FUN=function(x){
-    x <- as.numeric(x)
-    as.integer(c(length(x), sum(ctype[x]=="artificial")))
-  })
-  d <- as.data.frame(t(d))
+  knn$type <- matrix(as.numeric(ctype)[knn[[1]]]==1, nrow=nrow(knn[[1]]))
+  if(any(knn$distance==0)) knn$distance <- knn$distance + 0.01
+  w <- 1/knn$distance
 
-  rm(graph)
+  d <- data.frame( weighted=rowSums(knn$type*w/rowSums(w)),
+                   distanceToNearest=knn$distance[,1],
+                   ratio=rowSums(knn$type)/k )
+  rm(knn)
+  rm(pca)
   
-  colnames(d) <- c("nb.neighbors", "artificial.neighbors")
-  d$ratio <- d[,2]/d[,1]
-  d$enrichment <- d[,2]/(d[,1]*ncol(ad)/c(ncol(ad)+ncol(sce2)))
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
   d$type <- ctype
 
-  if(hybridScore){
-      rf <- randomForest(x=d[,-ncol(d)],y=as.factor(d$type), ntree=300, mtry=3)
-      d$score <- rf$votes[,"artificial"]
-      fscores <- d$score
+  if(score=="hybrid"){
+      rf <- randomForest(x=d[,-ncol(d)],y=d$type, ntree=150, mtry=3)
+      fscores <- rf$votes[,"artificial"]
   }else{
-      fscores <- d$ratio
+      if(score=="ratio"){
+          fscores <- d$ratio
+      }else{
+          fscores <- d$weighted
+      }
   }
+  d$score <- fscores
 
   if(verbose) message("Finding threshold...")
   th <- doubletThresholding( fscores, d$type, clusters=clusters, dbr=dbr, 
@@ -216,36 +224,13 @@ numbers of cells.")
   d$classification <- ifelse(fscores >= th, "doublet", "singlet")
   if(fullTable) return(d)
   
-  d <- d[seq_len(ncol(sce2)),]
+  d <- d[seq_len(ncol(orig)),]
   d$type <- NULL
-  row.names(d) <- colnames(sce2)
-  d <- d[colnames(sce),]
-  sce$scDblFinder.neighbors <- d$nb.neighbors
-  sce$scDblFinder.ratio <- d$ratio
-  if(hybridScore) sce$scDblFinder.score <- d$score
-  sce$scDblFinder.class <- d$classification
-  sce
-}
-
-
-#' @import SingleCellExperiment scran Matrix BiocParallel
-.getClusters <- function(sce, maxClusSize, minClusSize, ngenes=3000, 
-                         verbose=TRUE, BPPARAM=SerialParam()){
-    # we first simplify the dataset and identify rough clusters
-    o <- order(Matrix::rowMeans(counts(sce)), decreasing=TRUE)
-    sce <- sce[o[seq_len(min(nrow(sce),ngenes))],]
-    if(is.null(maxClusSize) || !is.na(maxClusSize)){
-        if(verbose) message("Overclustering...")
-        clusters <- overcluster( counts(sce), 
-                                 min.size=minClusSize, max.size=maxClusSize)
-    }else{
-        # for reasons of speed, with many cells we use the fast greedy algorithm
-        clust.method <- ifelse(ncol(sce)>=5000,"igraph","hclust")
-        if(verbose) message("Quick ", clust.method, " clustering:")
-        clusters <- scran::quickCluster( sce, min.size=minClusSize, 
-                                         method=clust.method, use.ranks=TRUE, 
-                                         BPPARAM=BPPARAM)
-    }
-    if(verbose) print(table(clusters))
-    clusters
+  row.names(d) <- colnames(orig)
+  d <- d[colnames(orig),]
+  orig$scDblFinder.weighted <- d$weighted
+  orig$scDblFinder.ratio <- d$ratio
+  orig$scDblFinder.score <- d$score
+  orig$scDblFinder.class <- d$classification
+  orig
 }

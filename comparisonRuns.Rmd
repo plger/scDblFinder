@@ -112,7 +112,7 @@ barplot(t(t.elapsed), ylab="Running time (elapsed), in seconds", beside=TRUE)
 # Accuracy
 
 ```{r}
-scoresNames <- c("scran.score"="scran", "scDblFinder.ratio"="scDblFinder", "DF.score"="DoubletFinder", "hybrid_score"="scds")
+scoresNames <- c("scran.score"="scran", "scDblFinder.score"="scDblFinder.score", "scDblFinder.ratio"="scDblFinder.ratio", "DF.score"="DoubletFinder", "hybrid_score"="scds")
 ```
 
 ## Mixology10x3cl
