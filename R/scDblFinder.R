@@ -34,8 +34,6 @@
 #' @param clust.graph.type Either 'snn' or 'knn'.
 #' @param fullTable Logical; whether to return the full table including 
 #' artificial doublets, rather than the table for real cells only (default).
-#' @param trans The transformation to use before computing the KNN network. The 
-#' default, `scran::scaledColRanks`, gave the best result in our hands.
 #' @param verbose Logical; whether to print messages and the thresholding plot.
 #' @param score Score to use for final classification; either 'weighted' 
 #' (default), 'ratio' or 'hybrid' (includes information about library size and 

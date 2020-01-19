@@ -40,7 +40,7 @@ overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50,
                    rankTrans=rankTrans(x),
                    x)
       g <- buildSNNGraph(x)
-      N <- ncol(e)
+      N <- ncol(x)
   }
   cl <- membership(cluster_fast_greedy(g))
   if(is.null(max.size))
