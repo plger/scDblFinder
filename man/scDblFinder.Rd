@@ -66,9 +66,6 @@ detection rate.}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
-
-\item{trans}{The transformation to use before computing the KNN network. The 
-default, `scran::scaledColRanks`, gave the best result in our hands.}
 }
 \value{
 The `sce` object with the following additional colData columns: 
