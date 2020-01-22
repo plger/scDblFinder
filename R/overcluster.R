@@ -173,9 +173,17 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
 #' @importFrom scater runPCA normalizeCounts
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000){
-    if(!("logcounts" %in% assayNames(sce))) sce <- normalizeCounts(sce)
+    if(!("logcounts" %in% assayNames(sce))){
+        e <- normalizeCounts(sce)
+        if(is(e,"SingleCellExperiment")){
+            sce <- e
+        }else{
+            logcounts(sce) <- e
+        }
+        rm(e)
+    }
     if(!("PCA" %in% reducedDimNames(sce))){
-        sce <- runPCA(sce, ncomponents=ndims, ntop=max(nfeatures,nrow(sce)))
+        sce <- runPCA(sce, ncomponents=ndims, ntop=min(nfeatures,nrow(sce)))
     }
     sce
 }
