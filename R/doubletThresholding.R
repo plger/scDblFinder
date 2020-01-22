@@ -95,10 +95,10 @@ doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025,
     if(is.null(clusters)){
       leg <- leg[-2]
       legend("top", col=c("blue", "red","darkgrey"), 
-             lty=c(1,1,1), lw=2, legend=leg)
+             lty=c(1,1,1), lwd=2, legend=leg)
     }else{
       legend("top", col=c("blue","blue", "red","darkgrey"), 
-             lty=c(1,2,1,1), lw=2, legend=leg)
+             lty=c(1,2,1,1), lwd=2, legend=leg)
     }
   }
   th
