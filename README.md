@@ -66,33 +66,18 @@ Since doublets are created across clusters, it is important that subpopulations 
 
 To benchmark scDblFinder against alternatives, we used datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via *[demuxlet](https://github.com/statgen/demuxlet)*), which also enables the identification of doublets from different individuals.
 
-The method is compared to:
+The datasets are:
+
+* mixology10x3cl: a mixture of 3 cancer cell lines from the RNA mixology paper
+* mixology10x5cl: a mixture of 5 cancer cell lines from the RNA mixology paper
+* demuxlet: the demuxlet control (Batch 2) dataset (GSM2560248)
+
+The other methods tested are:
 
 * *[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*
 * *[scran](https://bioconductor.org/packages/3.9/scran)*'s `doubletCells` function
 * *[scds](https://bioconductor.org/packages/3.9/scds)* (hybrid method)
 
-## Mixology10x3cl
+![Accuracy and running time of the doublet detection methods](scDblFinder_comparison.png)
 
-![Accuracy of the doublet detection in the mixology10x3cl dataset (a mixture of 3 cancer cell lines). All methods perform very well.](scDblFinder_files/figure-html/ds1-1.png)
-
-(DoubletFinder failed on the Mixology10x3cl dataset)
-
-## Mixology10x5cl
-
-![Accuracy of the doublet detection in the mixology10x5cl dataset (a mixture of 5 cancer cell lines).](scDblFinder_files/figure-html/ds2-1.png)
-
-## Demuxlet controls
-
-![Accuracy of the doublet detection in the demuxlet control (Batch 2) dataset (GSM2560248).](scDblFinder_files/figure-html/ds3-1.png)
-
-## Running time
-
-
-```
-## Warning: Removed 1 rows containing missing values (position_stack).
-```
-
-![Running time for each method/dataset](scDblFinder_files/figure-html/runtime-1.png)
-
-Note that by far most of the running time of `scDblFinder` is actually the clustering.
+NB: DoubletFinder failed on the Mixology10x3cl dataset.
