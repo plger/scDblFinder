@@ -155,7 +155,7 @@ numbers of cells.")
   cli <- split(seq_len(ncol(sce)), clusters)
   
   if(is.null(colnames(sce)))
-      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+      colnames(orig) <- colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   if(is.null(row.names(sce)))
       row.names(sce) <- paste0("f",seq_len(nrow(sce)))
 
