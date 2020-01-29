@@ -4,12 +4,22 @@
 \alias{plotROCs}
 \title{plotROCs}
 \usage{
-plotROCs(scores, truth)
+plotROCs(scores, truth, called.class = NULL, nbT = TRUE,
+  dot.size = 5)
 }
 \arguments{
 \item{scores}{A data.frame with the different types of scores as columns.}
 
 \item{truth}{A vector of the true class corresponding to each row of `scores`}
+
+\item{called.class}{A numeric vector (with names corresponding to the columns
+of `scores`) indicating, for each method, the number of cases called as true
+(i.e. the threshold decided). Those will be plotted as points.}
+
+\item{nbT}{Logical; whether to add a dot for each score at the number of 
+true positives (default TRUE).}
+
+\item{dot.size}{The size of the dots.}
 }
 \value{
 a ggplot

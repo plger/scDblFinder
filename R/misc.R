@@ -28,6 +28,12 @@ rankTrans <- function(x){
 #'
 #' @param scores A data.frame with the different types of scores as columns.
 #' @param truth A vector of the true class corresponding to each row of `scores`
+#' @param called.class A numeric vector (with names corresponding to the columns
+#' of `scores`) indicating, for each method, the number of cases called as true
+#' (i.e. the threshold decided). Those will be plotted as points.
+#' @param nbT Logical; whether to add a dot for each score at the number of 
+#' true positives (default TRUE).
+#' @param dot.size The size of the dots.
 #'
 #' @return a ggplot
 #' @import ggplot2
@@ -38,7 +44,7 @@ rankTrans <- function(x){
 #' plotROCs(  myscores, truth )
 #' 
 #' @export
-plotROCs <- function(scores, truth){
+plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   truth <- as.integer(as.factor(truth))-1
   scores <- as.data.frame(scores)
   roclist <- lapply(scores, FUN=function(x){
@@ -54,7 +60,23 @@ plotROCs <- function(scores, truth){
   d <- data.frame( method=methods,
                    FPR=unlist(lapply(roclist,FUN=function(x) x$FPR)),
                    TPR=unlist(lapply(roclist,FUN=function(x) x$TPR)) )
-  ggplot(d, aes(FPR, TPR, colour=method)) + geom_line(size=1.2)
+  p <- ggplot(d, aes(FPR, TPR, colour=method)) + geom_line(size=1.2)
+  if(nbT){
+      nbt <- sum(truth)
+      d2 <- data.frame( method=names(roclist),
+                        FPR=sapply(roclist,FUN=function(x) x$FPR[nbt]),
+                        TPR=unlist(lapply(roclist,FUN=function(x) x$TPR[nbt])) )
+      p <- p + geom_point(data=d2, alpha=0.5, size=dot.size)
+  }
+  if(!is.null(called.class) &&
+     length(mm <- intersect(names(called.class), names(roclist)))>0){
+      d2 <- data.frame( method=mm,
+                        FPR=mapply(r=roclist[mm], cc=called.class[mm], FUN=function(r,cc) r$FPR[cc]),
+                        TPR=mapply(r=roclist[mm], cc=called.class[mm], FUN=function(r,cc) r$TPR[cc]) )
+      p <- p + geom_point(data=d2, size=dot.size, shape=8, show.legend = FALSE)
+  }
+  
+  p
 }
 
 # get random cross-cluster pairs of cells from a cluster assignment vector
