@@ -6,13 +6,10 @@ scDblFinder  identifies doublets in single-cell RNAseq directly by creating arti
 
 ## Installation
 
-scDblFinder was developed under R 3.6. Install with:
-
-```r
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("plger/scDblFinder")
-```
+scDblFinder was developed under R 3.6. As major changes were made to the package after the BioConductor release, we strongly recommend to install the development version, either from Bioconductor:
+`BiocManager::install("scDblFinder", version="devel")`
+or directly through github:
+`BiocManager::install("plger/scDblFinder")`
 
 ## Usage
 
