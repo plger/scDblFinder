@@ -52,7 +52,7 @@
 #' 
 #' @import SingleCellExperiment Matrix BiocParallel
 #' @importFrom SummarizedExperiment colData<- assayNames
-#' @importFrom scater normalizeCounts calculatePCA
+#' @importFrom scater normalizeCounts runPCA
 #' @importFrom dplyr bind_rows
 #' @importFrom randomForest randomForest
 #' @importFrom methods is
@@ -177,7 +177,13 @@ numbers of cells.")
 
   e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
   e <- normalizeCounts(e)
-  pca <- calculatePCA(e, dims, subset_row=seq_len(nrow(e)))
+  pca <- tryCatch({
+            scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)))
+        }, error=function(e){
+            reducedDim( scater::runPCA( SingleCellExperiment(list(logcounts=e)), 
+                            rank=ndims, ntop=nrow(e)) )
+        })
+  if(is.list(pca)) pca <- pca$x
 
   # evaluate by library size and non-zero features
   lsizes <- c(colSums(counts(sce)),colSums(ad))
