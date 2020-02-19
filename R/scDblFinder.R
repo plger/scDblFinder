@@ -179,7 +179,7 @@ numbers of cells.")
   e <- normalizeCounts(e)
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)))
-        }, error=function(e){
+        }, error=function(msg){
             reducedDim( scater::runPCA( SingleCellExperiment(list(logcounts=e)), 
                             rank=ndims, ntop=nrow(e)) )
         })
