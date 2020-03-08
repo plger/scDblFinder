@@ -75,6 +75,6 @@ The other methods tested are:
 * *[scran](https://bioconductor.org/packages/3.9/scran)*'s `doubletCells` function
 * *[scds](https://bioconductor.org/packages/3.9/scds)* (hybrid method)
 
-![Accuracy and running time of the doublet detection methods](scDblFinder_comparison.png)
+![Accuracy and running time of the doublet detection methods](inst/docs/scDblFinder_comparison.png)
 
 NB: DoubletFinder failed on the Mixology10x3cl dataset.
