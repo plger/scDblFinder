@@ -180,7 +180,7 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
         ls <- librarySizeFactors(sce)
         if(any(is.na(ls) | ls==0))
             stop("Some of the size factors are invalid. Consider removing",
-                 "cells with sizeFactors of zero, or filling it the",
+                 "cells with sizeFactors of zero, or filling in the",
                  "`logcounts' assay yourself.")
         sce <- logNormCounts(sce)
     }
