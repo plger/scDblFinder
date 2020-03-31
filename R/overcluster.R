@@ -170,20 +170,23 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
     sce
 }
 
-#' @importFrom scater runPCA normalizeCounts
+#' @importFrom scater runPCA logNormCounts librarySizeFactors computeLibraryFactors 
+#' @importFrom BiocSingular IrlbaParam
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000){
     if(!("logcounts" %in% assayNames(sce))){
-        e <- normalizeCounts(sce)
-        if(is(e,"SingleCellExperiment")){
-            sce <- e
-        }else{
-            logcounts(sce) <- e
-        }
-        rm(e)
+        if(is.null(librarySizeFactors(sce)))
+            sce <- computeLibraryFactors(sce)
+        ls <- librarySizeFactors(sce)
+        if(any(is.na(ls) | ls==0))
+            stop("Some of the size factors are invalid. Consider removing",
+                 "cells with sizeFactors of zero, or filling it the",
+                 "`logcounts' assay yourself.")
+        sce <- logNormCounts(sce)
     }
     if(!("PCA" %in% reducedDimNames(sce))){
-        sce <- runPCA(sce, ncomponents=ndims, ntop=min(nfeatures,nrow(sce)))
+        sce <- runPCA(sce, ncomponents=ndims, ntop=min(nfeatures,nrow(sce)),
+                      BSPARAM=IrlbaParam())
     }
     sce
 }

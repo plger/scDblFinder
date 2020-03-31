@@ -31,7 +31,10 @@ of `colData(sce)`), indicating to which sample each cell belongs. Here, a
 sample is understood as being processed independently. If omitted, doublets 
 will be searched for with all cells together. If given, doublets will be 
 searched for independently for each sample, which is preferable if they 
-represent different captures.}
+represent different captures. If your samples were multiplexed using cell
+hashes, want you want to give here are the different batches/wells (i.e. 
+independent captures, since doublets cannot arise across them) rather
+than biological samples.}
 
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
 (default 50); ignored if `clusters` is given.}

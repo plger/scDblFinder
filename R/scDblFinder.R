@@ -80,6 +80,8 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          score=c("weighted","ratio","hybrid"),
                          BPPARAM=SerialParam()
                         ){
+  if(!is(sce, "SingleCellExperiment"))
+      stop("`sce` should be a SingleCellExperiment")
   clust.graph.type <- match.arg(clust.graph.type)
   clust.method <- match.arg(clust.method)
   if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
