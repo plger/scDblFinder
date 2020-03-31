@@ -100,7 +100,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     if(fullTable) warning("`fullTable` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
     cs <- split(seq_along(samples), samples, drop=TRUE)
-    CD <- bind_rows(bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
+    tmp <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         x <- colData( scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
                                   clusters=clusters[x], minClusSize=minClusSize, 
@@ -111,7 +111,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   verbose=FALSE ) )
         fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
         as.data.frame(x[,fields])
-    }))
+    })
+    CD <- bind_rows(tmp)
+    row.names(CD) <- unlist(lapply(tmp, row.names))
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
   }
