@@ -30,7 +30,7 @@ This will add the following columns to the colData of `sce`:
 ### Multiple samples
 
 If you have multiple samples (understood as different cell captures), then it is
-preferable to look for doublets separately for each sample. You can do this by 
+preferable to look for doublets separately for each sample (for multiplexed samples with cell hashes, rather use the well/batch). You can do this by 
 simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or,
 if these are stored in a column of `colData`, the name of the column. In this case,
 you might also consider multithreading it using the `BPPARAM` parameter. For example:
