@@ -148,6 +148,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
 #' scDblFinder.clusters
 #' 
 #' @importFrom scran buildSNNGraph buildKNNGraph
+#' @importFrom BiocNeighbors AnnoyParam
 #' @importFrom igraph cluster_fast_greedy cluster_louvain is.igraph
 #' @export
 fastClust <- function( sce, nfeatures=1000, k=10, dims=20, 
@@ -161,7 +162,7 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
         gfn <- buildKNNGraph
     }
     sce <- .prepSCE(sce, nfeatures=nfeatures, ndims=dims) 
-    g <- gfn(sce, BPPARAM=BPPARAM, use.dimred="PCA", k=k)
+    g <- gfn(sce, BPPARAM=BPPARAM, use.dimred="PCA", k=k, BNPARAM=AnnoyParam())
     sce$scDblFinder.clusters <- switch(method,
         louvain=igraph::cluster_louvain(g)$membership,
         fast_greedy=igraph::cluster_fast_greedy(g)$membership,

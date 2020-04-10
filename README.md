@@ -2,7 +2,20 @@
 
 ## Introduction
 
-scDblFinder  identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their prevalence in the neighborhood of each cell. The rough logic is very similar to *[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*, but it simpler and more efficient. In a nutshell, instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids creating homotypic doublets and enables the detection of most heterotypic doublets with much fewer artificial doublets. We also rely on the expected proportion of doublets to threshold the scores, we include a variability in the estimate of the doublet proportion (`dbr.sd`), and use the error rate of the real/artificial predicition in conjunction with the deviation in global doublet rate to set the threshold.
+scDblFinder identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their 
+prevalence in the neighborhood of each cell. The rough logic is very similar to 
+*[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*, but it is simpler and more efficient. In a 
+nutshell, instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and 
+create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids 
+creating homotypic doublets and enables the detection of most heterotypic doublets with much fewer artificial doublets. 
+We also rely on the expected proportion of doublets to threshold the scores, we include a variability in the estimate 
+of the doublet proportion (`dbr.sd`), and use the error rate of the real/artificial predicition in conjunction with 
+the deviation in global doublet rate to set the threshold.
+
+The approach described here is complementary to doublets identified via cell hashes and SNPs in multiplexed samples. 
+The latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable
+from real cells transcriptionally (and hence unidentifiable through the present package), but cannot identify doublets
+made by cells of the same sample.
 
 ## Installation
 
@@ -13,7 +26,7 @@ or directly through github:
 
 ## Usage
 
-Given an object `sce` of class `SingleCellExperiment`:
+Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered):
 
 ```r
 library(scDblFinder)
