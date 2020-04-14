@@ -46,19 +46,19 @@ scDblFinder was developed under R 3.6. Install with:
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install("scDblFinder")
-```
 
-Or, to get that latest developments:
-```{r, eval=FALSE}
+# or, to get that latest developments:
 BiocManager::install("plger/scDblFinder")
 ```
 
 ## Usage
 
 Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered) :
-```{r, eval=FALSE}
+```{r}
+# we create a dummy dataset
+sce <- scater::mockSCE(ncells=500, ngenes=500)
 library(scDblFinder)
-sce <- scDblFinder(sce)
+sce <- scDblFinder(sce, verbose=FALSE)
 ```
 
 This will add the following columns to the colData of `sce`:
