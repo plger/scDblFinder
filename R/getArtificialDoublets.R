@@ -23,9 +23,9 @@
 #' 
 #' @import Matrix
 #' @export
-getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
+getArtificialDoublets <- function( x, n=3000, clusters=NULL,
                                    n.meta.cells=1, meta.triplets=TRUE ){
-  if(prop.fullyRandom>0 | is.null(clusters)){
+  if(is.null(clusters)){
     # create random combinations
     nr <- ifelse(is.null(clusters), n, ceiling(prop.fullyRandom*n))
     if(ncol(x)^2 <= nr){
@@ -39,25 +39,19 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     # create doublets
     ad.m <- x[,ad[,1]]+x[,ad[,2]]
     colnames(ad.m) <- paste0("arificialDoublet.", seq_len(ncol(ad.m)))
-    
-    if(is.null(clusters)) return(ad.m)
-  }else{
-    ad.m <- NULL
+    return(ad.m)
   }
   
   if(is.null(clusters) || length(unique(clusters))<3) n.meta.cells <- 0
     
   # create doublets across clusters:
-  n <- ceiling(n*(1-prop.fullyRandom))
+  n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
-  colnames(m2) <- paste0( "arificialDoublet.",
-                          ifelse(is.null(ad.m),0,ncol(ad.m))+seq_len(ncol(m2)) )
-  if(is.null(ad.m)){
-    ad.m <- m2
-  }else{
-    ad.m <- cbind(ad.m, m2)
-  }
+  oc <- ca$orig.clusters
+  names(oc) <- colnames(m2) <- paste0( "arificialDoublet.", seq_len(ncol(m2)) )
+  ad.m <- m2
+  rm(m2)
   
   if(n.meta.cells>0){
     # create doublets from meta cells:
@@ -66,8 +60,11 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     clusters <- rep(unique(clusters),each=n.meta.cells)
     ca <- .getCellPairs(clusters, n=ceiling(n*0.2))
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]
-    colnames(m2) <- paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
+    oc2 <- ca$orig.clusters
+    names(oc2) <- colnames(m2) <- 
+      paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
+    oc <- c(oc,oc2)
   }
   
   if(meta.triplets && length(unique(clusters)) >= 3){
@@ -87,8 +84,11 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     ca <- expand.grid(i, i, i)
     ca <- ca[apply(ca,1,FUN=function(x){ length(unique(x)) })==3,]
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]+meta[,ca[,3]]
-    colnames(m2) <- paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
+    oc2 <- rep(NA, ncol(m2))
+    names(oc2) <- colnames(m2) <- 
+      paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
+    oc <- c(oc,oc2)
   }
-  ad.m
+  list( counts=ad.m, origins=oc )
 }
