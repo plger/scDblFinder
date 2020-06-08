@@ -83,13 +83,16 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
 .getCellPairs <- function(clusters, n=1000){
   cli <- split(seq_along(clusters), clusters)
   ca <- expand.grid(unique(clusters), unique(clusters))
+  ca <- t(apply(ca, 1, FUN=function(x) sort(x)))
+  ca <- !duplicated(ca)
   ca <- ca[which(ca[,1]!=ca[,2]),]
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), 
-                               n=ceiling(n/nrow(ca)), 
-                               FUN=function(i,n){ 
+  n <- ceiling(n/nrow(ca))
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i,n){ 
     cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
            sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
   }))
+  oc <- paste(rep(ca[,1], each=n), rep(ca[,1], each=n), sep="+")
+  ca <- data.frame(ca, orig.clusters=as.factor(oc))
   ca[!duplicated(ca),]
 }  
 
