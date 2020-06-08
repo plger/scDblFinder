@@ -4,8 +4,15 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(scores, celltypes, clusters = NULL, dbr = 0.025,
-  dbr.sd = 0.02, prop.fullyRandom = 0, do.plot = TRUE)
+doubletThresholding(
+  scores,
+  celltypes,
+  clusters = NULL,
+  dbr = 0.025,
+  dbr.sd = 0.02,
+  prop.fullyRandom = 0,
+  do.plot = TRUE
+)
 }
 \arguments{
 \item{scores}{A vector of the doublet score for each cell (real and 

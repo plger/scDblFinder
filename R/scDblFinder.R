@@ -61,6 +61,7 @@
 #' @importFrom methods is
 #' @importFrom DelayedArray as.matrix
 #' @importFrom BiocNeighbors findKNN
+#' @importFrom BiocSingular IrlbaParam
 #' 
 #' @examples
 #' library(SingleCellExperiment)
@@ -181,33 +182,43 @@ numbers of cells.")
                                                   n=artificialDoublets, 
                                                   clusters=clusters ) )
   }
+  ado <- ad$origins
+  ad <- ad$counts
+  ado2 <- as.factor(c(rep(NA, ncol(sce)), as.character(ado)))
 
   e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
   e <- normalizeCounts(e)
   pca <- tryCatch({
-            scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)))
+            scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
+                                 BSPARAM=BiocSingular::IrlbaParam())
         }, error=function(msg){
             reducedDim( scater::runPCA( SingleCellExperiment(list(logcounts=e)), 
-                            rank=ndims, ntop=nrow(e)) )
+                                        ncomponents=dims, ntop=nrow(e),
+                                        BSPARAM=BiocSingular::IrlbaParam()) )
         })
   if(is.list(pca)) pca <- pca$x
+  row.names(pca) <- colnames(e)
 
   # evaluate by library size and non-zero features
   lsizes <- c(colSums(counts(sce)),colSums(ad))
   nfeatures <- c(colSums(counts(sce)>0), colSums(ad>0))
   
   if(verbose) message("Finding KNN...")
-  ctype <- factor(rep(c("real","artificial"), c(ncol(sce),ncol(ad))))
+  ctype <- factor( rep(1:2, c(ncol(sce),ncol(ad))), 
+                   labels = c("real","artificial"))
   knn <- suppressWarnings(findKNN(pca, k, BPPARAM=BPPARAM))
   
   if(verbose) message("Evaluating cell neighborhoods...")
-  knn$type <- matrix(as.numeric(ctype)[knn[[1]]]==1, nrow=nrow(knn[[1]]))
+  knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
+  knn$orig <- matrix(ado2[knn$index], nrow=nrow(knn[[1]]))
   if(any(knn$distance==0)) knn$distance <- knn$distance + 0.01
   w <- 1/knn$distance
 
   d <- data.frame( weighted=rowSums(knn$type*w/rowSums(w)),
                    distanceToNearest=knn$distance[,1],
-                   ratio=rowSums(knn$type)/k )
+                   ratio=rowSums(knn$type)/k,
+                   .getMostLikelyOrigins(knn) )
+  
   rm(knn)
   rm(pca)
   
@@ -239,9 +250,12 @@ numbers of cells.")
   d$type <- NULL
   row.names(d) <- colnames(orig)
   d <- d[colnames(orig),]
+  orig$scDblFinder.cluster <- clusters
   orig$scDblFinder.weighted <- d$weighted
   orig$scDblFinder.ratio <- d$ratio
   orig$scDblFinder.score <- d$score
   orig$scDblFinder.class <- d$classification
+  orig$scDblFinder.mostLikelyOrigin <- d$mostLikelyOrigin
+  orig$scDblFinder.originAmbiguous <- d$originAmbiguous
   orig
 }

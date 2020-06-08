@@ -40,7 +40,7 @@
 #' @export
 doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025, 
                                 dbr.sd=0.02, prop.fullyRandom=0, do.plot=TRUE){
-  if(!all(sort(unique(celltypes))==c("artificial","real"))){
+  if(!all(sort(as.character(unique(celltypes)))==c("artificial","real"))){
     stop("`celltypes` should be either 'real' or 'artificial'.")
   }
   if(any(is.na(scores))){

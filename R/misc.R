@@ -82,17 +82,15 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
 # get random cross-cluster pairs of cells from a cluster assignment vector
 .getCellPairs <- function(clusters, n=1000){
   cli <- split(seq_along(clusters), clusters)
-  ca <- expand.grid(unique(clusters), unique(clusters))
-  ca <- t(apply(ca, 1, FUN=function(x) sort(x)))
-  ca <- !duplicated(ca)
-  ca <- ca[which(ca[,1]!=ca[,2]),]
+  ca <- expand.grid(seq_along(cli), seq_along(cli))
+  ca <- ca[ca[,1]<ca[,2],]
   n <- ceiling(n/nrow(ca))
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i,n){ 
+  oc <- paste( names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
     cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
            sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
   }))
-  oc <- paste(rep(ca[,1], each=n), rep(ca[,1], each=n), sep="+")
-  ca <- data.frame(ca, orig.clusters=as.factor(oc))
+  ca <- data.frame(ca, orig.clusters=rep(as.factor(oc), each=n))
   ca[!duplicated(ca),]
 }  
 
@@ -110,3 +108,30 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   meta
 }
 
+
+
+.tablevec <- function(x){
+  if(!is(x, "table")) x <- table(x)
+  y <- as.numeric(x)
+  names(y) <- names(x)
+  y
+}
+
+.getMostLikelyOrigins <- function(knn){
+  origins <- t(vapply( seq_len(nrow(knn$orig)), FUN.VALUE=character(2),
+                       FUN=function(i){
+           if(all(is.na(knn$orig[i,]))) return(c(NA_character_,NA_character_))
+           n <- .tablevec(knn$orig[i,])
+           if(length(n)==1) return(c(names(n),FALSE))
+           if(sum(n==max(n))==1) return(c(names(n)[which.max(n)],FALSE))
+           x <- split(knn$distance[i,], knn$orig[i,])
+           x <- sort(vapply(x,min,numeric(1)))
+           if( (x[2]-x[1])/x[1] > 0.2 ) return(c(names(x)[1], FALSE))
+           return(c(names(x)[1], TRUE))
+                       }))
+  origins <- as.data.frame(origins)
+  colnames(origins) <- c("mostLikelyOrigin", "originAmbiguous")
+  origins[,1] <- factor(origins[,1])
+  origins[,2] <- as.logical(origins[,2])
+  origins
+}

@@ -48,7 +48,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
-  oc <- ca$orig.clusters
+  oc <- as.character(ca$orig.clusters)
   names(oc) <- colnames(m2) <- paste0( "arificialDoublet.", seq_len(ncol(m2)) )
   ad.m <- m2
   rm(m2)
@@ -64,31 +64,28 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     names(oc2) <- colnames(m2) <- 
       paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
-    oc <- c(oc,oc2)
+    oc <- c(oc,as.character(oc2))
   }
   
-  if(meta.triplets && length(unique(clusters)) >= 3){
+  pc10 <- length(clusters)/10
+  tt <- table(clusters)
+  if(meta.triplets && length(tt)>2){
+    # get clusters that have more than 10% of the cells
+    cl2 <- names(tt)[tt>=pc10]
+    # otherwise get the 3 largest clusters
+    if(length(cl2)<3) cl2 <- names(sort(tt, decreasing=TRUE))[1:3]
+    w <- which(clusters %in% cl2)
     # create triplets from meta cells:
-    if(length(unique(clusters))^3 > n){
-      tt <- table(clusters)
-      topc <- min(10,length(tt))
-      warning("Too many clusters - will create triplets only for the ", topc,
-              " largest clusters.")
-      tt <- names(tt)[order(tt,decreasing=TRUE)[seq_len(topc)]]
-      w <- which(clusters %in% tt)
-      x <- x[,w]
-      clusters <- clusters[w]
-    }
-    meta <- .getMetaCells(x, clusters, n.meta.cells=1, meta.cell.size=100)
+    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, meta.cell.size=100)
     i <- seq_len(ncol(meta))
     ca <- expand.grid(i, i, i)
-    ca <- ca[apply(ca,1,FUN=function(x){ length(unique(x)) })==3,]
-    m2 <- meta[,ca[,1]]+meta[,ca[,2]]+meta[,ca[,3]]
-    oc2 <- rep(NA, ncol(m2))
+    ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
+    m2 <- meta[,ca[,1],drop=FALSE]+meta[,ca[,2],drop=FALSE]+meta[,ca[,3],drop=FALSE]
+    oc2 <- rep(NA_character_, ncol(m2))
     names(oc2) <- colnames(m2) <- 
       paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
-    oc <- c(oc,oc2)
+    oc <- c(oc, oc2)
   }
-  list( counts=ad.m, origins=oc )
+  list( counts=ad.m, origins=as.factor(oc) )
 }
