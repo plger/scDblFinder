@@ -1,22 +1,16 @@
 #' overcluster
 #'
 #' This function deliberately overclusters based on the desired range of cluster
-#' size. It first calculates a SNN network viar `scran::buildSNNGraph`, then 
-#' runs `igraph::cluster_fast_greedy` until no cluster is above the size limits,
-#'  and merges clusters that are too small. By default, `rankTrans` is used on 
-#' the counts before, because it tends to produce over-clustering influenced by 
-#' library size, which is desirable for producing artificial doublets.
+#' size. It uses iterative calls to `igraph::cluster_fast_greedy` until no 
+#' cluster is above the size limits, and merges clusters that are too small.
 #'
 #' @param x A numeric matrix, with entities (e.g. cells) as columns and features
 #'  (e.g. genes) as rows. Alternatively, an object of class `igraph`.
-#' @param rtrans Transformation to apply, either 'rankTrans' (default, dense 
-#' step-preserving rank transformation, see `rankTrans`), 'scran' (default; see 
-#' `scran::scaledColRanks`), or 'none' (data taken as-is). Ignored if `x` is an
-#' `igraph`.
 #' @param min.size The minimum cluster size (applies after splitting, and hence 
 #' overrides `max.size`)
 #' @param max.size The maximum cluster size. If omitted, will be calculated on 
 #' the basis of the population size and initial number of clusters.
+#' @param rdname Optional name of the reduced dimension to use.
 #'
 #' @return A vector of cluster labels.
 #' 
@@ -26,26 +20,55 @@
 #' cc <- suppressWarnings(overcluster(m,min.size=5))
 #' table(cc)
 #' 
-#' @importFrom scran buildSNNGraph scaledColRanks
+#' @importFrom scran buildSNNGraph
 #' @importFrom igraph V cluster_fast_greedy membership
 #' @export
-overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50, 
-                         max.size=NULL){
+overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
   if(is.igraph(x)){
       N <- length(V(x))
       g <- x
   }else{
-      x <- switch( match.arg(rtrans),
-                   scran=scaledColRanks(x),
-                   rankTrans=rankTrans(x),
-                   x)
-      g <- buildSNNGraph(x)
-      N <- ncol(x)
+    x <- .prepSCE(x, ...)
+    g <- buildSNNGraph(x, use.dimred=rdname, BNPARAM=AnnoyParam())
   }
-  cl <- membership(cluster_fast_greedy(g))
-  if(is.null(max.size))
-      max.size <- ceiling(max(N/(2*length(unique(cl))),min.size+1))
+  cl <- membership(cluster_fast_greedy(g, merges=FALSE, modularity=FALSE))
   resplitClusters(g, cl=cl, min.size=min.size, max.size=max.size)
+}
+
+.getMaxSize <- function(cl, max.size=NULL, min.size){
+  if(!is.null(max.size)) return(max.size)
+  ceiling(max(length(cl)/(2*length(unique(cl))),min.size+1))
+}
+
+#' fastcluster
+#'
+#' Performs a fast two-step clustering: first clusters using k-means with a very
+#' large k, then uses louvain clustering of the k cluster averages and reports
+#' back the cluster labels.
+#'
+#' @param x An object of class SCE
+#' @param k The number of k-means clusters to use in the primary step (should 
+#' be much higher than the number of expected clusters). Defaults to 1/10th of 
+#' the number of cells with a maximum of 3000.
+#' @param rdname The name of the dimensionality reduction to use.
+#' @param nstart Number of starts for k-means clustering
+#' @param iter.max Number of iterations for k-means clustering
+#' @param ndims Number of dimensions to use
+#' @param nfeatures Number of features to use if doing PCA
+#'
+#' @return A vector of cluster labels
+#' @export
+fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
+                         ndims=30, nfeatures=1000){
+  if(!(rdname %in% reducedDimNames(x)))
+    x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
+  x <- reducedDim(x, rdname)
+  if(is.null(k)) k <- min(3000, floor(nrow(x)/10))
+  k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
+  ag <- sapply(split(names(k),k), FUN=function(i) colMeans(x[i,,drop=FALSE]))
+  cl <- membership(cluster_louvain(buildKNNGraph(ag)))
+  cl <- cl[k]
+  cl
 }
 
 
@@ -64,6 +87,7 @@ overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50,
 #' @param iterative Logical; whether to resplit until no cluster is above the 
 #' size limit or no improvement is made (default TRUE). If FALSE, splits each 
 #' cluster once.
+#' @param nodesizes Optional size of each node of the graph
 #'
 #' @return A vector of cluster assignments.
 #' 
@@ -76,7 +100,8 @@ overcluster <- function( x, rtrans=c("rankTrans","scran","none"), min.size=50,
 #' @importFrom igraph V E cluster_fast_greedy membership subgraph modularity
 #' @export
 resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50, 
-                             renameClusters=TRUE, iterative=TRUE ){
+                             renameClusters=TRUE, iterative=TRUE, 
+                             nodesizes=NULL ){
     if(!is.null(max.size) && !is.null(min.size) && max.size<min.size) 
         stop("max.size and min.size are incompatible")
     if(is.null(cl)){
@@ -99,9 +124,10 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         }
     }
     ## repeat until no more improvement or no cluster is above limit
-    while(iterative && max(table(cl))>max.size){
+    while(iterative && max(.getClusterSizes(cl, nodesizes))>max.size){
         newcl <- resplitClusters( g, cl, max.size=max.size, min.size=NULL, 
-                                  renameClusters=FALSE, iterative=FALSE )
+                                  renameClusters=FALSE, iterative=FALSE,
+                                  nodesizes=nodesizes )
         if(identical(cl, newcl)) iterative <- FALSE
         cl <- newcl
     }
@@ -109,8 +135,9 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         ## merge clusters below minimum
         ## adapted from scran:::.merge_closest_graph()
         oldcl <- NULL
-        while(min(table(cl))<min.size && !identical(oldcl, cl)){
-            cs <- table(cl)
+        while( min(.getClusterSizes(cl, nodesizes))<min.size && 
+               !identical(oldcl, cl) ){
+            cs <- .getClusterSizes(cl, nodesizes)
             oldcl <- cl
             min.cs <- names(cs)[which.min(cs)]
             other.cl <- setdiff(names(cs), min.cs)
@@ -132,44 +159,17 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     cl
 }
 
-
-#' fastClust
-#'
-#' @param sce An object of class `SingleCellExperiment`
-#' @param nfeatures For the PCA
-#' @param k number of nearest neighbors
-#' @param dims number of PCA dimensions
-#' @param graph.type either snn or knn
-#' @param method Either 'louvain' or 'fast_greedy'
-#' @param BPPARAM Passed to scran for KNN/SNN graph generation
-#' @param ... passed to `overcluster`
-#'
-#' @return The `SingleCellExperiment` object with an additional colData column
-#' scDblFinder.clusters
-#' 
-#' @importFrom scran buildSNNGraph buildKNNGraph
-#' @importFrom BiocNeighbors AnnoyParam
-#' @importFrom igraph cluster_fast_greedy cluster_louvain is.igraph
-#' @export
-fastClust <- function( sce, nfeatures=1000, k=10, dims=20, 
-                       graph.type=c("snn","knn"),
-                       method=c("louvain","fast_greedy","overcluster"),
-                       BPPARAM=BiocParallel::SerialParam(), ...){
-    method <- match.arg(method)
-    if(graph.type=="snn"){ 
-        gfn <- buildSNNGraph
-    }else{
-        gfn <- buildKNNGraph
-    }
-    sce <- .prepSCE(sce, nfeatures=nfeatures, ndims=dims) 
-    g <- gfn(sce, BPPARAM=BPPARAM, use.dimred="PCA", k=k, BNPARAM=AnnoyParam())
-    sce$scDblFinder.clusters <- switch(method,
-        louvain=igraph::cluster_louvain(g)$membership,
-        fast_greedy=igraph::cluster_fast_greedy(g)$membership,
-        overcluster=overcluster(g, ...)
-    )
-    sce
+.getClusterSizes <- function(cl, nodesizes=NULL){
+  if(is.null(nodesizes)) return(table(cl))
+  if(length(cl)!=length(nodesizes) && 
+     (is.null(names(nodesizes)) || is.null(names(cl)) ||
+     !all(names(cl) %in% names(nodesizes)) ) )
+     stop("Cannot match nodes sizes and clusters.")
+  if(!is.null(names(cl)) && is.null(names(cl)))
+    nodesizes <- nodesizes[names(cl)]
+  sapply(split(nodesizes, cl), FUN=sum)
 }
+
 
 #' @importFrom scater runPCA logNormCounts librarySizeFactors computeLibraryFactors 
 #' @importFrom BiocSingular IrlbaParam

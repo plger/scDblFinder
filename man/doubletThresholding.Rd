@@ -4,17 +4,14 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(
-  scores,
-  celltypes,
-  clusters = NULL,
-  dbr = 0.025,
-  dbr.sd = 0.02,
-  prop.fullyRandom = 0,
-  do.plot = TRUE
-)
+doubletThresholding(d, dbr = 0.025, dbr.sd = 0.02, local = TRUE)
 }
 \arguments{
+\item{dbr}{The expected (mean) doublet rate.}
+
+\item{dbr.sd}{The standard deviation of the doublet rate, representing the 
+uncertainty in the estimate.}
+
 \item{scores}{A vector of the doublet score for each cell (real and 
 artificial); can be anything ranging from 0 to 1, with higher scores 
 indicating higher change of being a doublet.}
@@ -25,11 +22,6 @@ cell, whether it is a 'real' cell or an 'artificial' doublet. Missing values
 
 \item{clusters}{Optional vector of cluster assignment for each (real) cell, 
 used for homotypic doublet correction.}
-
-\item{dbr}{The expected (mean) doublet rate.}
-
-\item{dbr.sd}{The standard deviation of the doublet rate, representing the 
-uncertainty in the estimate.}
 
 \item{prop.fullyRandom}{The proportion of artificical doublets that are fully
  random, used for homotypy correction. Default 0.25 (the default value in 

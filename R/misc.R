@@ -117,7 +117,7 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   y
 }
 
-.getMostLikelyOrigins <- function(knn){
+.getMostLikelyOrigins <- function(knn, known.origins=NULL){
   origins <- t(vapply( seq_len(nrow(knn$orig)), FUN.VALUE=character(2),
                        FUN=function(i){
            if(all(is.na(knn$orig[i,]))) return(c(NA_character_,NA_character_))
@@ -131,7 +131,84 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
                        }))
   origins <- as.data.frame(origins)
   colnames(origins) <- c("mostLikelyOrigin", "originAmbiguous")
+  if(!is.null(known.origins)){
+    w <- which(!is.na(known.origins))
+    origins[w,1] <- known.origins[w]
+    origins[w,2] <- "FALSE"
+  }
   origins[,1] <- factor(origins[,1])
   origins[,2] <- as.logical(origins[,2])
   origins
+}
+
+.adjust.dbr.homotypy <- function(clusters, dbr=NULL){
+  if(is.null(dbr)) dbr <- (0.01*length(clusters)/1000)
+  # adjust expected dbr for expected homotypic doublets
+  homotypic.prop <- sum((table(clusters)/length(clusters))^2)
+  dbr*(1-homotypic.prop)
+}
+
+getExpectedDoublets <- function(x, dbr=NULL, doPlot=is(x,"SingleCellExperiment")){
+  if(is(x,"SingleCellExperiment")){
+    clusters <- x$scDblFinder.clusters
+  }else{
+    doPlot <- FALSE
+    clusters <- x
+  }
+  ncells <- length(clusters)
+  dbr <- .adjust.dbr.homotypy(clusters, dbr)
+  cs <- table(clusters)
+  eg <- expand.grid(seq_along(unique(clusters)), seq_along(unique(clusters)))
+  eg <- eg[eg[,1]<eg[,2],]
+  nd <- ceiling(dbr*ncells)
+  expected <- apply(eg,1, FUN=function(x){
+    nd*(cs[[x[[1]]]]/ncells)*(cs[[x[[2]]]]/ncells)
+  })
+  names(expected) <- apply(eg,1,FUN=function(x){
+    paste(names(cs)[x], collapse="+")
+  })
+  if(!doPlot) return(expected)
+  observed <- table(x$scDblFinder.mostLikelyOrigin[x$scDblFinder.class=="doublet"])
+  observed <- observed[names(expected)]
+  observed[is.na(observed)] <- 0
+  observed <- .castorigins(observed)
+  expected <- .castorigins(expected)
+  enrich <- log2((observed+1)/(expected+1))
+  Heatmap(enrich, name="log2(enrichment)", column_title="Clusters", 
+          column_title_side = "bottom", col=viridis(100), na_col="white", 
+          cell_fun = function(j, i, x, y, width, height, fill){
+            grid.text(as.character(observed[i, j]), x, y, gp=gpar(fontsize=10))
+          })
+}
+
+.castorigins <- function(e, val=NULL){
+  if(is.table(e) || is.null(dim(e))){
+    e <- cbind(do.call(rbind, strsplit(names(e),"+",fixed=TRUE)),
+               data.frame(val=as.numeric(e)))
+  }
+  if(is.null(val)) val <- rev(colnames(e))[1]
+  names(n) <- n <- unique(as.character(as.matrix(e[,1:2])))
+  sapply(n, FUN=function(x){
+    sapply(n, FUN=function(y){
+      if(x==y) return(NA)
+      w <- which(e[,1] %in% c(x,y) & e[,2] %in% c(x,y))
+      if(length(w)==0) return(0)
+      sum(e[w,val])
+    })
+  })
+}
+
+.clusterTopG <- function(sce, clusters=NULL, nfeatures=1000){
+  if(is.null(clusters))
+    return(row.names(sce)[order(Matrix::rowMeans(counts(sce)),decreasing=TRUE)])
+  # get mean expression across clusters
+  cli <- split(seq_len(ncol(sce)), clusters)
+  cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce)), FUN=function(x){
+    Matrix::rowMeans(counts(sce)[,x,drop=FALSE])
+  })
+  # grab the top genes in each cluster
+  g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
+    order(x, decreasing=TRUE)[seq_len(nfeatures)]
+  })))
+  g
 }
