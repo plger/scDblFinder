@@ -148,11 +148,10 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   dbr*(1-homotypic.prop)
 }
 
-getExpectedDoublets <- function(x, dbr=NULL, doPlot=is(x,"SingleCellExperiment")){
+getExpectedDoublets <- function(x, dbr=NULL){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
   }else{
-    doPlot <- FALSE
     clusters <- x
   }
   ncells <- length(clusters)
@@ -167,18 +166,7 @@ getExpectedDoublets <- function(x, dbr=NULL, doPlot=is(x,"SingleCellExperiment")
   names(expected) <- apply(eg,1,FUN=function(x){
     paste(names(cs)[x], collapse="+")
   })
-  if(!doPlot) return(expected)
-  observed <- table(x$scDblFinder.mostLikelyOrigin[x$scDblFinder.class=="doublet"])
-  observed <- observed[names(expected)]
-  observed[is.na(observed)] <- 0
-  observed <- .castorigins(observed)
-  expected <- .castorigins(expected)
-  enrich <- log2((observed+1)/(expected+1))
-  Heatmap(enrich, name="log2(enrichment)", column_title="Clusters", 
-          column_title_side = "bottom", col=viridis(100), na_col="white", 
-          cell_fun = function(j, i, x, y, width, height, fill){
-            grid.text(as.character(observed[i, j]), x, y, gp=gpar(fontsize=10))
-          })
+  expected
 }
 
 .castorigins <- function(e, val=NULL){
@@ -211,4 +199,42 @@ getExpectedDoublets <- function(x, dbr=NULL, doPlot=is(x,"SingleCellExperiment")
     order(x, decreasing=TRUE)[seq_len(nfeatures)]
   })))
   g
+}
+
+#' @export
+plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed", 
+                           addSizes=TRUE, col=NULL, column_title="Clusters", 
+                           row_title="Clusters", column_title_side="bottom", 
+                           na_col="white", ...){
+  s <- metadata(sce)$scDblFinder.stats
+  s$enrichment <- (s$observed+1)/(s$expected+1)
+  colorBy <- match.arg(colorBy, colnames(s))
+  labelBy <- match.arg(labelBy, colnames(s))
+  comb <- do.call(rbind,strsplit(s$combination,"+",fixed=TRUE))
+  colnames(comb) <- paste0("cluster",1:2)
+  s <- cbind(comb, s)
+  ob <- .castorigins(s, val="observed")
+  en <- .castorigins(s, val=colorBy)
+  if(colorBy=="enrichment"){
+    en <- log2(en)
+    colorBy <- "log2\nenrichment"
+  }
+  if(addSizes){
+    sizes <- table(sce$scDblFinder.cluster)
+    n <- paste0(colnames(ob), " (", as.numeric(sizes[colnames(ob)]),")")
+    colnames(ob) <- row.names(ob) <- colnames(en) <- row.names(en) <- n
+    if(is.null(col))
+      col <- circlize::colorRamp2(c(min(en,na.rm=TRUE),0,max(en,na.rm=TRUE)),
+                                 colors=c("blue","white","red"))
+  }else{
+    if(is.null(col)) col <- viridisLite::viridis(100)
+  }
+  
+  Heatmap(en, name=colorBy, column_title=column_title, 
+          row_title=row_title, column_title_side=column_title_side, 
+          col=col, na_col=na_col,
+          cell_fun = function(j, i, x, y, width, height, fill){
+            if(is.na(ob[i, j])) return(NULL)
+            grid.text(as.character(ob[i, j]), x, y, gp=gpar(fontsize=10))
+          }, ...)
 }
