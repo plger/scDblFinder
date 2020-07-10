@@ -26,10 +26,11 @@ recoverDoublets(x, ...)
 }
 \arguments{
 \item{x}{A log-expression matrix for all cells (including doublets) in columns and genes in rows.
-Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing such a matrix.
+If \code{transposed=TRUE}, this should be a matrix of low-dimensional coordinates where each row corresponds to a cell.
 
-If \code{transposed=TRUE}, a matrix of low-dimensional coordinates where each row corresponds to a cell.
-This can also be in the \code{\link{reducedDims}} of a \linkS4class{SingleCellExperiment} if \code{use.dimred} is specified.}
+Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing 
+(i) a log-expression matrix in the \code{\link{assays}} as specified by \code{assay.type},
+or (ii) a matrix of reduced dimensions in the \code{\link{reducedDims}} as specified by \code{use.dimred}.}
 
 \item{...}{For the generic, additional arguments to pass to specific methods.
 
@@ -46,7 +47,7 @@ used to determine how many cells are to be considered as intra-sample doublets.}
 
 \item{transposed}{Logical scalar indicating whether \code{x} is transposed, i.e., cells in the rows.}
 
-\item{subset.row}{See \code{?"\link{scran-gene-selection}"}, specifying the genes to use for the neighbor search. 
+\item{subset.row}{A logical, integer or character vector specifying the genes to use for the neighbor search. 
 Only used when \code{transposed=FALSE}.}
 
 \item{BNPARAM}{A \linkS4class{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.}
@@ -55,7 +56,7 @@ Only used when \code{transposed=FALSE}.}
 
 \item{assay.type}{A string specifying which assay values contain the log-expression matrix.}
 
-\item{use.dimred}{A string specifying whether existing values in \code{reducedDims(x)} should be used.}
+\item{use.dimred}{A string specifying whether existing values in \code{\link{reducedDims}(x)} should be used.}
 }
 \value{
 A \linkS4class{DataFrame} containing one row per cell and the following fields:

@@ -3,16 +3,17 @@
 #' Recover intra-sample doublets that are neighbors to known inter-sample doublets in a multiplexed experiment.
 #'
 #' @param x A log-expression matrix for all cells (including doublets) in columns and genes in rows.
-#' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing such a matrix.
+#' If \code{transposed=TRUE}, this should be a matrix of low-dimensional coordinates where each row corresponds to a cell.
 #'
-#' If \code{transposed=TRUE}, a matrix of low-dimensional coordinates where each row corresponds to a cell.
-#' This can also be in the \code{\link{reducedDims}} of a \linkS4class{SingleCellExperiment} if \code{use.dimred} is specified.
+#' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing 
+#' (i) a log-expression matrix in the \code{\link{assays}} as specified by \code{assay.type},
+#' or (ii) a matrix of reduced dimensions in the \code{\link{reducedDims}} as specified by \code{use.dimred}.
 #' @param doublets A logical, integer or character vector specifying which cells in \code{x} are known (inter-sample) doublets.
 #' @param samples A numeric vector containing the relative proportions of cells from each sample,
 #' used to determine how many cells are to be considered as intra-sample doublets.
 #' @param k Integer scalar specifying the number of nearest neighbors to use for computing the local doublet proportions.
 #' @param transposed Logical scalar indicating whether \code{x} is transposed, i.e., cells in the rows.
-#' @param subset.row See \code{?"\link{scran-gene-selection}"}, specifying the genes to use for the neighbor search. 
+#' @param subset.row A logical, integer or character vector specifying the genes to use for the neighbor search. 
 #' Only used when \code{transposed=FALSE}.
 #' @param BNPARAM A \linkS4class{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying the parallelization to use for the nearest neighbor search.
@@ -22,7 +23,7 @@
 #'
 #' For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.
 #' @param assay.type A string specifying which assay values contain the log-expression matrix. 
-#' @param use.dimred A string specifying whether existing values in \code{reducedDims(x)} should be used.
+#' @param use.dimred A string specifying whether existing values in \code{\link{reducedDims}(x)} should be used.
 #'
 #' @return
 #' A \linkS4class{DataFrame} containing one row per cell and the following fields:
