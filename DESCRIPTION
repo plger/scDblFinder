@@ -3,14 +3,40 @@ Type: Package
 Title: scDblFinder
 Version: 1.1.15
 Depends: R (>= 4.0)
-Authors@R: person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218"))
+Authors@R: c(
+    person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
+    person("Aaron", "Lun", email="infinite.monkeys.with.keyboards@gmail.com", role="ctb"))
 URL: https://github.com/plger/scDblFinder
 BugReports: https://github.com/plger/scDblFinder/issues
 Description: Efficient identification of doublets in single-cell RNAseq directly from counts using overclustering-based generation of artifical doublets.
 License: GPL-3
-Imports: igraph, Matrix, matrixStats, BiocParallel, BiocNeighbors, BiocSingular, SummarizedExperiment, SingleCellExperiment, scran, scater, data.table, dplyr, ggplot2, randomForest, graphics, methods, stats, DelayedArray
-Suggests: BiocStyle, knitr, rmarkdown
+Imports: 
+    igraph, 
+    Matrix, 
+    matrixStats, 
+    BiocParallel, 
+    BiocNeighbors, 
+    BiocSingular, 
+    S4Vectors,
+    SummarizedExperiment, 
+    SingleCellExperiment, 
+    scran, 
+    scater, 
+    scuttle,
+    data.table, 
+    dplyr, 
+    ggplot2, 
+    randomForest, 
+    graphics, 
+    methods, 
+    stats, 
+    DelayedArray
+Suggests: 
+    BiocStyle, 
+    knitr, 
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 biocViews: Preprocessing, SingleCell, RNASeq
