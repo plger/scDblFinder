@@ -127,6 +127,7 @@ NULL
 
 #' @export
 #' @rdname recoverDoublets
+#' @import methods
 setGeneric("recoverDoublets", function(x, ...) standardGeneric("recoverDoublets"))
 
 #' @export

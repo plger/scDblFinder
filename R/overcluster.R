@@ -171,7 +171,8 @@ fastClust <- function( sce, nfeatures=1000, k=10, dims=20,
     sce
 }
 
-#' @importFrom scater runPCA logNormCounts librarySizeFactors computeLibraryFactors 
+#' @importFrom scater runPCA 
+#' @importFrom scuttle logNormCounts librarySizeFactors computeLibraryFactors 
 #' @importFrom BiocSingular IrlbaParam
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000){
