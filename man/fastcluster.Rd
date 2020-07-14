@@ -4,8 +4,15 @@
 \alias{fastcluster}
 \title{fastcluster}
 \usage{
-fastcluster(x, k = NULL, rdname = "PCA", nstart = 2, iter.max = 20,
-  ndims = 30, nfeatures = 1000)
+fastcluster(
+  x,
+  k = NULL,
+  rdname = "PCA",
+  nstart = 2,
+  iter.max = 20,
+  ndims = 30,
+  nfeatures = 1000
+)
 }
 \arguments{
 \item{x}{An object of class SCE}

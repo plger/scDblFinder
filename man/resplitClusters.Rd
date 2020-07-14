@@ -4,8 +4,15 @@
 \alias{resplitClusters}
 \title{resplitClusters}
 \usage{
-resplitClusters(g, cl = NULL, max.size = 500, min.size = 50,
-  renameClusters = TRUE, iterative = TRUE, nodesizes = NULL)
+resplitClusters(
+  g,
+  cl = NULL,
+  max.size = 500,
+  min.size = 50,
+  renameClusters = TRUE,
+  iterative = TRUE,
+  nodesizes = NULL
+)
 }
 \arguments{
 \item{g}{An object of class `igraph`}

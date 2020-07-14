@@ -4,8 +4,7 @@
 \alias{plotROCs}
 \title{plotROCs}
 \usage{
-plotROCs(scores, truth, called.class = NULL, nbT = TRUE,
-  dot.size = 5)
+plotROCs(scores, truth, called.class = NULL, nbT = TRUE, dot.size = 5)
 }
 \arguments{
 \item{scores}{A data.frame with the different types of scores as columns.}

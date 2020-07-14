@@ -4,13 +4,24 @@
 \alias{scDblFinder}
 \title{scDblFinder}
 \usage{
-scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
-  clust.method = c("fastcluster", "overcluster"), samples = NULL,
-  minClusSize = min(50, ncol(sce)/5), maxClusSize = NULL,
-  nfeatures = 1000, dims = 20, dbr = NULL, dbr.sd = 0.015,
-  k = 20, fullTable = FALSE, score = c("xgb.local.optim", "xgb",
-  "weighted", "ratio"), verbose = is.null(samples),
-  BPPARAM = SerialParam())
+scDblFinder(
+  sce,
+  artificialDoublets = NULL,
+  clusters = NULL,
+  clust.method = c("fastcluster", "overcluster"),
+  samples = NULL,
+  minClusSize = min(50, ncol(sce)/5),
+  maxClusSize = NULL,
+  nfeatures = 1000,
+  dims = 20,
+  dbr = NULL,
+  dbr.sd = 0.015,
+  k = 20,
+  returnType = c("sce", "table", "full"),
+  score = c("xgb.local.optim", "xgb", "weighted", "ratio"),
+  verbose = is.null(samples),
+  BPPARAM = SerialParam()
+)
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
@@ -54,8 +65,9 @@ appropriate for 10x datasets.}
 
 \item{k}{Number of nearest neighbors (for KNN graph).}
 
-\item{fullTable}{Logical; whether to return the full table including 
-artificial doublets, rather than the table for real cells only (default).}
+\item{returnType}{Either "sce" (default), "table" (to return the table of 
+cell attributes including artificial doublets), or "full" (returns an SCE
+object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
 

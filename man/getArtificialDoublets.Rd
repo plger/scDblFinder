@@ -4,8 +4,13 @@
 \alias{getArtificialDoublets}
 \title{getArtificialDoublets}
 \usage{
-getArtificialDoublets(x, n = 3000, clusters = NULL, n.meta.cells = 1,
-  meta.triplets = TRUE)
+getArtificialDoublets(
+  x,
+  n = 3000,
+  clusters = NULL,
+  n.meta.cells = 1,
+  meta.triplets = TRUE
+)
 }
 \arguments{
 \item{x}{A count matrix, with features as rows and cells as columns.}
