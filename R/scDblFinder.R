@@ -32,8 +32,9 @@
 #' appropriate for 10x datasets.
 #' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
 #' @param k Number of nearest neighbors (for KNN graph).
-#' @param fullTable Logical; whether to return the full table including 
-#' artificial doublets, rather than the table for real cells only (default).
+#' @param returnType Either "sce" (default), "table" (to return the table of 
+#' cell attributes including artificial doublets), or "full" (returns an SCE
+#' object containing both the real and artificial cells.
 #' @param score Score to use for final classification.
 #' @param verbose Logical; whether to print messages and the thresholding plot.
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
@@ -67,13 +68,14 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          samples=NULL, minClusSize=min(50,ncol(sce)/5), 
                          maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
-                         dbr.sd=0.015, k=20, fullTable=FALSE,
+                         dbr.sd=0.015, k=20, returnType=c("sce","table","full"),
                          score=c("xgb.local.optim","xgb","weighted","ratio"),
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
   if(!is(sce, "SingleCellExperiment"))
       stop("`sce` should be a SingleCellExperiment")
   clust.method <- match.arg(clust.method)
+  returnType <- match.arg(returnType)
   if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
       if(!(clusters %in% colnames(colData(sce)))) 
           stop("Could not find `clusters` column in colData!")
@@ -89,7 +91,8 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
         samples <- colData(sce)[[samples]]
     if(ncol(sce)!=length(samples))
         stop("Samples vector matches number of cells")
-    if(fullTable) warning("`fullTable` param ignored when splitting by samples")
+    if(returnType!="sce") 
+        warning("`returnType` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
     cs <- split(seq_along(samples), samples, drop=TRUE)
     tmp <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
@@ -233,7 +236,17 @@ numbers of cells.")
   d$nearestClass <- factor(d$nearestClass, levels = 0:1, 
                            labels=c("cell","artificialDoublet"))
   d$class <- ifelse(d$score >= th, "doublet", "singlet")
-  if(fullTable) return(d)
+  
+  if(returnType=="table") return(d)
+  if(returnType=="full"){
+      sce_out <- SingleCellExperiment(list(
+          counts=cbind(as.matrix(counts(sce)), ad[row.names(sce),]),
+          logcounts=e), colData=d)
+      reducedDim(sce_out, "PCA") <- pca
+      metadata(sce_out)$scDblFinder.stats <- th$stats
+      return(sce_out)
+  }
+  
   
   d <- d[seq_len(ncol(orig)),]
   d$type <- NULL
