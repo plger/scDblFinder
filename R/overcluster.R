@@ -58,6 +58,8 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 #'
 #' @return A vector of cluster labels
 #' @export
+#' @importFrom igraph cluster_louvain membership
+#' @importFrom scran buildKNNGraph
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
                          ndims=30, nfeatures=1000){
   if(!(rdname %in% reducedDimNames(x)))

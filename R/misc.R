@@ -22,63 +22,6 @@ rankTrans <- function(x){
   y
 }
 
-#' plotROCs
-#' 
-#' Plot ROC curves for given scores.
-#'
-#' @param scores A data.frame with the different types of scores as columns.
-#' @param truth A vector of the true class corresponding to each row of `scores`
-#' @param called.class A numeric vector (with names corresponding to the columns
-#' of `scores`) indicating, for each method, the number of cases called as true
-#' (i.e. the threshold decided). Those will be plotted as points.
-#' @param nbT Logical; whether to add a dot for each score at the number of 
-#' true positives (default TRUE).
-#' @param dot.size The size of the dots.
-#'
-#' @return a ggplot
-#' @import ggplot2
-#' 
-#' @examples
-#' myscores <- list( test=1:10 )
-#' truth <- sample(c(TRUE,FALSE), 10, TRUE)
-#' plotROCs(  myscores, truth )
-#' 
-#' @export
-plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
-  truth <- as.integer(as.factor(truth))-1
-  scores <- as.data.frame(scores)
-  roclist <- lapply(scores, FUN=function(x){
-    labels <- truth[order(x, decreasing=TRUE)]
-    data.frame(FPR=cumsum(!labels)/sum(!labels),
-               TPR=cumsum(labels)/sum(labels))
-  })
-  methods <- factor( rep(names(roclist), 
-                         vapply(roclist, FUN.VALUE=integer(1), 
-                                FUN=function(x) length(x$TPR))
-                         ),
-                     levels=names(roclist) )
-  d <- data.frame( method=methods,
-                   FPR=unlist(lapply(roclist,FUN=function(x) x$FPR)),
-                   TPR=unlist(lapply(roclist,FUN=function(x) x$TPR)) )
-  p <- ggplot(d, aes(FPR, TPR, colour=method)) + geom_line(size=1.2)
-  if(nbT){
-      nbt <- sum(truth)
-      d2 <- data.frame( method=names(roclist),
-                        FPR=sapply(roclist,FUN=function(x) x$FPR[nbt]),
-                        TPR=unlist(lapply(roclist,FUN=function(x) x$TPR[nbt])) )
-      p <- p + geom_point(data=d2, alpha=0.5, size=dot.size)
-  }
-  if(!is.null(called.class) &&
-     length(mm <- intersect(names(called.class), names(roclist)))>0){
-      d2 <- data.frame( method=mm,
-                        FPR=mapply(r=roclist[mm], cc=called.class[mm], FUN=function(r,cc) r$FPR[cc]),
-                        TPR=mapply(r=roclist[mm], cc=called.class[mm], FUN=function(r,cc) r$TPR[cc]) )
-      p <- p + geom_point(data=d2, size=dot.size, shape=8, show.legend = FALSE)
-  }
-  
-  p
-}
-
 # get random cross-cluster pairs of cells from a cluster assignment vector
 .getCellPairs <- function(clusters, n=1000){
   cli <- split(seq_along(clusters), clusters)
@@ -133,7 +76,7 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   colnames(origins) <- c("mostLikelyOrigin", "originAmbiguous")
   if(!is.null(known.origins)){
     w <- which(!is.na(known.origins))
-    origins[w,1] <- known.origins[w]
+    origins[w,1] <- as.character(known.origins[w])
     origins[w,2] <- "FALSE"
   }
   origins[,1] <- factor(origins[,1])
@@ -148,16 +91,30 @@ plotROCs <- function(scores, truth, called.class=NULL, nbT=TRUE, dot.size=5){
   dbr*(1-homotypic.prop)
 }
 
+#' getExpectedDoublets
+#'
+#' @param x A vector of cluster labels for each cell
+#' @param dbr The expected doublet rate.
+#'
+#' @return The expected number of doublets of each combination of clusters
+#'
+#' @examples
+#' # random cluster labels
+#' cl <- sample(LETTERS[1:4], size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
+#' getExpectedDoublets(cl)
+#' @export
 getExpectedDoublets <- function(x, dbr=NULL){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
   }else{
     clusters <- x
   }
+  clusters <- factor(clusters)
   ncells <- length(clusters)
+  if(is.null(dbr)) dbr <- (0.01*ncells/1000)
   dbr <- .adjust.dbr.homotypy(clusters, dbr)
   cs <- table(clusters)
-  eg <- expand.grid(seq_along(unique(clusters)), seq_along(unique(clusters)))
+  eg <- expand.grid(seq_along(cs), seq_along(cs))
   eg <- eg[eg[,1]<eg[,2],]
   nd <- ceiling(dbr*ncells)
   expected <- apply(eg,1, FUN=function(x){
@@ -201,40 +158,3 @@ getExpectedDoublets <- function(x, dbr=NULL){
   g
 }
 
-#' @export
-plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed", 
-                           addSizes=TRUE, col=NULL, column_title="Clusters", 
-                           row_title="Clusters", column_title_side="bottom", 
-                           na_col="white", ...){
-  s <- metadata(sce)$scDblFinder.stats
-  s$enrichment <- (s$observed+1)/(s$expected+1)
-  colorBy <- match.arg(colorBy, colnames(s))
-  labelBy <- match.arg(labelBy, colnames(s))
-  comb <- do.call(rbind,strsplit(s$combination,"+",fixed=TRUE))
-  colnames(comb) <- paste0("cluster",1:2)
-  s <- cbind(comb, s)
-  ob <- .castorigins(s, val="observed")
-  en <- .castorigins(s, val=colorBy)
-  if(colorBy=="enrichment"){
-    en <- log2(en)
-    colorBy <- "log2\nenrichment"
-  }
-  if(addSizes){
-    sizes <- table(sce$scDblFinder.cluster)
-    n <- paste0(colnames(ob), " (", as.numeric(sizes[colnames(ob)]),")")
-    colnames(ob) <- row.names(ob) <- colnames(en) <- row.names(en) <- n
-    if(is.null(col))
-      col <- circlize::colorRamp2(c(min(en,na.rm=TRUE),0,max(en,na.rm=TRUE)),
-                                 colors=c("blue","white","red"))
-  }else{
-    if(is.null(col)) col <- viridisLite::viridis(100)
-  }
-  
-  Heatmap(en, name=colorBy, column_title=column_title, 
-          row_title=row_title, column_title_side=column_title_side, 
-          col=col, na_col=na_col,
-          cell_fun = function(j, i, x, y, width, height, fill){
-            if(is.na(ob[i, j])) return(NULL)
-            grid.text(as.character(ob[i, j]), x, y, gp=gpar(fontsize=10))
-          }, ...)
-}
