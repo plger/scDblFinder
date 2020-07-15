@@ -170,8 +170,8 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
   sapply(split(nodesizes, cl), FUN=sum)
 }
 
-
-#' @importFrom scater runPCA logNormCounts librarySizeFactors computeLibraryFactors 
+#' @importFrom scater runPCA 
+#' @importFrom scuttle logNormCounts librarySizeFactors computeLibraryFactors 
 #' @importFrom BiocSingular IrlbaParam
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000){

@@ -46,9 +46,10 @@
 #' `fullTable=TRUE`, a data.frame will be returned with information about real 
 #' and artificial cells.
 #' 
-#' @import SingleCellExperiment Matrix BiocParallel xgboost
+#' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
-#' @importFrom scater normalizeCounts runPCA
+#' @importFrom scuttle normalizeCounts
+#' @importFrom scater runPCA
 #' @importFrom dplyr bind_rows
 #' @importFrom methods is
 #' @importFrom DelayedArray as.matrix

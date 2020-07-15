@@ -21,7 +21,6 @@
 #'                FUN=function(x) rpois(30,x) ) )
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
-#' @import Matrix
 #' @export
 getArtificialDoublets <- function( x, n=3000, clusters=NULL,
                                    n.meta.cells=1, meta.triplets=TRUE ){
