@@ -4,13 +4,24 @@
 \alias{scDblFinder}
 \title{scDblFinder}
 \usage{
-scDblFinder(sce, artificialDoublets = NULL, clusters = NULL,
-  clust.method = c("louvain", "overcluster", "fast_greedy"),
-  samples = NULL, minClusSize = min(50, ncol(sce)/5),
-  maxClusSize = NULL, nfeatures = 1000, dims = 20, dbr = NULL,
-  dbr.sd = 0.015, k = 20, clust.graph.type = c("snn", "knn"),
-  fullTable = FALSE, verbose = is.null(samples),
-  score = c("weighted", "ratio", "hybrid"), BPPARAM = SerialParam())
+scDblFinder(
+  sce,
+  artificialDoublets = NULL,
+  clusters = NULL,
+  clust.method = c("fastcluster", "overcluster"),
+  samples = NULL,
+  minClusSize = min(50, ncol(sce)/5),
+  maxClusSize = NULL,
+  nfeatures = 1000,
+  dims = 20,
+  dbr = NULL,
+  dbr.sd = 0.015,
+  k = 20,
+  returnType = c("sce", "table", "full"),
+  score = c("xgb.local.optim", "xgb", "weighted", "ratio"),
+  verbose = is.null(samples),
+  BPPARAM = SerialParam()
+)
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
@@ -40,9 +51,7 @@ than biological samples.}
 (default 50); ignored if `clusters` is given.}
 
 \item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if 
-`clusters` is given. If NA, clustering will be performed using 
-`quickCluster`, otherwise via `overcluster`. If missing, the default value 
-will be estimated by `overcluster`.}
+`clusters` is given or if `clust.method`!='overcluster'.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
@@ -56,26 +65,20 @@ appropriate for 10x datasets.}
 
 \item{k}{Number of nearest neighbors (for KNN graph).}
 
-\item{clust.graph.type}{Either 'snn' or 'knn'.}
+\item{returnType}{Either "sce" (default), "table" (to return the table of 
+cell attributes including artificial doublets), or "full" (returns an SCE
+object containing both the real and artificial cells.}
 
-\item{fullTable}{Logical; whether to return the full table including 
-artificial doublets, rather than the table for real cells only (default).}
+\item{score}{Score to use for final classification.}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
-
-\item{score}{Score to use for final classification; either 'weighted' 
-(default), 'ratio' or 'hybrid' (includes information about library size and 
-detection rate.}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
 }
 \value{
-The `sce` object with the following additional colData columns: 
-`scDblFinder.ratio` (ratio of aritifical doublets among neighbors), 
-`scDblFinder.weighted` (the ratio of artificial doublets among neighbors 
-weigted by their distance), `scDblFinder.score` (the final score used,
-by default the same as `scDblFinder.weighted`), and  `scDblFinder.class` 
+The `sce` object with several additional colData columns, in 
+particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
 (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
 `fullTable=TRUE`, a data.frame will be returned with information about real 
 and artificial cells.

@@ -38,68 +38,129 @@
 #' @importFrom stats pcauchy optimize ecdf
 #' @importFrom graphics abline legend lines plot
 #' @export
-doubletThresholding <- function(scores, celltypes, clusters=NULL, dbr=0.025, 
-                                dbr.sd=0.02, prop.fullyRandom=0, do.plot=TRUE){
-  if(!all(sort(unique(celltypes))==c("artificial","real"))){
-    stop("`celltypes` should be either 'real' or 'artificial'.")
+doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
+  # check that we have all necessary fields:
+  if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous") 
+          %in% colnames(d))) stop("Input misses some columns.")
+  
+  if(!all(sort(as.character(unique(d$type)))==c("artificial","real"))){
+    stop("`type` should be either 'real' or 'artificial'.")
   }
-  if(any(is.na(scores))){
-    w <- which(is.na(scores))
-    scores <- scores[-w]
-    celltypes <- celltypes[-w]
-    warning(length(w)," cells with NA scores were discarded.")
+  expected <- getExpectedDoublets(d$cluster[d$type=="real"], dbr=dbr, FALSE)
+  if(local){
+    ths <- .optimThresholds(d$score, d$type, d$mostLikelyOrigin, d$difficulty, 
+                          expected)
+    d$score.global <- d$score
+    logit <- function(p) log(p/(1-p))
+    adjp <- ths[d$mostLikelyOrigin,1]
+    adjp[is.na(adjp)] <- median(ths)
+    d$score <- 1/(1+exp(-(logit(d$score)-logit(sqrt(adjp)))))
   }
-  if(!is.null(clusters) && length(unique(clusters))>1){
-    homotypic.prop <- sum((table(clusters)/length(clusters))^2)
-  }else{
-    homotypic.prop <- 0
+  th <- .optimThreshold(d$score, d$type, expected)
+  o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
+  stats <- .compareToExpectedDoublets(o, expected, dbr)
+  stats$combination <- as.character(stats$combination)
+  stats$FNR <- vapply(split(d, d$mostLikelyOrigin), FUN.VALUE=numeric(1L), 
+                  FUN=function(x) .FNR(x$type, x$score, th) )[stats$combination]
+  stats$difficulty <- vapply(split(d$difficulty, d$mostLikelyOrigin), 
+                             FUN.VALUE=numeric(1L), na.rm=TRUE, 
+                             FUN=median)[stats$combination]
+  if(local){
+    stats$local.threshold <- ths[stats$combination,2]
+    stats$local.moderated <- ths[stats$combination,1]
   }
-  # if clusters given, adjust expected dbr for expected homotypic doublets
-  dbr <- dbr*(1-homotypic.prop)
-  f1 <- ecdf(scores[which(celltypes!="artificial")])
-  f2 <- ecdf(scores[which(celltypes=="artificial")])
-  # accuracy functions
-  accfn <- function(x){ 
-      min(1,(1-f1(x))+max(0,f2(x)-prop.fullyRandom*homotypic.prop))
-  }
-  accfn2 <- function(x){ min(1,(1-f1(x))+f2(x)) }
-  # deviation from expected doublet proportion
-  dbr.dev <- function(x){
-    p <- sum(scores>=x & celltypes=="real")/sum(celltypes=="real")
-    abs(pcauchy(abs(dbr-p), scale=dbr.sd)*2-1)^2
-  }
-  totfn <- function(x){
-    accfn(x)+dbr.dev(x)
-  }
-  th <- optimize(totfn, c(0,1), maximum=FALSE)$minimum
-  if(do.plot){
-    # we plot the thresholding data
-    x <- 1:99/100
-    acc <- vapply(x, FUN.VALUE=double(1), FUN=accfn)
-    dev <- vapply(x, FUN.VALUE=double(1), FUN=dbr.dev)
-    ymax <- min(1,max(c(acc,dev)))
-    plot(x, acc, type="l", lty=ifelse(is.null(clusters),1,2), col="blue", 
-         ylim=c(0,ymax), lwd=2, main="Thresholding", 
-         ylab="Proportion", xlab="Ratio of artificial doublets in neighborhood")
-    if(!is.null(clusters))
-      lines(x, vapply(x, FUN.VALUE=double(1), FUN=accfn2), col="blue", lwd=2)
-    lines(x, dev, col="red", lwd=2)
-    lines(x, vapply(x, FUN.VALUE=double(1), FUN=function(x){
-            sum(scores>=x & celltypes=="real")/sum(celltypes=="real")
-        }), col="darkgrey")
-    abline(v=th, lty="dashed")
-    leg <- c( "Error in classifying real cells vs artificial doublets",
-              "Error in classifying artificial doublets, adjusted for homotypy",
-              "Deviation from expected doublet rate",
-              "Proportion of real cells considered doublet" )
-    if(is.null(clusters)){
-      leg <- leg[-2]
-      legend("top", col=c("blue", "red","darkgrey"), 
-             lty=c(1,1,1), lwd=2, legend=leg)
-    }else{
-      legend("top", col=c("blue","blue", "red","darkgrey"), 
-             lty=c(1,2,1,1), lwd=2, legend=leg)
-    }
-  }
-  th
+  list(th=th, stats=stats, finalScores=d$score)
 }
+
+.optimThreshold <- function(score, type, expected){
+  totfn <- function(x){
+    .FNR(type, score, x)*2 + .FDR(type, score, x) + 
+      .prop.dev(type,score,expected,x)^2
+  }
+  expected <- sum(expected)
+  optimize(totfn, c(0,1), maximum=FALSE)$minimum
+}
+
+.optimThresholds <- function(score, type, origins, difficulty, expected, 
+                             moderate=TRUE){
+  ll <- split(seq_along(score), origins)
+  names(n) <- n <- names(ll)
+  ths <- vapply(n, FUN.VALUE=numeric(1L), FUN=function(comb){
+    i <- ll[[comb]]
+    totfn <- function(x){
+      .FNR(type[i], score[i], x)*2 + .FDR(type[i], score[i], x) + 
+        .prop.dev(type[i],score[i],expected[comb],x)^2
+    }
+    optimize(totfn, c(0,1), maximum=FALSE)$minimum
+  })
+  if(moderate){
+    diff <- sapply(split(difficulty,origins), na.rm=TRUE, FUN=median)
+    diff <- diff[names(ths)]
+    mod <- MASS::rlm(ths~diff)
+    ths2 <- (ths+predict(mod))/2
+    if(length(w <- which(ths2<0.01))>0)
+      ths2[w] <- apply(cbind(ths[w],rep(0.01,length(w))),1,FUN=max)
+    ths <- cbind(moderated=ths2, local=ths)
+  }
+  cbind(ths)
+}
+
+.FNR <- function(type, score, threshold){
+  if(length(type)==0) return(1)
+  sum(type=="artificial" & score<threshold)/sum(type=="artificial")
+}
+.FDR <- function(type, score, threshold){
+  # real cells with a score haflway from threshold to 1 aren't considered FN
+  sum(type=="real" & score>=mean(c(threshold,1)))/sum(score>=threshold)
+}
+.prop.dev <- function(type, score, expected, threshold){
+  x <- sum(score>=threshold & type=="real")
+  if(length(expected)>1 && x>min(expected) && x<max(expected)) return(0)
+  min(abs(x-expected)/expected)
+}
+
+.compareToExpectedDoublets <- function(origins, expected, dbr=NULL, od=NULL){
+  if(length(origins)==0){
+    d <- data.frame(observed=rep(0,length(expected)))
+    d$deviation <- d$expected <- as.numeric(expected)
+  }else{
+    n <- names(expected)
+    o <- as.numeric(table(origins)[names(expected)])
+    o[is.na(o)] <- 0 
+    expected <- as.numeric(expected)
+    d <- data.frame( combination=n, observed=o, expected=expected,
+                     deviation=abs(expected-o))
+  }
+  d$prop.deviation <- d$deviation/sum(expected)
+  if(!is.null(od)) d$p <- dnbinom(d$observed, mu=d$expected, size=1/od)
+  d
+}
+  
+.getThresholdStats <- function(x, expected=NULL, thresholds=(0:100/100), dbr=NULL, od=0.05){
+  if(is(x,"SingleCellExperiment")){
+    x <- as.data.frame(colData(x))
+    if(is.null(x$scDblFinder.type)) x$scDblFinder.type <- "real"
+    x <- x[,grep("^scDblFinder",colnames(x))]
+    colnames(x) <- gsub("^scDblFinder\\.","",colnames(x))
+  }
+  real <- which(x$type=="real")
+  if(is.null(expected)) expected <- getExpectedDoublets(x$clusters[w], dbr)
+  if(is.null(names(thresholds))) names(thresholds) <- thresholds
+  a <- lapply( thresholds, FUN=function(i){
+    .compareToExpectedDoublets(x$mostLikelyOrigin[which(x$score>=i & x$type=="real")], 
+                               expected, dbr=dbr, od=od)
+  })
+  a <- dplyr::bind_rows(a, .id="threshold")
+  if(!all(x$type=="real")){
+    b <- lapply( thresholds, FUN=function(i){
+      y <- vapply(split(x, x$mostLikelyOrigin), FUN.VALUE=numeric(1L), 
+                  FUN=function(x) .FNR(x$type, x$score, i) )
+      data.frame(combination=names(y), FNR=y)
+    })
+    b <- dplyr::bind_rows(b, .id="threshold")
+    a <- merge(a,b,by=c("combination","threshold"),all.x=TRUE)
+  }
+  a$threshold <- as.numeric(a$threshold)
+  a
+}
+

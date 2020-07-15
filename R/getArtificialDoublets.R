@@ -22,9 +22,9 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
 #' @export
-getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
+getArtificialDoublets <- function( x, n=3000, clusters=NULL,
                                    n.meta.cells=1, meta.triplets=TRUE ){
-  if(prop.fullyRandom>0 | is.null(clusters)){
+  if(is.null(clusters)){
     # create random combinations
     nr <- ifelse(is.null(clusters), n, ceiling(prop.fullyRandom*n))
     if(ncol(x)^2 <= nr){
@@ -38,25 +38,19 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     # create doublets
     ad.m <- x[,ad[,1]]+x[,ad[,2]]
     colnames(ad.m) <- paste0("arificialDoublet.", seq_len(ncol(ad.m)))
-    
-    if(is.null(clusters)) return(ad.m)
-  }else{
-    ad.m <- NULL
+    return(ad.m)
   }
   
   if(is.null(clusters) || length(unique(clusters))<3) n.meta.cells <- 0
     
   # create doublets across clusters:
-  n <- ceiling(n*(1-prop.fullyRandom))
+  n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
-  colnames(m2) <- paste0( "arificialDoublet.",
-                          ifelse(is.null(ad.m),0,ncol(ad.m))+seq_len(ncol(m2)) )
-  if(is.null(ad.m)){
-    ad.m <- m2
-  }else{
-    ad.m <- cbind(ad.m, m2)
-  }
+  oc <- as.character(ca$orig.clusters)
+  names(oc) <- colnames(m2) <- paste0( "arificialDoublet.", seq_len(ncol(m2)) )
+  ad.m <- m2
+  rm(m2)
   
   if(n.meta.cells>0){
     # create doublets from meta cells:
@@ -65,29 +59,32 @@ getArtificialDoublets <- function( x, n=3000, prop.fullyRandom=0, clusters=NULL,
     clusters <- rep(unique(clusters),each=n.meta.cells)
     ca <- .getCellPairs(clusters, n=ceiling(n*0.2))
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]
-    colnames(m2) <- paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
+    oc2 <- ca$orig.clusters
+    names(oc2) <- colnames(m2) <- 
+      paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
+    oc <- c(oc,as.character(oc2))
   }
   
-  if(meta.triplets && length(unique(clusters)) >= 3){
+  pc10 <- length(clusters)/10
+  tt <- table(clusters)
+  if(meta.triplets && length(tt)>2){
+    # get clusters that have more than 10% of the cells
+    cl2 <- names(tt)[tt>=pc10]
+    # otherwise get the 3 largest clusters
+    if(length(cl2)<3) cl2 <- names(sort(tt, decreasing=TRUE))[1:3]
+    w <- which(clusters %in% cl2)
     # create triplets from meta cells:
-    if(length(unique(clusters))^3 > n){
-      tt <- table(clusters)
-      topc <- min(10,length(tt))
-      warning("Too many clusters - will create triplets only for the ", topc,
-              " largest clusters.")
-      tt <- names(tt)[order(tt,decreasing=TRUE)[seq_len(topc)]]
-      w <- which(clusters %in% tt)
-      x <- x[,w]
-      clusters <- clusters[w]
-    }
-    meta <- .getMetaCells(x, clusters, n.meta.cells=1, meta.cell.size=100)
+    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, meta.cell.size=100)
     i <- seq_len(ncol(meta))
     ca <- expand.grid(i, i, i)
-    ca <- ca[apply(ca,1,FUN=function(x){ length(unique(x)) })==3,]
-    m2 <- meta[,ca[,1]]+meta[,ca[,2]]+meta[,ca[,3]]
-    colnames(m2) <- paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
+    ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
+    m2 <- meta[,ca[,1],drop=FALSE]+meta[,ca[,2],drop=FALSE]+meta[,ca[,3],drop=FALSE]
+    oc2 <- rep(NA_character_, ncol(m2))
+    names(oc2) <- colnames(m2) <- 
+      paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
+    oc <- c(oc, oc2)
   }
-  ad.m
+  list( counts=ad.m, origins=as.factor(oc) )
 }

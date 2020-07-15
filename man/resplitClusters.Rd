@@ -4,8 +4,15 @@
 \alias{resplitClusters}
 \title{resplitClusters}
 \usage{
-resplitClusters(g, cl = NULL, max.size = 500, min.size = 50,
-  renameClusters = TRUE, iterative = TRUE)
+resplitClusters(
+  g,
+  cl = NULL,
+  max.size = 500,
+  min.size = 50,
+  renameClusters = TRUE,
+  iterative = TRUE,
+  nodesizes = NULL
+)
 }
 \arguments{
 \item{g}{An object of class `igraph`}
@@ -23,6 +30,8 @@ overrides `max.size`.}
 \item{iterative}{Logical; whether to resplit until no cluster is above the 
 size limit or no improvement is made (default TRUE). If FALSE, splits each 
 cluster once.}
+
+\item{nodesizes}{Optional size of each node of the graph}
 }
 \value{
 A vector of cluster assignments.
