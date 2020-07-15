@@ -17,6 +17,8 @@ The latter can identify doublets formed by cells of the same type from two sampl
 from real cells transcriptionally (and hence unidentifiable through the present package), but cannot identify doublets
 made by cells of the same sample.
 
+**Note that scDblFinder is currently undergoing major updates, which involve several new functionalities and improvements, as well as the migration of [scran](https://bioconductor.org/packages/release/bioc/html/scran.html)'s doublet-related functions to this package. The version in this repository should therefore be considered as a development version, and users required a more stable release with more adequate documentation should rely on the [bioconductor 3.11 release](https://bioconductor.org/packages/release/bioc/html/scDblFinder.html).**
+
 ## Installation
 
 scDblFinder was developed under R 3.6. As major changes were made to the package after the BioConductor release, we strongly recommend to install the development version, either from Bioconductor:
