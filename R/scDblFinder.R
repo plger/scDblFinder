@@ -86,6 +86,10 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
       stop("`sce` should have an assay named 'counts'")
+  if(is.null(colnames(sce)))
+      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(is.null(row.names(sce)))
+      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
   if(!is.null(samples)){
     # splitting by samples
     if(length(samples)==1 && samples %in% colnames(colData(sce)))
@@ -129,9 +133,9 @@ numbers of cells.")
       if(verbose) message("Clustering cells...")
       if(clust.method=="overcluster"){
         clusters <- overcluster(sce, min.size=minClusSize, max.size=maxClusSize,
-                                ndims=ndims)
+                                ndims=dims)
       }else{
-        clusters <- fastcluster(sce, ndims=ndims)
+        clusters <- fastcluster(sce, ndims=dims)
       }
   }
   if(length(unique(clusters)) == 1) stop("Only one cluster generated")
@@ -145,11 +149,6 @@ numbers of cells.")
   }
   cli <- split(seq_len(ncol(sce)), clusters)
   
-  if(is.null(colnames(sce)))
-      colnames(orig) <- colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
-  if(is.null(row.names(sce)))
-      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
-
   # get the artificial doublets
   if(is.null(artificialDoublets)){
     artificialDoublets <- max( ncol(sce), 
@@ -170,6 +169,10 @@ numbers of cells.")
   ado2 <- as.factor(c(rep(NA, ncol(sce)), as.character(ado)))
 
   e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
+  # evaluate by library size and non-zero features
+  lsizes <- colSums(e)
+  nfeatures <- colSums(e>0)
+  
   e <- normalizeCounts(e)
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
@@ -181,16 +184,13 @@ numbers of cells.")
         })
   if(is.list(pca)) pca <- pca$x
   row.names(pca) <- colnames(e)
-
-  # evaluate by library size and non-zero features
-  lsizes <- c(colSums(counts(sce)),colSums(ad))
-  nfeatures <- c(colSums(counts(sce)>0), colSums(ad>0))
-  
   
   ctype <- factor( rep(1:2, c(ncol(sce),ncol(ad))), 
                    labels = c("real","artificial"))
-  knn <- .evaluateKNN(pca, ctype, ado2, k=k, dbr=dbr, BPPARAM=BPPARAM, 
+  ex <- getExpectedDoublets(clusters, dbr)
+  knn <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
                       verbose=verbose)
+
   d <- knn$d
   knn <- knn$knn
   d$lsizes <- lsizes
@@ -263,7 +263,7 @@ numbers of cells.")
   orig
 }
 
-.evaluateKNN <- function(pca, ctype, origins, k, dbr, BPPARAM=SerialParam(), 
+.evaluateKNN <- function(pca, ctype, origins, expected, k, BPPARAM=SerialParam(), 
                          verbose=TRUE){
   if(verbose) message("Finding KNN...")
   knn <- suppressWarnings(findKNN(pca, k, BPPARAM=BPPARAM))
@@ -303,8 +303,7 @@ numbers of cells.")
   d$difficulty[w] <- 1-class.weighted[d$mostLikelyOrigin[w]]
   d$difficulty <- .knnSmooth(knn, d$difficulty)
   
-  ex <- getExpectedDoublets(clusters, dbr)
-  d$expected <- ex[d$mostLikelyOrigin]
+  d$expected <- expected[d$mostLikelyOrigin]
   ob <- table(d$mostLikelyOrigin)
   d$observed <- ob[d$mostLikelyOrigin]
   w <- which(is.na(d$mostLikelyOrigin))

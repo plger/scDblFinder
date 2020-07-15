@@ -46,7 +46,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   if(!all(sort(as.character(unique(d$type)))==c("artificial","real"))){
     stop("`type` should be either 'real' or 'artificial'.")
   }
-  expected <- getExpectedDoublets(d$cluster[d$type=="real"], dbr=dbr, FALSE)
+  expected <- getExpectedDoublets(d$cluster[d$type=="real"], dbr=dbr)
   if(local){
     ths <- .optimThresholds(d$score, d$type, d$mostLikelyOrigin, d$difficulty, 
                           expected)
@@ -56,7 +56,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     adjp[is.na(adjp)] <- median(ths)
     d$score <- 1/(1+exp(-(logit(d$score)-logit(sqrt(adjp)))))
   }
-  th <- .optimThreshold(d$score, d$type, expected)
+  th <- .optimThreshold(d$score, d$type, sum(expected, na.rm=TRUE))
   o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
   stats <- .compareToExpectedDoublets(o, expected, dbr)
   stats$combination <- as.character(stats$combination)
@@ -77,7 +77,6 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     .FNR(type, score, x)*2 + .FDR(type, score, x) + 
       .prop.dev(type,score,expected,x)^2
   }
-  expected <- sum(expected)
   optimize(totfn, c(0,1), maximum=FALSE)$minimum
 }
 
@@ -100,28 +99,32 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     ths2 <- (ths+predict(mod))/2
     if(length(w <- which(ths2<0.01))>0)
       ths2[w] <- apply(cbind(ths[w],rep(0.01,length(w))),1,FUN=max)
+    ths2[ths2>1] <- 1
     ths <- cbind(moderated=ths2, local=ths)
   }
   cbind(ths)
 }
 
 .FNR <- function(type, score, threshold){
-  if(length(type)==0) return(1)
-  sum(type=="artificial" & score<threshold)/sum(type=="artificial")
+  sum(type=="artificial" & score<threshold, na.rm=TRUE)/sum(type=="artificial")
 }
 .FDR <- function(type, score, threshold){
+  if(sum(score>=threshold, na.rm=TRUE)==0) return(0)
   # real cells with a score haflway from threshold to 1 aren't considered FN
-  sum(type=="real" & score>=mean(c(threshold,1)))/sum(score>=threshold)
+  sum(type=="real" & score>=mean(c(threshold,1)), na.rm=TRUE)/
+      sum(score>=threshold, na.rm=TRUE)
 }
 .prop.dev <- function(type, score, expected, threshold){
-  x <- sum(score>=threshold & type=="real")
+  x <- 1+sum(score>=threshold & type=="real")
+  expected <- expected + 1
   if(length(expected)>1 && x>min(expected) && x<max(expected)) return(0)
   min(abs(x-expected)/expected)
 }
 
 .compareToExpectedDoublets <- function(origins, expected, dbr=NULL, od=NULL){
   if(length(origins)==0){
-    d <- data.frame(observed=rep(0,length(expected)))
+    d <- data.frame(combination=names(expected), 
+                    observed=rep(0,length(expected)))
     d$deviation <- d$expected <- as.numeric(expected)
   }else{
     n <- names(expected)
