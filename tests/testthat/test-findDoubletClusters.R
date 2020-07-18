@@ -54,7 +54,6 @@ test_that("findDoubletClusters works correctly with vanilla tests", {
 
     dbl2  <- RENAMER(dbl, c("source1", "source2"), LETTERS)
     rownames(dbl2) <- LETTERS[as.integer(rownames(dbl2))]
-    names(dbl2$all.pairs) <- LETTERS[as.integer(names(dbl2$all.pairs))]
     expect_identical(dbl2, re.dbl)
 })
 
@@ -64,8 +63,8 @@ test_that("findDoubletClusters agrees with a reference implementation", {
     counts <- cbind(counts.1, counts.2, counts.3, counts.m)
     clusters <- rep(1:4, c(ncol(counts.1), ncol(counts.2), ncol(counts.3), ncol(counts.m)))
 
-    dbl <- findDoubletClusters(counts, clusters)
-    ref <- findMarkers(scuttle::normalizeCounts(counts, scuttle::librarySizeFactors(counts)), clusters, full.stats=TRUE)
+    dbl <- findDoubletClusters(counts, clusters, get.all.pairs=TRUE)
+    ref <- scran::findMarkers(scuttle::normalizeCounts(counts), clusters, full.stats=TRUE)
 
     for (x in rownames(dbl)) {
         stats <- ref[[x]]
@@ -80,21 +79,22 @@ test_that("findDoubletClusters agrees with a reference implementation", {
             p <- pmax(exp(stats1$log.p.value), exp(stats2$log.p.value))
             p[sign(stats1$logFC)!=sign(stats2$logFC)] <- 1
             adj.p <- p.adjust(p, method="BH")
-            data.frame(best=rownames(stats)[which.min(p)], p.val=min(adj.p), N=sum(adj.p <= 0.05), stringsAsFactors=FALSE)
+            data.frame(best=rownames(stats)[which.min(p)], p.val=min(adj.p), 
+                num.de=sum(adj.p <= 0.05), stringsAsFactors=FALSE)
         })
 
         collected <- do.call(rbind, collected)
-        o <- order(collected$N, -collected$p.val)
+        o <- order(collected$num.de, -collected$p.val)
 
         obs <- dbl[x,"all.pairs"][[1]]
         expect_identical(obs$source1, pmax(combos[2,], combos[1,])[o])
         expect_identical(obs$source2, pmin(combos[1,], combos[2,])[o])
-        expect_identical(obs$N, collected$N[o])
+        expect_identical(obs$num.de, collected$num.de[o])
         expect_identical(obs$best, collected$best[o])
         expect_equal(obs$p.value, collected$p.val[o])
 
         to.use <- o[1]
-        expect_identical(dbl[x,"N"], collected[to.use, "N"])
+        expect_identical(dbl[x,"num.de"], collected[to.use, "num.de"])
         expect_equal(dbl[x,"p.value"], collected[to.use, "p.val"])
         expect_identical(dbl[x,"best"], collected[to.use, "best"])
         expect_identical(sort(c(dbl[x,"source1"],dbl[x,"source2"])), sort(combos[,to.use]))
@@ -113,13 +113,14 @@ test_that("findDoubletClusters works correctly with row subsets", {
     expect_identical(nrow(out), nrow(ref))
     expect_true(all(is.na(out$best)))
     expect_true(all(is.na(out$p.value)))
-    expect_true(all(out$N==0L))
+    expect_true(all(out$num.de==0L))
 
     # While we're here, trying out empty columns.
     expect_error(findDoubletClusters(counts[,0], clusters[0]), "need at least three")
 })
 
 test_that("findDoubletClusters works correctly with SE/SCEs", {
+    library(SingleCellExperiment)
     sce <- SingleCellExperiment(list(counts=counts))
     ref <- findDoubletClusters(counts, clusters)
 

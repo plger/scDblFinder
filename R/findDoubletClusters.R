@@ -19,46 +19,53 @@
 #'
 #' For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.
 #' @param assay.type A string specifying which assay values to use, e.g., \code{"counts"} or \code{"logcounts"}.
+#' @param get.all.pairs Logical scalar indicating whether statistics for all possible source pairings should be returned.
 #' 
 #' @return 
 #' A \linkS4class{DataFrame} containing one row per query cluster with the following fields:
 #' \describe{
-#'     \item{\code{source1}:}{String specifying the identity of the first source cluster.}
-#'     \item{\code{source2}:}{String specifying the identity of the second source cluster.}
-#'     \item{\code{N}:}{Integer, number of genes that are significantly non-intermediate in the query cluster compared to the two putative source clusters.}
-#'     \item{\code{best}:}{String specifying the identify of the top gene with the lowest p-value against the doublet hypothesis for this combination of query and source clusters.}
-#'     \item{\code{p.value}:}{Numeric, containing the adjusted p-value for the \code{best} gene.} 
-#'     \item{\code{lib.size1}:}{Numeric, ratio of the median library sizes for the first source cluster to the query cluster.}
-#'     \item{\code{lib.size2}:}{Numeric, ratio of the median library sizes for the second source cluster to the query cluster.}
-#'     \item{\code{prop}:}{Numeric, proportion of cells in the query cluster.}
-#'     \item{\code{all.pairs}:}{A \linkS4class{SimpleList} object containing the above statistics for every pair of potential source clusters.}
+#' \item{\code{source1}:}{String specifying the identity of the first source cluster.}
+#' \item{\code{source2}:}{String specifying the identity of the second source cluster.}
+#' \item{\code{num.de}:}{Integer, number of genes that are significantly non-intermediate 
+#' in the query cluster compared to the two putative source clusters.}
+#' \item{\code{median.de}:}{Integer, median number of genes that are significantly non-intermediate 
+#' in the query cluster across all possible source cluster pairings.}
+#' \item{\code{best}:}{String specifying the identify of the top gene with the lowest p-value 
+#' against the doublet hypothesis for this combination of query and source clusters.}
+#' \item{\code{p.value}:}{Numeric, containing the adjusted p-value for the \code{best} gene.} 
+#' \item{\code{lib.size1}:}{Numeric, ratio of the median library sizes for the first source cluster to the query cluster.}
+#' \item{\code{lib.size2}:}{Numeric, ratio of the median library sizes for the second source cluster to the query cluster.}
+#' \item{\code{prop}:}{Numeric, proportion of cells in the query cluster.}
+#' \item{\code{all.pairs}:}{A \linkS4class{SimpleList} object containing the above statistics 
+#' for every pair of potential source clusters, if \code{get.all.pairs=TRUE}.}
 #' }
 #' Each row is named according to its query cluster.
 #' 
 #' @details
 #' This function detects clusters of doublet cells in a manner similar to the method used by Bach et al. (2017).
-#' For each \dQuote{query} cluster, we examine all possible pairs of \dQuote{source} clusters, hypothesizing that the query consists of doublets formed from the two sources.
-#' If so, gene expression in the query cluster should be strictly intermediate between the two sources after library size normalization.
+#' For each \dQuote{query} cluster, we examine all possible pairs of \dQuote{source} clusters, 
+#' hypothesizing that the query consists of doublets formed from the two sources.
+#' If so, gene expression in the query cluster should be strictly intermediate 
+#' between the two sources after library size normalization.
 #' 
-#' We apply pairwise t-tests to the normalized log-expression profiles (see \code{\link{logNormCounts}}) to reject this null hypothesis.
-#' This is done by identifying genes that are consistently up- or down-regulated in the query compared to \emph{both} of the sources.
+#' We apply pairwise t-tests to the normalized log-expression profiles to reject this null hypothesis.
+#' This is done by identifying genes that are consistently up- or down-regulated in the query compared to \emph{both} sources.
 #' We count the number of genes that reject the null hypothesis at the specified FDR \code{threshold}.
 #' For each query cluster, the most likely pair of source clusters is that which minimizes the number of significant genes.
 #' 
-#' Potential doublet clusters are identified using the following characteristics:
+#' Potential doublet clusters are identified using the following characteristics, in order of importance:
 #' \itemize{
-#'     \item Low number of significant genes, i.e., \code{N} in the output DataFrame.
-#' The threshold can be identified by looking for small outliers in \code{log(N)} across all clusters,
-#' under the assumption that most clusters are \emph{not} doublets (and thus should have high \code{N}).
-#'     \item A reasonable proportion of cells in the cluster, i.e., \code{prop}.
+#' \item Low number of significant genes (i.e., \code{num.de}).
+#' Ideally, \code{median.de} is also high to indicate that the absence of strong DE is not due to a lack of power.
+#' \item A reasonable proportion of cells in the cluster, i.e., \code{prop}.
 #' This requires some expectation of the doublet rate in the experimental protocol. 
-#'     \item Library sizes of the source clusters that are below that of the query cluster, i.e., \code{lib.size*} values below unity.
-#' This assumes that the doublet cluster will contain more RNA and have more counts than either of the two source clusters.    
+#' \item Library sizes of the source clusters that are below that of the query cluster, i.e., \code{lib.size*} values below unity.
+#' This assumes that the doublet cluster will contain more RNA and have more counts than either of the two source clusters.
 #' }
 #' 
-#' For each query cluster, the function will only report the pair of source clusters with the lowest \code{N}.
-#' It is possible that a source pair with slightly higher (but still low) value of \code{N} may have more appropriate \code{lib.size*} values.
-#' Thus, it may be valuable to examine \code{all.pairs} in the output, especially in over-clustered data sets with closely neighbouring clusters.
+#' For each query cluster, the function will only report the pair of source clusters with the lowest \code{num.de}.
+#' Setting \code{get.all.pairs=TRUE} will retrieve statistics for all pairs of potential source clusters.
+#' This can be helpful for diagnostics to identify relationships between specific clusters.
 #' 
 #' The reported \code{p.value} is of little use in a statistical sense, and is only provided for inspection.
 #' Technically, it could be treated as the Simes combined p-value against the doublet hypothesis for the query cluster.
@@ -77,13 +84,7 @@
 #' Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA sequencing. 
 #' \emph{Nat Commun.} 8, 1:2128.
 #' 
-#' Lun ATL (2018).
-#' Detecting clusters of doublet cells in \emph{scran}.
-#' \url{https://ltla.github.io/SingleCellThoughts/software/doublet_detection/bycluster.html}
-#'
 #' @seealso
-#' \code{\link{doubletCells}}, which provides another approach for doublet detection.
-#'
 #' \code{\link{findMarkers}}, to detect DE genes between clusters.
 #' 
 #' @examples
@@ -105,7 +106,7 @@
 #' 
 #' # Narrow this down to clusters with very low 'N':
 #' library(scuttle)
-#' isOutlier(dbl$N, log=TRUE, type="lower") 
+#' isOutlier(dbl$num.de, log=TRUE, type="lower") 
 #' 
 #' # Get help from "lib.size" below 1.
 #' dbl$lib.size1 < 1 & dbl$lib.size2 < 1 
@@ -119,7 +120,7 @@ NULL
 #' @importFrom stats p.adjust median
 #' @importFrom methods as
 #' @importClassesFrom S4Vectors SimpleList
-.doublet_cluster <- function(x, clusters, subset.row=NULL, threshold=0.05, ...) {
+.doublet_cluster <- function(x, clusters, subset.row=NULL, threshold=0.05, get.all.pairs=FALSE, ...) {
     if (length(unique(clusters)) < 3L) {
         stop("need at least three clusters to detect doublet clusters")
     }
@@ -144,7 +145,7 @@ NULL
         remnants <- setdiff(all.clusters, ref)
 
         num <- length(remnants) * (length(remnants) - 1L)/2L
-        all.N <- all.gene <- all.parent1 <- all.parent2 <- integer(num)
+        all.N <- med.N <- all.gene <- all.parent1 <- all.parent2 <- integer(num)
         all.p <- numeric(num)
         idx <- 1L
 
@@ -156,7 +157,7 @@ NULL
                 # Obtaining the IUT and setting opposing log-fold changes to 1.
                 max.log.p <- pmax(stats1$log.p.value, stats2$log.p.value)
                 max.log.p[sign(stats1$logFC) != sign(stats2$logFC)] <- 0
-                    
+
                 # Correcting across genes. We use [1] to get NA when there are
                 # no genes, which avoids an nrow() mismatch in DataFrame().
                 log.adj.p <- .logBH(max.log.p)
@@ -176,21 +177,32 @@ NULL
         parent2 <- remnants[all.parent2]
 
         stats <- DataFrame(source1=parent1, source2=parent2, 
-            N=all.N, best=rownames(ref.stats)[all.gene], p.value=all.p,
+            num.de=all.N, 
+            median.de=rep(0, length(all.N)), # placeholder, see below.
+            best=rownames(ref.stats)[all.gene], 
+            p.value=all.p,
             lib.size1=unname(med.lib.size[parent1]/med.lib.size[ref]), 
 			lib.size2=unname(med.lib.size[parent2]/med.lib.size[ref]))
 
         o <- order(all.N, -all.p)
         top <- cbind(stats[o[1],], prop=n.cluster[[ref]])
+        med.de <- median(all.N)
+        top$median.de <- med.de
         rownames(top) <- ref
         collected.top[[ref]] <- top
-        collected.all[[ref]] <- stats[o,]
+
+        if (get.all.pairs) {
+            stats$median.de <- NULL
+            collected.all[[ref]] <- stats[o,]
+        }
     }
 
     # Returning the DataFrame of compiled results.
     out <- do.call(rbind, collected.top)
-    out$all.pairs <- as(collected.all, "SimpleList")
-    out[order(out$N),]
+    if (get.all.pairs) {
+        out$all.pairs <- as(collected.all, "SimpleList")
+    }
+    out[order(out$num.de),]
 }
 
 ##############################
