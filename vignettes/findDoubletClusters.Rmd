@@ -1,0 +1,156 @@
+---
+title: Detecting clusters of doublet cells with DE analyses 
+package: scDblFinder
+author: 
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document
+vignette: |
+  %\VignetteIndexEntry{findDoubletClusters}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+library(BiocStyle)
+```
+
+# tl;dr
+
+To demonstrate, we'll use one of the mammary gland datasets from the `r Biocpkg("scRNAseq")` package.
+We will subset it down to a random set of 500 cells for speed.
+
+```{r}
+library(scRNAseq)
+sce <- BachMammaryData(samples="G_2")
+
+set.seed(1000)
+sce <- sce[,sample(ncol(sce), 500)]
+```
+
+For the purposes of this demonstration, we'll perform an extremely expedited analysis.
+One would usually take more care here and do some quality control, 
+create some diagnostic plots, etc., but we don't have the space for that.
+
+```{r}
+library(scuttle)
+sce <- logNormCounts(sce)
+
+library(scran)
+dec <- modelGeneVar(sce)
+
+library(scater)
+set.seed(1000)
+sce <- runPCA(sce, ncomponents=10, subset_row=getTopHVGs(dec, n=1000))
+clusters <- clusterSNNGraph(sce, use.dimred="PCA")
+
+sce <- runTSNE(sce, dimred="PCA")
+plotTSNE(sce, colour_by=I(clusters), text_by=I(clusters))
+```
+
+We then run `findDoubletClusters()` to test each cluster against the null hypothesis that it _does_ consist of doublets.
+The null is rejected if a cluster has many DE genes that lie outside the expression limits defined by the "source" clusters.
+On the other hand, if `num.de` is low, the cluster's expression profile is consistent with the doublet hypothesis.
+
+```{r}
+library(scDblFinder)
+tab <- findDoubletClusters(sce, clusters)
+tab
+```
+
+# Mathematical background
+
+Consider a cell population $i$ that has mean transcript count $\lambda_{gi}$ for gene $g$.
+Assume that each population exhibits a unique scaling bias $s_i$, representing the efficiency of library preparation for that population.
+The observed read/UMI count for each gene is then $\mu_{gi}=s_i\lambda_{gi}$.
+(For simplicity, we will ignore gene-specific scaling biases, as this is easily accommodated by considering $\lambda_{gi} \equiv \phi_g \lambda_{gi}$ for some bias $\phi_g$.)
+The expected total count for each population is $N_i = \sum_g \mu_{gi}$.
+
+Now, let us consider a doublet population $j$ that forms from two parent populations $i_1$ and $i_2$.
+The observed read count for $g$ in $j$ is $\mu_{gj} = s_j (\lambda_{gi_1} + \lambda_{gi_2})$.
+Note that $s_j$ need not be any particular function of $s_{i_1}$ and $s_{i_2}$.
+Rather, this relationship depends on how quickly the reverse transcription and amplification reagents are saturated during library preparation, which is difficult to make assumptions around.
+
+# Normalization by library size
+
+We obtain log-normalized expression values for each cell based on the library size.
+Assume that the library size-normalized expression values are such that $\mu_{gi_1}N_{i_1}^{-1} < \mu_{gi_2}N_{i_2}^{-1}$, 
+i.e., the proportion of $g$ increases in $i_2$ compared to $i_1$.
+The contribution of each $s_i$ cancels out, yielding
+$$
+\frac{\lambda_{gi_1}}{\sum_g \lambda_{gi_1}} < \frac{\lambda_{gi_2}}{\sum_g \lambda_{gi_2}} \;.
+$$
+The normalized expression value of the doublet cluster $j$ is subsequently 
+$$
+\frac{\lambda_{gi_1} + \lambda_{gi_2}}{\sum_g (\lambda_{gi_1} + \lambda_{gi_2})} \;,
+$$
+and it is fairly easy to show that, under the above assumption, we have
+$$
+\frac{\lambda_{gi_1}}{\sum_g \lambda_{gi_1}} < 
+\frac{\lambda_{gi_1} + \lambda_{gi_2}}{\sum_g (\lambda_{gi_1} + \lambda_{gi_2})}  < 
+\frac{\lambda_{gi_2}}{\sum_g \lambda_{gi_2}} \;.
+$$
+In other words, the library size-normalized expression of the doublet cluster lies between the two parents.
+
+It is harder to provide theoretical guarantees with arbitrary size factors, which is why we only use the library sizes for normalization instead.
+Indeed, a size factor estimate for a doublet cell will not be equal to $s_j$ as it will absorb increases in total RNA content.
+The exception is that of spike-in size factors that would estimate $s_i$ directly.
+This would allow us to obtain estimates of $\lambda_{gi}$ for the parent clusters and of $\lambda_{gi_1} + \lambda_{gi_2}$ for the doublets.
+In this manner, we could more precisely identify doublet clusters as those where the normalized expression value is equal to the sum of the parents.
+Unfortunately, spike-ins are generally not available for droplet-based data sets where doublets are most problematic.
+
+# Testing for (lack of) intermediacy
+
+We want to identify the clusters that may be comprised of doublets of other clusters.
+For each cluster $j'$, we test for differential expression in the library size-normalized expression profiles against every other cluster $i'$.
+For each pair of other clusters $i'_1$ and $i'_2$, we identify genes that change in $j'$ against both $i'_1$ and $i'_2$ **in the same direction**.
+The presence of such genes violates the intermediacy expected of a doublet cluster and provides evidence that $j'$ is not a doublet of $i'_1$ and $i'_2$.
+
+Significant genes are identified by an intersection-union test on the $p$-values from the pairwise comparisons between $j'$ and $i'_1$ or $i'_2$. 
+(Specifically, $t$-tests are used via the `findMarkers()` function from `r Biocpkg("scran")`.)
+The $p$-value for a gene is set to unity when the signs of the log-fold changes are not the same between comparisons.
+Multiple correction testing is applied using the Benjamini-Hochberg method, and the number of genes detected at a specified false discovery rate (usually 5\%) is counted.
+The pair $(i'_1, i'_2)$ with the fewest detected genes are considered as the putative parents of $j'$.
+
+In theory, it is possible to compute the Simes' combined $p$-value across all genes to reject the doublet hypothesis for $j'$.
+This would provide a more rigorous approach to ruling out potential doublet/parent combinations.
+However, this is very sensitive to misspecification of clusters -- see below.
+
+# Calling doublet clusters
+
+Assuming that most clusters are not comprised of doublets, we identify clusters that have an unusually low number of detected genes that violate the intermediacy condition.
+This is achieved by identifying small outliers on the log-transformed number of detected genes, using the median absolute deviation-based method in the \texttt{isOutlier} function.
+(We use a log-transformation simply to improve resolution at low values.)
+Clusters are likely to be doublets if they are outliers on this metric. 
+
+Doublet clusters should also have larger library sizes than the proposed parent clusters.
+This is consistent with the presence of more RNA in each doublet, though the library size of the doublet cluster need not be a sum of that of the parent clusters
+(due to factors such as saturation and composition effects).
+The proportion of cells assigned to the doublet cluster should also be ``reasonable'';
+exactly what this means depends on the experimental setup and the doublet rate of the protocol in use.
+
+# Discussion
+
+We have chosen the above approach due to its lack of assumptions.
+Specifically, we do not need to know $s_i$ for each cluster in order to satisfy the intermediacy condition.
+This allows us to identify doublets even when the exact location of the doublet is unknown.
+In contrast, methods that attempt to reconstruct the doublet cluster need to know the ratio in which RNA from the parent populations are mixed.
+This requires knowledge of the total RNA content of each cell, which is not available without spike-ins;
+and $N_i$ is a poor substitute, especially in experiments that reach saturation.
+
+The intermediacy condition also provides robustness against misspecification of the clusters.
+Consider the situation where an adjacent population $x$ is merged into the doublet or parent clusters.
+The intermediacy condition would still hold for genes where the log-fold change between $x$ and its merged partner population is smaller than the log-fold change between the parents.
+The condition would only fail in extreme cases, e.g., for strong marker genes in $x$ that now appear to be uniquely expressed in the doublet cluster,
+or due to apparent downregulation of genes in the parent cluster when the cluster average includes a non-expressing population.
+The number of such genes should be low if $x$ was similar enough to be merged in the first place.
+This means that the doublet cluster should still be detected as a small outlier for the number of detected genes.
+
+# Session information
+
+```{r}
+sessionInfo()
+```
