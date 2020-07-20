@@ -66,15 +66,18 @@
 #' 
 #' @export
 scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
+                         samples=NULL, knownDoublets=NULL,
                          clust.method=c("fastcluster","overcluster"),
-                         samples=NULL, minClusSize=min(50,ncol(sce)/5), 
+                         minClusSize=min(50,ncol(sce)/5), 
                          maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
                          dbr.sd=0.015, k=20, returnType=c("sce","table","full"),
-                         score=c("xgb.local.optim","xgb","weighted","ratio"),
+                         score=c("xgb","xgb.local.optim","weighted","ratio"),
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
   if(!is(sce, "SingleCellExperiment"))
-      stop("`sce` should be a SingleCellExperiment")
+      stop("`sce` should be a SingleCellExperiment. If you have a matrix of ",
+           "counts 'mat', you can create an SCE using:\n",
+           "SingleCellExperiment::SingleCellExperiment(list(counts=mat))")
   clust.method <- match.arg(clust.method)
   returnType <- match.arg(returnType)
   if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
@@ -244,7 +247,7 @@ numbers of cells.")
           counts=cbind(as.matrix(counts(sce)), ad[row.names(sce),]),
           logcounts=e), colData=d)
       reducedDim(sce_out, "PCA") <- pca
-      metadata(sce_out)$scDblFinder.stats <- th$stats
+      metadata(sce_out)$scDblFinder.stats <- metadata(orig)$scDblFinder.stats
       return(sce_out)
   }
   
