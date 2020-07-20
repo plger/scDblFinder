@@ -8,8 +8,9 @@ scDblFinder(
   sce,
   artificialDoublets = NULL,
   clusters = NULL,
-  clust.method = c("fastcluster", "overcluster"),
   samples = NULL,
+  knownDoublets = NULL,
+  clust.method = c("fastcluster", "overcluster"),
   minClusSize = min(50, ncol(sce)/5),
   maxClusSize = NULL,
   nfeatures = 1000,
@@ -18,7 +19,7 @@ scDblFinder(
   dbr.sd = 0.015,
   k = 20,
   returnType = c("sce", "table", "full"),
-  score = c("xgb.local.optim", "xgb", "weighted", "ratio"),
+  score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
   verbose = is.null(samples),
   BPPARAM = SerialParam()
 )
@@ -35,8 +36,6 @@ clustering). This is used to make doublets more efficiently. `clusters`
 should either be a vector of labels for each cell, or the name of a colData 
 column of `sce`.}
 
-\item{clust.method}{The clustering method if `clusters` is not given.}
-
 \item{samples}{A vector of the same length as cells (or the name of a column 
 of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
 sample is understood as being processed independently. If omitted, doublets 
@@ -46,6 +45,12 @@ represent different captures. If your samples were multiplexed using cell
 hashes, want you want to give here are the different batches/wells (i.e. 
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
+
+\item{knownDoublets}{An optional logical vector of known doublets (e.g. 
+through cell barcodes), or the name of a colData column of `sce` containing
+that information.}
+
+\item{clust.method}{The clustering method if `clusters` is not given.}
 
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
 (default 50); ignored if `clusters` is given.}
@@ -89,9 +94,7 @@ overclustering-based generation of artifical doublets.
 }
 \examples{
 library(SingleCellExperiment)
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
-               FUN=function(x) rpois(50,x) ) )
-sce <- SingleCellExperiment( list(counts=m) )
+sce <- mockDoubletSCE()
 sce <- scDblFinder(sce, verbose=FALSE)
 table(sce$scDblFinder.class)
 

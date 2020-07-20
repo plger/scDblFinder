@@ -21,6 +21,9 @@
 #' hashes, want you want to give here are the different batches/wells (i.e. 
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
+#' @param knownDoublets An optional logical vector of known doublets (e.g. 
+#' through cell barcodes), or the name of a colData column of `sce` containing
+#' that information.
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
 #' (default 50); ignored if `clusters` is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
@@ -58,9 +61,7 @@
 #' 
 #' @examples
 #' library(SingleCellExperiment)
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
-#'                FUN=function(x) rpois(50,x) ) )
-#' sce <- SingleCellExperiment( list(counts=m) )
+#' sce <- mockDoubletSCE()
 #' sce <- scDblFinder(sce, verbose=FALSE)
 #' table(sce$scDblFinder.class)
 #' 
@@ -85,6 +86,15 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
           stop("Could not find `clusters` column in colData!")
       clusters <- colData(sce)[[clusters]]
   }
+  if(!is.null(clusters) && length(clusters)!=ncol(sce))
+    stop("The length of `clusters` does not match the columns of `sce`.")
+  if(!is.null(knownDoublets) && is.character(knownDoublets) && length(knownDoublets)==1){
+    if(!(knownDoublets %in% colnames(colData(sce)))) 
+      stop("Could not find `knownDoublets` column in colData!")
+    knownDoublets <- colData(sce)[[knownDoublets]]
+  }
+  if(!is.null(knownDoublets) && length(knownDoublets)!=ncol(sce))
+    stop("The length of `knownDoublets` does not match the columns of `sce`.")
   if(!is.null(score)) score <- match.arg(score)
   stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
@@ -119,8 +129,8 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
   }
-  if(ncol(sce)<100) warning("scDblFinder might not work well with very low 
-numbers of cells.")
+  if(ncol(sce)<100)
+  warning("scDblFinder might not work well with very low numbers of cells.")
 
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
@@ -263,6 +273,7 @@ numbers of cells.")
              "mostLikelyOrigin","originAmbiguous")){
     if(!is.null(d[[f]])) orig[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
+  orig$scDblFinder.class <- relevel(as.factor(orig$scDblFinder.class),"singlet")
   orig
 }
 
