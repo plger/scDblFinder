@@ -35,7 +35,8 @@ Suggests:
     BiocStyle, 
     knitr, 
     rmarkdown,
-    testthat
+    testthat,
+    scRNAseq
 VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.1.1
