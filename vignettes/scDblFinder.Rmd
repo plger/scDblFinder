@@ -21,22 +21,17 @@ library(BiocStyle)
 
 # scDblFinder
 
-## Introduction
-
-scDblFinder identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their
-prevalence in the neighborhood of each cell. The rough logic is very similar to
-`r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")`, but it is simpler and more efficient. In a
-nutshell, instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and
-create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids
-creating homotypic doublets and enables the detection of most heterotypic doublets with much fewer artificial doublets.
-We also rely on the expected proportion of doublets to threshold the scores, we include a variability in the estimate
-of the doublet proportion (`dbr.sd`), and use the error rate of the real/artificial predicition in conjunction with
-the deviation in global doublet rate to set the threshold.
+scDblFinder identifies doublets in single-cell RNAseq by creating artificial doublets and looking at their
+prevalence in the neighborhood of each cell, along with a few other covariates. The rough logic is very similar to 
+other methods (e.g. `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")` or `r Biocpkg("scds")`), with a few twists 
+that make it more efficient and provide extra features.
 
 The approach described here is complementary to doublets identified via cell hashes and SNPs in multiplexed samples.  
 The latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable
-from real cells transcriptionally (and hence unidentifiable through the present package), but cannot identify doublets
-made by cells of the same sample.
+from real cells transcriptionally (and hence generally unidentifiable through the present package), but cannot 
+identify doublets made by cells of the same sample. Moreover, when such inter-sample doublets are available, they
+can be provided to `scDblFinder` through the `knownDoublets` argument to improve the identification of further doublets.
+
 
 ## Installation
 
@@ -52,15 +47,10 @@ BiocManager::install("plger/scDblFinder")
 ## Usage
 
 Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered) :
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(scDblFinder)
-library(SingleCellExperiment)
 # we create a dummy dataset
-m <- t(sapply( seq(from=0, to=5, length.out=500), 
-                FUN=function(x) rpois(1000,x) ) )
-# we add a few random artificial doublets:
-m <- cbind(m, m[,1]+m[,2], m[,20]+m[,30])
-sce <- SingleCellExperiment( list(counts=m) )
+sce <- mockDoubletSCE()
 ```
 
 We run `scDblFinder` simply with:
@@ -95,20 +85,70 @@ sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
 table(sce$scDblFinder.class)
 ```
 
+<br/><br/>
 
-### Parameters
+## Description of the method
+
+Wrapped in the `scDblFinder` function are the following steps:
+
+### Splitting captures
+
+Doublets can only arise within a given sample or capture, and for this reason are better sought independently for each sample, which also speeds up the analysis. If the `samples` argument is given, `scDblFinder` will use it to split the cells into samples/captures, and process each of them (in parallel if the `BPPARAM` argument is given). If your samples are multiplexed, i.e. the different samples are mixed in different batches, then the batches should be what you provide to this argument.
+
+### Reducing and clustering the data
+
+The analysis can be considerably sped up, at little if any cost in accuracy, by reducing the dataset to only the top expressed genes (controlled by the `nfeatures` argument). Then, if the `clusters` argument isn't provided, the cells will be clustered using a fast clustering procedure on the PCA space (taken from the 'PCA' dimRed if present, otherwise generated). The method is controlled by the `clust.method` argument. The aim, here, is to favour over-clustering so as to avoid collapsing pairs of celltypes whose doublets could be distinguishable. The clusters are included in the output.
+
+### Generating artificial doublets
+
+Artificial doublets are then generated on all pairs of non-identical clusters (homotypic doublets being nearly impossible to distinguish without cellular barcodes). This can be performed manually using the `getArtificialDoublets` function.
+
+### Examining the k-nearest neighbors (KNN) of each cell
+
+A new PCA is performed on the combination of real and artificial cells, from which a KNN network is generated. Using this KNN, a number of parameters are gathered for each cell, such as the proportion of doublets (i.e. artificial doublets or known doublets provided through the `knownDoublets` argument, if given - these could be for instance inter-sample doublets flagged by SNPs) among the KNN, ratio of the distances to the nearest doublet and nearest non-doublet, etc. Several of this features are reported in the output with the 'scDblFinder.' prefix:
+
+* `distanceToNearest` : distance to the nearest cell
+* `nearestClass` : whether the nearest cell is a doublet or singlet
+* `ratio` : the proportion of the KNN that are doublets
+* `weighted` : the proportion of the KNN that are doublets, weighted by their distance (particularly useful for isolated cells)
+
+### Training a classifier
+
+Unless the `score` argument is set to 'weighted' or 'ratio' (in which case the aforementioned ratio is directly used as a doublet score), `scDblFinder` then uses gradient boosted trees trained on the KNN-derived properties along with a few additional features (e.g. library size, number of non-zero features, and an estimate of the difficultly of detecting artificial doublets in the cell's neighborhood) to distinguish doublets (either artificial or given) from other cells, and assigns a score on this basis. This score is available in the output as either `scDblFinder.score` or `scDblFinder.score.global` (see below).
+
+### Local calibration and thresholding
+
+Rather than thresholding on some arbitrary cutoff of the score, `scDblFinder` uses the expected number of doublets to establish a threshold. Unless it is manually given through the `dbr` argument, the expected doublet rate is first estimated using the empirical rule of thumb applicable to 10X data, namely roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets, and the more cells you capture the higher the chance of creating a doublet). This doublet rate is then adjusted so that the expected amount of homotypic doublets, based on the relative cluster prevalences, is removed.
+
+Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets below the threshold) and 2) the deviation from the expected number of doublets (as a ratio of the total number of expected doublets), giving an equal weight to each (although in practice the deviation from the expected number of doublets will be the biggest driver of the threshold). If `score` is either to 'xgb' (default), 'weighted' or 'ratio', then thresholding is performed directly on the said score. If `score='xgb.local.optim'`, then a local calibration of the score is performed.
+
+#### Local calibration (optional)
+
+Doublets that are located in an otherwise sparse region of the space are easier to identify (and hence will have a higher score) that those located in a dense region. In other words, the aforementioned doublet scores are biased against rarer cell states. To correct for this, it is possible to perform threshold optimization separately for different groups of cells, depending on the type of artificial doublets (i.e. their originating clusters) closest to them. In this context, the expected number of doublets is calculated for each combination of clusters.
+
+This procedure can be problematic whenever the doublets are not random (e.g. when two cell types preferentially stick together). For this reason, instead of using the local threshold directly, `scDblFinder` moderates it by establishing a relationship between the local threshold and the difficultly in indentifying doublets, and pulling the threshold towards this expectation.
+
+The cells' scores are then transformed so that the different local thresholds are equalized, by substracting the logit-threshold to the logit-score and transforming back to a 0-1 score. Finally, the global threshold is calculated as described above. When the local calibration is enabled, the calibrated score is available in `scDblFinder.score`, and the original one in `scDblFinder.score.global`.
+
+### Doublet origins and enrichments
+
+Because the artificial doublets are generated from clusters, it is most often possible to call the most likely origin (in terms of the combination of clusters) of a given putative real doublet. This information is provided through the `scDblFinder.mostLikelyOrigin` column of the output (and the `scDblFinder.originAmbiguous` column indicates whether this origin is ambiguous or rather clear). This, in turn, allows us to identify enrichment over expectation for specific kinds of doublets. Some statistics on each combination of clusters are saved in `metadata(sce)$scDblFinder.stats`, and the `plotDoubletMap` function can be used to visualize enrichments. Most enrichment or depletion is explained by the difficulty of identifying doublets of certain kinds, but departures from expectation might also point to technical or biological effects.
+
+<br/><br/>
+
+## Important parameters
 
 The important sets of parameters in `scDblFinder` refer respectively to the expected proportion of doublets, to the clustering, and to the number of artificial doublets used.
 
-#### Expected proportion of doublets
+### Expected proportion of doublets
 
 The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
 
-#### Clustering
+### Clustering
 
 Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we favor over-clustering at this stage. scDblFinder's default clustering method is implemented in the `fastcluster` function; alternatives include the `overcluster` function (specifying minimum and maximum cluster sizes) and manually providing cluster labels.
 
-#### Number of artificial doublets
+### Number of artificial doublets
 
 `scDblFinder` itself determines a reasonable number of artificial doublets to create on the basis of the size of the population and the number of clusters, but increasing this number can only increase the accuracy.
 
