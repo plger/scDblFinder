@@ -17,7 +17,7 @@ artificial); can be anything ranging from 0 to 1, with higher scores
 indicating higher change of being a doublet.}
 
 \item{celltypes}{A vector of the same length as `scores` indicating, for each
-cell, whether it is a 'real' cell or an 'artificial' doublet. Missing values
+cell, whether it is a 'real' cell or a 'doublet'. Missing values
  not allowed.}
 
 \item{clusters}{Optional vector of cluster assignment for each (real) cell, 
@@ -42,7 +42,7 @@ m <- t(sapply( seq(from=0, to=5, length.out=50),
                FUN=function(x) rpois(30,x) ) )
 # generate doublets and merge them with real cells
 doublets <- getArtificialDoublets(m, 30)
-celltypes <- rep(c("real","artificial"), c(ncol(m), ncol(doublets)))
+celltypes <- rep(c("real","doublet"), c(ncol(m), ncol(doublets)))
 m <- cbind(m,doublets)
 # dummy doublet scores:
 scores <- abs(jitter(1:ncol(m),amount=10))

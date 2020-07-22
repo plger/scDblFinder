@@ -7,7 +7,7 @@
 #' artificial); can be anything ranging from 0 to 1, with higher scores 
 #' indicating higher change of being a doublet.
 #' @param celltypes A vector of the same length as `scores` indicating, for each
-#'  cell, whether it is a 'real' cell or an 'artificial' doublet. Missing values
+#'  cell, whether it is a 'real' cell or a 'doublet'. Missing values
 #'   not allowed.
 #' @param clusters Optional vector of cluster assignment for each (real) cell, 
 #' used for homotypic doublet correction.
@@ -27,7 +27,7 @@
 #'                FUN=function(x) rpois(30,x) ) )
 #' # generate doublets and merge them with real cells
 #' doublets <- getArtificialDoublets(m, 30)
-#' celltypes <- rep(c("real","artificial"), c(ncol(m), ncol(doublets)))
+#' celltypes <- rep(c("real","doublet"), c(ncol(m), ncol(doublets)))
 #' m <- cbind(m,doublets)
 #' # dummy doublet scores:
 #' scores <- abs(jitter(1:ncol(m),amount=10))
@@ -43,10 +43,10 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous") 
           %in% colnames(d))) stop("Input misses some columns.")
   
-  if(!all(sort(as.character(unique(d$type)))==c("artificial","real"))){
-    stop("`type` should be either 'real' or 'artificial'.")
+  if(!all(sort(as.character(unique(d$type)))==c("doublet","real"))){
+    stop("`type` should be either 'real' or 'doublet'.")
   }
-  expected <- getExpectedDoublets(d$cluster[d$type=="real"], dbr=dbr)
+  expected <- getExpectedDoublets(d$cluster[!is.na(d$cluster)], dbr=dbr)
   if(local){
     ths <- .optimThresholds(d$score, d$type, d$mostLikelyOrigin, d$difficulty, 
                           expected)
@@ -106,7 +106,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
 }
 
 .FNR <- function(type, score, threshold){
-  sum(type=="artificial" & score<threshold, na.rm=TRUE)/sum(type=="artificial")
+  sum(type!="real" & score<threshold, na.rm=TRUE)/sum(type!="real")
 }
 .FDR <- function(type, score, threshold){
   if(sum(score>=threshold, na.rm=TRUE)==0) return(0)

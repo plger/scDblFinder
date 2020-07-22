@@ -120,6 +120,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
                                   dbr.sd=dbr.sd, k=k, clust.method=clust.method,
                                   score=score, nfeatures=nfeatures, 
+                                  knownDoublets=knownDoublets,
                                   verbose=FALSE ) )
         fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
         as.data.frame(x[,fields])
@@ -141,7 +142,19 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   if(nrow(sce)>nfeatures){
     if(verbose) message("Identifying top genes...")
     sce <- sce[.clusterTopG(sce,nfeatures=nfeatures,clusters),]
-  }  
+  }
+
+  wDbl <- c()
+  if(!is.null(knownDoublets) & length(wDbl <- which(knownDoublets))>0){
+    sce$knownDoublet <- knownDoublets
+    sce.dbl <- sce[,wDbl,drop=FALSE]
+    sce <- sce[,-wDbl,drop=FALSE]
+    if(!is.null(clusters)){
+      clusters.dbl <- clusters[wDbl]
+      clusters <- clusters[-wDbl]
+      if(is.factor(clusters)) clusters <- droplevels(clusters)
+    }
+  }
   if(is.null(clusters)){
       if(verbose) message("Clustering cells...")
       if(clust.method=="overcluster"){
@@ -179,9 +192,17 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   }
   ado <- ad$origins
   ad <- ad$counts
-  ado2 <- as.factor(c(rep(NA, ncol(sce)), as.character(ado)))
-
-  e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
+  
+  no <- ncol(sce) + length(wDbl)
+  ado2 <- as.factor(c(rep(NA, no), as.character(ado)))
+  src <- factor( rep(1:2, c(no,ncol(ad))), labels = c("real","artificial"))
+  ctype <- factor( rep(c(1,2,2), c(ncol(sce),length(wDbl),ncol(ad))), 
+                   labels=c("real","doublet") )
+  
+  e <- as.matrix(counts(sce))
+  if(!is.null(wDbl)) e <- cbind(e, as.matrix(counts(sce.dbl)))
+  e <- cbind(e, ad[row.names(sce),])
+  
   # evaluate by library size and non-zero features
   lsizes <- colSums(e)
   nfeatures <- colSums(e>0)
@@ -198,8 +219,6 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   if(is.list(pca)) pca <- pca$x
   row.names(pca) <- colnames(e)
   
-  ctype <- factor( rep(1:2, c(ncol(sce),ncol(ad))), 
-                   labels = c("real","artificial"))
   ex <- getExpectedDoublets(clusters, dbr)
   knn <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
                       verbose=verbose)
@@ -208,6 +227,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   knn <- knn$knn
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
+  d$src <- src
   d$type <- ctype
 
   if(is.null(score)) return(d)
@@ -215,9 +235,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   if(score %in% c("xgb.local.optim","xgb")){
     if(verbose) message("Training model...")
     prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous","type",
-                                   "distanceToNearest"))
+                                   "src","distanceToNearest"))
     d2  <- as.matrix(d[,prds])
-    nd <- round(sum(ex))+sum(d$type=="artificial")
+    nd <- round(sum(ex))+sum(d$type!="real")
     fit <- xgboost(d2, as.integer(d$type)-1, nrounds=50, 
                    max_depth=6, objective="binary:logistic", 
                    #scale_pos_weight=sqrt(nd/(nrow(d)-nd)),
@@ -232,7 +252,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   }
   
   d$cluster <- NA
-  d$cluster[d$type=="real"] <- clusters
+  d[colnames(sce),"cluster"] <- clusters
   d$smoothed.score <- .knnSmooth(knn, d$score, type=0)
   rm(knn)
   
@@ -261,13 +281,9 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
       return(sce_out)
   }
   
-  
-  d <- d[seq_len(ncol(orig)),]
-  d$type <- NULL
-  row.names(d) <- colnames(orig)
   d <- d[colnames(orig),]
   
-  orig$scDblFinder.cluster <- clusters
+  orig$scDblFinder.cluster <- d$cluster
   for(f in c("cluster","distanceToNearest","nearestClass","difficulty","ratio",
              "weighted","score.global","score","smoothed.score","class",
              "mostLikelyOrigin","originAmbiguous")){
@@ -301,7 +317,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   
   dw <- 1/knn$distance
   dw <- dw/rowSums(dw)
-  d <- data.frame( type=ctype,
+  d <- data.frame( row.names=row.names(pca), type=ctype,
                    weighted=rowSums(knn$type*dw),
                    distanceToNearest=knn$distance[,1],
                    distanceToNearestDoublet=dr[,1],
