@@ -61,6 +61,13 @@ tab <- findDoubletClusters(sce, clusters)
 tab
 ```
 
+```{r, echo=FALSE}
+# Sanity check that one of the clusters is a good doublet candidate.
+# If this fails, we probably need to pick a more demonstrative example.
+stopifnot(rownames(tab)[1]=="6")
+stopifnot(tab[1,"num.de"]==0)
+```
+
 # Mathematical background
 
 Consider a cell population $i$ that has mean transcript count $\lambda_{gi}$ for gene $g$.
