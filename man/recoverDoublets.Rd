@@ -77,43 +77,14 @@ Such cells may be problematic if they are still sufficiently abundant to drive f
 
 This function identifies intra-sample doublets based on the similarity in expression profiles to known inter-sample doublets.
 For each cell, we compute the proportion of the \code{k} neighbors that are known doublets.
-Of the \dQuote{unmarked} cells that are not known doublets, 
-those with top \eqn{X} largest proportions are considered to be intra-sample doublets.
-We use \code{samples} to obtain a reasonable value for \eqn{X}, see below for details.
+Of the \dQuote{unmarked} cells that are not known doublets, those with top \eqn{X} largest proportions are considered to be intra-sample doublets.
+We use \code{samples} to obtain a reasonable estimate for \eqn{X}, see the vignette for details.
 
 A larger value of \code{k} provides more stable estimates of the doublet proportion in each cell.
 However, this comes at the cost of assuming that each cell actually has \code{k} neighboring cells of the same state.
 For example, if a doublet cluster has fewer than \code{k} members,
 its doublet proportions will be \dQuote{diluted} by inclusion of unmarked cells in the next-closest cluster.
 }
-\section{Additional notes}{
-
-For a more formal treatment: consider any two cell states \eqn{S_1} and \eqn{S_2} forming a doublet population \eqn{D_{12}}.
-The rate of doublet formation is (mostly) irrelevant as we condition on the number of events in \eqn{D_{12}}.
-Our interest instead lies in the relative frequency of inter-sample to intra-sample doublets in \eqn{D_{12}}.
-Given a vector containing the proportion of cells from each sample in each state, and assuming that doublets form randomly between pairs of samples, the expected proportion of intra-sample doublets is the dot product of vectors for \eqn{S_1} and \eqn{S_2}.
-Subtracting this from 1 gives us the proportion of inter-sample doublets.
-
-We expect that the proportion of inter-sample doublets (and thus, the proportion of known doublet neighbors)
-is higher within \eqn{D_{12}} compared to \eqn{S_1} or \eqn{S_2}.
-Any inter-sample doublets in the latter should be offset by a large majority of non-doublet cells,
-assuming that the rate of doublet formation is within acceptable limits.
-This motivates the calculation of the proportion of known doublet neighbors 
-to identify events that are most likely to be themselves doublets.
-
-We obtain a reasonable value for \eqn{X} by assuming that all cell states 
-contributing to doublet states have proportion vectors equal to \code{samples}.
-This allows us to use \code{samples} to estimate the expected percentage of inter-sample doublets,
-which we then convert into an absolute number \eqn{X} based on the observed number of known doublets in \code{doublets}.
-
-In this theoretical framework, we can easily spot a case where our method fails.
-If both \eqn{S_1} and \eqn{S_2} are unique to a given sample, all events in \eqn{D_{12}} will be intra-sample doublets.
-This means that no events in \eqn{D_{12}} will ever be detected as inter-sample doublets,
-which precludes their detection as intra-sample doublets by \code{recoverDoublets}.
-The computational remedy is to augment the predictions with simulation-based methods (e.g., \code{\link{scDblFinder}})
-while the experimental remedy is to ensure that multiplexed samples include technical or biological replicates.
-}
-
 \examples{
 # Mocking up an example.
 set.seed(100)
@@ -140,6 +111,9 @@ for alternative methods of doublet detection when no prior doublet information i
 
 \code{hashedDrops} from the \pkg{DropletUtils} package,
 to identify doublets from cell hashing experiments.
+
+More detail on the mathematical background of this function is provided in the corresponding vignette at
+\code{vignette("recoverDoublets", package="scDblFinder")}.
 }
 \author{
 Aaron Lun
