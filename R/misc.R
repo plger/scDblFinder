@@ -95,6 +95,8 @@ rankTrans <- function(x){
 #'
 #' @param x A vector of cluster labels for each cell
 #' @param dbr The expected doublet rate.
+#' @param only.heterotypic Logical; whether to return expectations only for 
+#' heterotypic doublets
 #'
 #' @return The expected number of doublets of each combination of clusters
 #'
@@ -103,7 +105,7 @@ rankTrans <- function(x){
 #' cl <- sample(LETTERS[1:4], size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
 #' getExpectedDoublets(cl)
 #' @export
-getExpectedDoublets <- function(x, dbr=NULL){
+getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
   }else{
@@ -112,10 +114,14 @@ getExpectedDoublets <- function(x, dbr=NULL){
   clusters <- factor(clusters)
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
-  dbr <- .adjust.dbr.homotypy(clusters, dbr)
+  if(only.heterotypic) dbr <- .adjust.dbr.homotypy(clusters, dbr)
   cs <- table(clusters)
   eg <- expand.grid(seq_along(cs), seq_along(cs))
-  eg <- eg[eg[,1]<eg[,2],]
+  if(only.heterotypic){
+    eg <- eg[eg[,1]<eg[,2],]
+  }else{
+    eg <- eg[eg[,1]<=eg[,2],]
+  }
   nd <- ceiling(dbr*ncells)
   expected <- apply(eg,1, FUN=function(x){
     nd*(cs[[x[[1]]]]/ncells)*(cs[[x[[2]]]]/ncells)
@@ -158,3 +164,88 @@ getExpectedDoublets <- function(x, dbr=NULL){
   g
 }
 
+#' mockDoubletSCE
+#' 
+#' Creates a mock random single-cell experiment object with doublets
+#'
+#' @param ncells A positive integer vector indicating the number of cells per
+#' cluster (min 2 clusters)
+#' @param ngenes The number of genes to simulate. Ignored if `mus` is given.
+#' @param mus A list of cluster averages.
+#' @param dbl.rate The doublet rate
+#'
+#' @return A SingleCellExperiment object, with the colData columns `type` 
+#' indicating whether the cell is a singlet or doublet, and `cluster` 
+#' indicating from which cluster (or cluster combination) it was simulated.
+#' 
+#' @export
+#' @import SingleCellExperiment stats
+#' @examples
+#' sce <- mockDoubletSCE()
+mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL, 
+                           dbl.rate=0.1){
+  if(length(ncells)<2)
+    stop("ncells should be a positive integer vector of length >=2")
+  if(is.null(names(ncells))) names(ncells)<-paste0("cluster",seq_along(ncells))
+  if(is.null(mus)){
+    mus <- lapply(ncells, FUN=function(x) 2^rnorm(ngenes))
+  }else{
+    if(!is.list(mus) || length(mus)!=length(ncells) || 
+       length(unique(lengths(mus)))!=1)
+      stop("If provided, `mus` should be a list of length equal to that of ",
+           "`ncells`, with each slot containing a numeric vector of averages ",
+           "for each gene.")
+    names(mus) <- names(ncells)
+  }
+
+  # non-doublets
+  counts <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
+    matrix(rpois(ncells[[i]]*ngenes, mus[[i]]), nrow=ngenes)
+  }))
+  sce <- SingleCellExperiment(list(counts=counts), 
+                              colData=data.frame(type="singlet", 
+                                           origin=rep(names(ncells), ncells)))
+  
+  # doublets
+  expected <- getExpectedDoublets(sce$origin, dbl.rate, FALSE)
+  simdbl <- rpois(length(expected), expected)
+  mus <- lapply(strsplit(names(expected),"+",fixed=TRUE), FUN=function(x){
+    mus[[x[[1]]]]+mus[[x[[2]]]]
+  })
+  doublets <- do.call(cbind, mapply(mu=mus, n=simdbl, FUN=function(mu, n){
+    matrix(rpois(n*ngenes, mu), nrow=ngenes)
+  }))
+  sce2 <- SingleCellExperiment( list(counts=doublets), 
+                                colData=data.frame(type="doublet", 
+                                        origin=rep(names(expected), simdbl)))
+  sce <- cbind(sce, sce2)
+  
+  # set original cluster for homotypic doublets
+  sce$cluster <- factor(sce$origin, c(names(ncells),names(expected)))
+  names(n) <- n <- levels(sce$cluster)
+  n[paste(names(ncells),names(ncells),sep="+")] <- names(ncells)
+  levels(sce$cluster) <- as.character(n)
+  
+  colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  row.names(sce) <- paste0("gene",seq_len(ngenes))
+  sce$type <- factor(sce$type, c("singlet","doublet"))
+  sce
+}
+
+
+.checkColArg <- function(sce, x, acceptNull=TRUE){
+  arg <- deparse(substitute(x))
+  if(is.null(x)){
+    if(!acceptNull) stop("Missing argument `",arg,"`!")
+    return(NULL)
+  }
+  if(is.character(x) && length(x)==1){
+    if(!(x %in% colnames(colData(sce)))) 
+      stop("Could not find `", arg, "` column in colData!")
+    x <- colData(sce)[[x]]
+  }else if(length(x)!=ncol(sce)){
+    stop("`",arg,"` should have a length equal to the number of columns in ",
+         "`sce`.")
+  }
+  x
+}

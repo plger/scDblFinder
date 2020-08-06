@@ -1,19 +1,21 @@
 #' scDblFinder
 #' 
-#' Identification of doublets in single-cell RNAseq directly from counts using 
-#' overclustering-based generation of artifical doublets.
+#' Identification of heterotypic (or neotypic) doublets in single-cell RNAseq 
+#' using cluster-based generation of artifical doublets.
 #'
-#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
+#' counts.
 #' @param artificialDoublets The approximate number of artificial doublets to 
-#' create. If NULL, will be the maximum of the number of cells or 
-#' `5*nbClusters^2`.
+#' create. If \code{NULL}, will be the maximum of the number of cells or 
+#' \code{5*nbClusters^2}.
 #' @param clusters The optional cluster assignments (if omitted, will run 
-#' clustering). This is used to make doublets more efficiently. `clusters` 
+#' clustering). This is used to make doublets more efficiently. \code{clusters} 
 #' should either be a vector of labels for each cell, or the name of a colData 
-#' column of `sce`.
-#' @param clust.method The clustering method if `clusters` is not given.
+#' column of \code{sce}.
+#' @param clust.method The clustering method if \code{clusters} is not given.
 #' @param samples A vector of the same length as cells (or the name of a column 
-#' of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
+#' of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
 #' will be searched for with all cells together. If given, doublets will be 
 #' searched for independently for each sample, which is preferable if they 
@@ -21,10 +23,13 @@
 #' hashes, want you want to give here are the different batches/wells (i.e. 
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
+#' @param knownDoublets An optional logical vector of known doublets (e.g. 
+#' through cell barcodes), or the name of a colData column of `sce` containing
+#' that information.
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
-#' (default 50); ignored if `clusters` is given.
+#' (default 50); ignored if \code{clusters} is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
-#' `clusters` is given or if `clust.method`!='overcluster'.
+#' \code{clusters} is given or if \code{clust.method!='overcluster'}.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used to build the network (default 20)
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
@@ -40,11 +45,30 @@
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
 #'
-#' @return The `sce` object with several additional colData columns, in 
+#' @return The \code{sce} object with several additional colData columns, in 
 #' particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
-#' (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
-#' `fullTable=TRUE`, a data.frame will be returned with information about real 
-#' and artificial cells.
+#' (whether the cell is called as 'doublet' or 'singlet'). See 
+#' \code{vignette("scDblFinder")} for more details; for alternative return 
+#' values, see the `returnType` argument.
+#' 
+#' @details
+#' This function generates artificial doublets from clusters of real cells, 
+#' evaluates their prevalence in the neighborhood of each cells, and uses this 
+#' along with additional features to classify doublets. The approach is 
+#' complementary to doublets identified via cell hashes and SNPs in multiplexed
+#' samples: the latter can identify doublets formed by cells of the same type
+#' from two samples, which are nearly undistinguishable from real cells 
+#' transcriptionally, but cannot identify doublets made by cells of the 
+#' same sample. See \code{vignette("scDblFinder")} for more details on the 
+#' method.
+#' 
+#' When inter-sample doublets are available, they can be provided to 
+#' `scDblFinder` through the \code{knownDoublets} argument to improve the 
+#' identification of further doublets.
+#' 
+#' When multiple samples/captures are present, they can be specified using the 
+#' \code{samples} argument and will be processed separately (in parallel if 
+#' \code{BPPARAM} is given).
 #' 
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
@@ -58,15 +82,15 @@
 #' 
 #' @examples
 #' library(SingleCellExperiment)
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
-#'                FUN=function(x) rpois(50,x) ) )
-#' sce <- SingleCellExperiment( list(counts=m) )
+#' sce <- mockDoubletSCE()
 #' sce <- scDblFinder(sce, verbose=FALSE)
 #' table(sce$scDblFinder.class)
 #' 
 #' @export
-scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
-                         samples=NULL, knownDoublets=NULL,
+#' @rdname scDblFinder
+#' @import SingleCellExperiment
+scDblFinder <- function( sce, clusters=NULL, samples=NULL, 
+                         artificialDoublets=NULL, knownDoublets=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          minClusSize=min(50,ncol(sce)/5), 
                          maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
@@ -74,17 +98,20 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
-  if(!is(sce, "SingleCellExperiment"))
-      stop("`sce` should be a SingleCellExperiment. If you have a matrix of ",
-           "counts 'mat', you can create an SCE using:\n",
-           "SingleCellExperiment::SingleCellExperiment(list(counts=mat))")
+  if(is(sce, "SummarizedExperiment")){
+    sce <- as(sce, "SingleCellExperiment")
+  }else if(!is(sce, "SingleCellExperiment")){
+    if(is.null(dim(sce)))
+      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    sce <- SingleCellExperiment(list(counts=sce))
+  }
   clust.method <- match.arg(clust.method)
   returnType <- match.arg(returnType)
-  if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
-      if(!(clusters %in% colnames(colData(sce)))) 
-          stop("Could not find `clusters` column in colData!")
-      clusters <- colData(sce)[[clusters]]
-  }
+  clusters <- .checkColArg(sce, clusters)
+  knownDoublets <- .checkColArg(sce, knownDoublets)
+  samples <- .checkColArg(sce, samples)
+  
   if(!is.null(score)) score <- match.arg(score)
   stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
@@ -95,10 +122,6 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
       row.names(sce) <- paste0("f",seq_len(nrow(sce)))
   if(!is.null(samples)){
     # splitting by samples
-    if(length(samples)==1 && samples %in% colnames(colData(sce)))
-        samples <- colData(sce)[[samples]]
-    if(ncol(sce)!=length(samples))
-        stop("Samples vector matches number of cells")
     if(returnType!="sce") 
         warning("`returnType` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
@@ -110,6 +133,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                                   maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
                                   dbr.sd=dbr.sd, k=k, clust.method=clust.method,
                                   score=score, nfeatures=nfeatures, 
+                                  knownDoublets=knownDoublets,
                                   verbose=FALSE ) )
         fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
         as.data.frame(x[,fields])
@@ -119,8 +143,8 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
     return(sce)
   }
-  if(ncol(sce)<100) warning("scDblFinder might not work well with very low 
-numbers of cells.")
+  if(ncol(sce)<100)
+    warning("scDblFinder might not work well with very low numbers of cells.")
 
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
@@ -131,7 +155,19 @@ numbers of cells.")
   if(nrow(sce)>nfeatures){
     if(verbose) message("Identifying top genes...")
     sce <- sce[.clusterTopG(sce,nfeatures=nfeatures,clusters),]
-  }  
+  }
+
+  wDbl <- c()
+  if(!is.null(knownDoublets) && length(wDbl <- which(knownDoublets))>0){
+    sce$knownDoublet <- knownDoublets
+    sce.dbl <- sce[,wDbl,drop=FALSE]
+    sce <- sce[,-wDbl,drop=FALSE]
+    if(!is.null(clusters)){
+      clusters.dbl <- clusters[wDbl]
+      clusters <- clusters[-wDbl]
+      if(is.factor(clusters)) clusters <- droplevels(clusters)
+    }
+  }
   if(is.null(clusters)){
       if(verbose) message("Clustering cells...")
       if(clust.method=="overcluster"){
@@ -169,9 +205,17 @@ numbers of cells.")
   }
   ado <- ad$origins
   ad <- ad$counts
-  ado2 <- as.factor(c(rep(NA, ncol(sce)), as.character(ado)))
-
-  e <- cbind(as.matrix(counts(sce)), ad[row.names(sce),])
+  
+  no <- ncol(sce) + length(wDbl)
+  ado2 <- as.factor(c(rep(NA, no), as.character(ado)))
+  src <- factor( rep(1:2, c(no,ncol(ad))), labels = c("real","artificial"))
+  ctype <- factor( rep(c(1,2,2), c(ncol(sce),length(wDbl),ncol(ad))), 
+                   labels=c("real","doublet") )
+  
+  e <- as.matrix(counts(sce))
+  if(!is.null(wDbl)) e <- cbind(e, as.matrix(counts(sce.dbl)))
+  e <- cbind(e, ad[row.names(sce),])
+  
   # evaluate by library size and non-zero features
   lsizes <- colSums(e)
   nfeatures <- colSums(e>0)
@@ -188,8 +232,6 @@ numbers of cells.")
   if(is.list(pca)) pca <- pca$x
   row.names(pca) <- colnames(e)
   
-  ctype <- factor( rep(1:2, c(ncol(sce),ncol(ad))), 
-                   labels = c("real","artificial"))
   ex <- getExpectedDoublets(clusters, dbr)
   knn <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
                       verbose=verbose)
@@ -198,6 +240,7 @@ numbers of cells.")
   knn <- knn$knn
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
+  d$src <- src
   d$type <- ctype
 
   if(is.null(score)) return(d)
@@ -205,9 +248,9 @@ numbers of cells.")
   if(score %in% c("xgb.local.optim","xgb")){
     if(verbose) message("Training model...")
     prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous","type",
-                                   "distanceToNearest"))
+                                   "src","distanceToNearest"))
     d2  <- as.matrix(d[,prds])
-    nd <- round(sum(ex))+sum(d$type=="artificial")
+    nd <- round(sum(ex))+sum(d$type!="real")
     fit <- xgboost(d2, as.integer(d$type)-1, nrounds=50, 
                    max_depth=6, objective="binary:logistic", 
                    #scale_pos_weight=sqrt(nd/(nrow(d)-nd)),
@@ -222,7 +265,7 @@ numbers of cells.")
   }
   
   d$cluster <- NA
-  d$cluster[d$type=="real"] <- clusters
+  d[colnames(sce),"cluster"] <- clusters
   d$smoothed.score <- .knnSmooth(knn, d$score, type=0)
   rm(knn)
   
@@ -251,18 +294,15 @@ numbers of cells.")
       return(sce_out)
   }
   
-  
-  d <- d[seq_len(ncol(orig)),]
-  d$type <- NULL
-  row.names(d) <- colnames(orig)
   d <- d[colnames(orig),]
   
-  orig$scDblFinder.cluster <- clusters
+  orig$scDblFinder.cluster <- d$cluster
   for(f in c("cluster","distanceToNearest","nearestClass","difficulty","ratio",
              "weighted","score.global","score","smoothed.score","class",
              "mostLikelyOrigin","originAmbiguous")){
     if(!is.null(d[[f]])) orig[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
+  orig$scDblFinder.class <- relevel(as.factor(orig$scDblFinder.class),"singlet")
   orig
 }
 
@@ -290,7 +330,7 @@ numbers of cells.")
   
   dw <- 1/knn$distance
   dw <- dw/rowSums(dw)
-  d <- data.frame( type=ctype,
+  d <- data.frame( row.names=row.names(pca), type=ctype,
                    weighted=rowSums(knn$type*dw),
                    distanceToNearest=knn$distance[,1],
                    distanceToNearestDoublet=dr[,1],

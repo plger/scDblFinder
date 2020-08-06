@@ -6,9 +6,9 @@
 \usage{
 scDblFinder(
   sce,
-  artificialDoublets = NULL,
   clusters = NULL,
   samples = NULL,
+  artificialDoublets = NULL,
   knownDoublets = NULL,
   clust.method = c("fastcluster", "overcluster"),
   minClusSize = min(50, ncol(sce)/5),
@@ -25,19 +25,17 @@ scDblFinder(
 )
 }
 \arguments{
-\item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
-
-\item{artificialDoublets}{The approximate number of artificial doublets to 
-create. If NULL, will be the maximum of the number of cells or 
-`5*nbClusters^2`.}
+\item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+\code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
+counts.}
 
 \item{clusters}{The optional cluster assignments (if omitted, will run 
-clustering). This is used to make doublets more efficiently. `clusters` 
+clustering). This is used to make doublets more efficiently. \code{clusters} 
 should either be a vector of labels for each cell, or the name of a colData 
-column of `sce`.}
+column of \code{sce}.}
 
 \item{samples}{A vector of the same length as cells (or the name of a column 
-of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
+of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 sample is understood as being processed independently. If omitted, doublets 
 will be searched for with all cells together. If given, doublets will be 
 searched for independently for each sample, which is preferable if they 
@@ -46,13 +44,21 @@ hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 
-\item{clust.method}{The clustering method if `clusters` is not given.}
+\item{artificialDoublets}{The approximate number of artificial doublets to 
+create. If \code{NULL}, will be the maximum of the number of cells or 
+\code{5*nbClusters^2}.}
+
+\item{knownDoublets}{An optional logical vector of known doublets (e.g. 
+through cell barcodes), or the name of a colData column of `sce` containing
+that information.}
+
+\item{clust.method}{The clustering method if \code{clusters} is not given.}
 
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
-(default 50); ignored if `clusters` is given.}
+(default 50); ignored if \code{clusters} is given.}
 
 \item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if 
-`clusters` is given or if `clust.method`!='overcluster'.}
+\code{clusters} is given or if \code{clust.method!='overcluster'}.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
@@ -78,21 +84,38 @@ object containing both the real and artificial cells.}
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
 }
 \value{
-The `sce` object with several additional colData columns, in 
+The \code{sce} object with several additional colData columns, in 
 particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
-(whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
-`fullTable=TRUE`, a data.frame will be returned with information about real 
-and artificial cells.
+(whether the cell is called as 'doublet' or 'singlet'). See 
+\code{vignette("scDblFinder")} for more details; for alternative return 
+values, see the `returnType` argument.
 }
 \description{
-Identification of doublets in single-cell RNAseq directly from counts using 
-overclustering-based generation of artifical doublets.
+Identification of heterotypic (or neotypic) doublets in single-cell RNAseq 
+using cluster-based generation of artifical doublets.
+}
+\details{
+This function generates artificial doublets from clusters of real cells, 
+evaluates their prevalence in the neighborhood of each cells, and uses this 
+along with additional features to classify doublets. The approach is 
+complementary to doublets identified via cell hashes and SNPs in multiplexed
+samples: the latter can identify doublets formed by cells of the same type
+from two samples, which are nearly undistinguishable from real cells 
+transcriptionally, but cannot identify doublets made by cells of the 
+same sample. See \code{vignette("scDblFinder")} for more details on the 
+method.
+
+When inter-sample doublets are available, they can be provided to 
+`scDblFinder` through the \code{knownDoublets} argument to improve the 
+identification of further doublets.
+
+When multiple samples/captures are present, they can be specified using the 
+\code{samples} argument and will be processed separately (in parallel if 
+\code{BPPARAM} is given).
 }
 \examples{
 library(SingleCellExperiment)
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
-               FUN=function(x) rpois(50,x) ) )
-sce <- SingleCellExperiment( list(counts=m) )
+sce <- mockDoubletSCE()
 sce <- scDblFinder(sce, verbose=FALSE)
 table(sce$scDblFinder.class)
 

@@ -1,19 +1,20 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 1.1.18
+Version: 1.1.19
 Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
     person("Aaron", "Lun", email="infinite.monkeys.with.keyboards@gmail.com", role="ctb"))
 URL: https://github.com/plger/scDblFinder
 BugReports: https://github.com/plger/scDblFinder/issues
-Description: Efficient identification of doublets in single-cell RNAseq directly from counts using overclustering-based generation of artifical doublets.
+Description: Efficient tools for doublet identification in single-cell RNAseq.
 License: GPL-3
 Imports: 
     igraph, 
     Matrix, 
     matrixStats, 
+    BiocGenerics,
     BiocParallel, 
     BiocNeighbors, 
     BiocSingular,
@@ -27,11 +28,14 @@ Imports:
     data.table, 
     dplyr, 
     ggplot2, 
-    randomForest, 
     graphics, 
     methods, 
     stats, 
-    DelayedArray
+    DelayedArray,
+    xgboost,
+    stats,
+    ComplexHeatmap,
+    utils
 Suggests: 
     BiocStyle, 
     knitr, 
