@@ -231,3 +231,21 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   sce$type <- factor(sce$type, c("singlet","doublet"))
   sce
 }
+
+
+.checkColArg <- function(sce, x, acceptNull=TRUE){
+  arg <- deparse(substitute(x))
+  if(is.null(x)){
+    if(!acceptNull) stop("Missing argument `",arg,"`!")
+    return(NULL)
+  }
+  if(is.character(x) && length(x)==1){
+    if(!(x %in% colnames(colData(sce)))) 
+      stop("Could not find `", arg, "` column in colData!")
+    x <- colData(sce)[[x]]
+  }else if(length(x)!=ncol(sce)){
+    stop("`",arg,"` should have a length equal to the number of columns in ",
+         "`sce`.")
+  }
+  x
+}
