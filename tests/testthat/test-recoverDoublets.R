@@ -1,5 +1,5 @@
 # This tests the recoverDoublets function.
-# library(scDblFinder); library(testthat); source("test-recover.R")
+# library(scDblFinder); library(testthat); source("test-recoverDoublets.R")
 
 set.seed(99000077)
 ngenes <- 100
