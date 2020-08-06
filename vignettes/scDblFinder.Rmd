@@ -62,7 +62,7 @@ sce <- scDblFinder(sce, verbose=FALSE)
 
 This will add a number of columns to the colData of `sce` prefixed with 'scDblFinder', the most important of which are:
 
-* `sce$scDblFinder.score` :  the final doublet score
+* `sce$scDblFinder.score` : the final doublet score
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
 ```{r}
@@ -156,4 +156,4 @@ Since doublets are created across clusters, it is important that subpopulations 
 
 ## Combination with other tools
 
-If the input SCE already contains a `logcounts` and/or `reducedDim` slot named 'PCA', scDblFinder will used them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`. In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest to increase the `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`. In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest to increase the `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
