@@ -21,7 +21,8 @@
 #' table(cc)
 #' 
 #' @importFrom scran buildSNNGraph
-#' @importFrom igraph V cluster_fast_greedy membership
+#' @importFrom BiocNeighbors AnnoyParam
+#' @importFrom igraph V cluster_fast_greedy membership is.igraph
 #' @export
 overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
   if(is.igraph(x)){
