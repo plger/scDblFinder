@@ -1,19 +1,21 @@
 #' scDblFinder
 #' 
-#' Identification of doublets in single-cell RNAseq directly from counts using 
-#' overclustering-based generation of artifical doublets.
+#' Identification of heterotypic (or neotypic) doublets in single-cell RNAseq 
+#' using cluster-based generation of artifical doublets.
 #'
-#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
+#' counts.
 #' @param artificialDoublets The approximate number of artificial doublets to 
-#' create. If NULL, will be the maximum of the number of cells or 
-#' `5*nbClusters^2`.
+#' create. If \code{NULL}, will be the maximum of the number of cells or 
+#' \code{5*nbClusters^2}.
 #' @param clusters The optional cluster assignments (if omitted, will run 
-#' clustering). This is used to make doublets more efficiently. `clusters` 
+#' clustering). This is used to make doublets more efficiently. \code{clusters} 
 #' should either be a vector of labels for each cell, or the name of a colData 
-#' column of `sce`.
-#' @param clust.method The clustering method if `clusters` is not given.
+#' column of \code{sce}.
+#' @param clust.method The clustering method if \code{clusters} is not given.
 #' @param samples A vector of the same length as cells (or the name of a column 
-#' of `colData(sce)`), indicating to which sample each cell belongs. Here, a 
+#' of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
 #' will be searched for with all cells together. If given, doublets will be 
 #' searched for independently for each sample, which is preferable if they 
@@ -25,9 +27,9 @@
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information.
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
-#' (default 50); ignored if `clusters` is given.
+#' (default 50); ignored if \code{clusters} is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
-#' `clusters` is given or if `clust.method`!='overcluster'.
+#' \code{clusters} is given or if \code{clust.method!='overcluster'}.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used to build the network (default 20)
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
@@ -43,11 +45,30 @@
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
 #'
-#' @return The `sce` object with several additional colData columns, in 
+#' @return The \code{sce} object with several additional colData columns, in 
 #' particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
-#' (whether the cell is called as 'doublet' or 'singlet'). Alternatively, if 
-#' `fullTable=TRUE`, a data.frame will be returned with information about real 
-#' and artificial cells.
+#' (whether the cell is called as 'doublet' or 'singlet'). See 
+#' \code{vignette("scDblFinder")} for more details; for alternative return 
+#' values, see the `returnType` argument.
+#' 
+#' @details
+#' This function generates artificial doublets from clusters of real cells, 
+#' evaluates their prevalence in the neighborhood of each cells, and uses this 
+#' along with additional features to classify doublets. The approach is 
+#' complementary to doublets identified via cell hashes and SNPs in multiplexed
+#' samples: the latter can identify doublets formed by cells of the same type
+#' from two samples, which are nearly undistinguishable from real cells 
+#' transcriptionally, but cannot identify doublets made by cells of the 
+#' same sample. See \code{vignette("scDblFinder")} for more details on the 
+#' method.
+#' 
+#' When inter-sample doublets are available, they can be provided to 
+#' `scDblFinder` through the \code{knownDoublets} argument to improve the 
+#' identification of further doublets.
+#' 
+#' When multiple samples/captures are present, they can be specified using the 
+#' \code{samples} argument and will be processed separately (in parallel if 
+#' \code{BPPARAM} is given).
 #' 
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
@@ -66,8 +87,10 @@
 #' table(sce$scDblFinder.class)
 #' 
 #' @export
-scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
-                         samples=NULL, knownDoublets=NULL,
+#' @rdname scDblFinder
+#' @import SingleCellExperiment
+scDblFinder <- function( sce, clusters=NULL, samples=NULL, 
+                         artificialDoublets=NULL, knownDoublets=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          minClusSize=min(50,ncol(sce)/5), 
                          maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
@@ -75,26 +98,20 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
-  if(!is(sce, "SingleCellExperiment"))
-      stop("`sce` should be a SingleCellExperiment. If you have a matrix of ",
-           "counts 'mat', you can create an SCE using:\n",
-           "SingleCellExperiment::SingleCellExperiment(list(counts=mat))")
+  if(is(sce, "SummarizedExperiment")){
+    sce <- as(sce, "SingleCellExperiment")
+  }else if(!is(sce, "SingleCellExperiment")){
+    if(is.null(dim(sce)))
+      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    sce <- SingleCellExperiment(list(counts=sce))
+  }
   clust.method <- match.arg(clust.method)
   returnType <- match.arg(returnType)
-  if(!is.null(clusters) && is.character(clusters) && length(clusters)==1){
-      if(!(clusters %in% colnames(colData(sce)))) 
-          stop("Could not find `clusters` column in colData!")
-      clusters <- colData(sce)[[clusters]]
-  }
-  if(!is.null(clusters) && length(clusters)!=ncol(sce))
-    stop("The length of `clusters` does not match the columns of `sce`.")
-  if(!is.null(knownDoublets) && is.character(knownDoublets) && length(knownDoublets)==1){
-    if(!(knownDoublets %in% colnames(colData(sce)))) 
-      stop("Could not find `knownDoublets` column in colData!")
-    knownDoublets <- colData(sce)[[knownDoublets]]
-  }
-  if(!is.null(knownDoublets) && length(knownDoublets)!=ncol(sce))
-    stop("The length of `knownDoublets` does not match the columns of `sce`.")
+  clusters <- .checkColArg(sce, clusters)
+  knownDoublets <- .checkColArg(sce, knownDoublets)
+  samples <- .checkColArg(sce, samples)
+  
   if(!is.null(score)) score <- match.arg(score)
   stopifnot(is(sce, "SingleCellExperiment"))
   if( !("counts" %in% assayNames(sce)) ) 
@@ -105,10 +122,6 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
       row.names(sce) <- paste0("f",seq_len(nrow(sce)))
   if(!is.null(samples)){
     # splitting by samples
-    if(length(samples)==1 && samples %in% colnames(colData(sce)))
-        samples <- colData(sce)[[samples]]
-    if(ncol(sce)!=length(samples))
-        stop("Samples vector matches number of cells")
     if(returnType!="sce") 
         warning("`returnType` param ignored when splitting by samples")
     if(verbose) message("`verbose` param ignored when splitting by samples.")
@@ -131,7 +144,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
     return(sce)
   }
   if(ncol(sce)<100)
-  warning("scDblFinder might not work well with very low numbers of cells.")
+    warning("scDblFinder might not work well with very low numbers of cells.")
 
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
@@ -145,7 +158,7 @@ scDblFinder <- function( sce, artificialDoublets=NULL, clusters=NULL,
   }
 
   wDbl <- c()
-  if(!is.null(knownDoublets) & length(wDbl <- which(knownDoublets))>0){
+  if(!is.null(knownDoublets) && length(wDbl <- which(knownDoublets))>0){
     sce$knownDoublet <- knownDoublets
     sce.dbl <- sce[,wDbl,drop=FALSE]
     sce <- sce[,-wDbl,drop=FALSE]
