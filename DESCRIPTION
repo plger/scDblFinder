@@ -8,12 +8,11 @@ Authors@R: c(
     person("Aaron", "Lun", email="infinite.monkeys.with.keyboards@gmail.com", role="ctb"))
 URL: https://github.com/plger/scDblFinder
 BugReports: https://github.com/plger/scDblFinder/issues
-Description: Efficient tools for doublet identification in single-cell RNAseq.
+Description: The scDblFinder package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volume).
 License: GPL-3
 Imports: 
     igraph, 
-    Matrix, 
-    matrixStats, 
+    Matrix,
     BiocGenerics,
     BiocParallel, 
     BiocNeighbors, 
@@ -24,15 +23,11 @@ Imports:
     scran,
     scater, 
     scuttle,
-    data.table, 
-    ggplot2, 
-    graphics, 
     methods, 
     stats, 
     DelayedArray,
     xgboost,
     stats,
-    ComplexHeatmap,
     scds,
     utils
 Suggests: 

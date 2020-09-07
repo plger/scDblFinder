@@ -1,27 +1,3 @@
-#' rankTrans
-#'
-#' A dense rank transformation that preserves 0 and rank step size in the 
-#' presence of many ties.
-#'
-#' @param x A matrix, with samples/cells as columns and genes/features as rows.
-#'
-#' @return rank-transformed x.
-#' 
-#' @examples
-#' m <- t(sapply( seq(from=0, to=5, length.out=30), 
-#'                FUN=function(x) rpois(30,x) ) )
-#' m2 <- rankTrans(m)
-#' 
-#' @importFrom data.table frank
-#' @importFrom matrixStats colMaxs
-#' @export
-rankTrans <- function(x){
-  y <- apply(x,2,ties.method="dense",FUN=frank)-1
-  y <- matrix(as.integer(t(max(y)*t(y)/colMaxs(y))),nrow=nrow(y))
-  dimnames(y) <- dimnames(x)
-  y
-}
-
 # get random cross-cluster pairs of cells from a cluster assignment vector
 .getCellPairs <- function(clusters, n=1000){
   cli <- split(seq_along(clusters), clusters)

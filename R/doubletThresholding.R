@@ -17,7 +17,6 @@
 #' @param prop.fullyRandom The proportion of artificical doublets that are fully
 #'  random, used for homotypy correction. Default 0.25 (the default value in 
 #' `getArtificialDoublets`). Ignored if `clusters=NULL`
-#' @param do.plot Logical; whether to plot the thresholding data (default TRUE).
 #'
 #' @return A scaler indicating the decided threshold.
 #' 
@@ -36,7 +35,6 @@
 #' doubletThresholding(scores, celltypes, do.plot=FALSE)
 #' 
 #' @importFrom stats pcauchy optimize ecdf
-#' @importFrom graphics abline legend lines plot
 #' @export
 doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   # check that we have all necessary fields:

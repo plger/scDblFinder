@@ -26,8 +26,6 @@ used for homotypic doublet correction.}
 \item{prop.fullyRandom}{The proportion of artificical doublets that are fully
  random, used for homotypy correction. Default 0.25 (the default value in 
 `getArtificialDoublets`). Ignored if `clusters=NULL`}
-
-\item{do.plot}{Logical; whether to plot the thresholding data (default TRUE).}
 }
 \value{
 A scaler indicating the decided threshold.

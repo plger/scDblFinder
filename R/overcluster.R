@@ -97,7 +97,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
 #' @examples
 #' m <- t(sapply( seq(from=0, to=5, length.out=50), 
 #'                FUN=function(x) rpois(50,x) ) )
-#' g <- scran::buildSNNGraph(rankTrans(m))
+#' g <- scran::buildSNNGraph(m)
 #' table(resplitClusters(g, min.size=2, max.size=20))
 #' 
 #' @importFrom igraph V E cluster_fast_greedy membership subgraph modularity
