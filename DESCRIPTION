@@ -25,7 +25,6 @@ Imports:
     scater, 
     scuttle,
     data.table, 
-    dplyr, 
     ggplot2, 
     graphics, 
     methods, 
