@@ -1,6 +1,6 @@
 # scDblFinder
 
-The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volume). The methods included in this package are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while the latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample.
+The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volume). The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while the latter can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample.
 
 For a brief overview of the methods, see the (introductory vignette)[vignettes/introduction.Rmd] (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
