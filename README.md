@@ -57,6 +57,6 @@ For more detail, please see `vignette("scDblFinder")`.
 
 ## Comparison with other tools
 
-To benchmark `scDblFinder` against alternatives we used two datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via `r Githubpkg("statgen/demuxlet")`), which also enables the identification of doublets from different individuals. `scDblFinder` is compared to two other excellent methods,  (DoubletFinder)[https://github.com/chris-mcginnis-ucsf/DoubletFinder] and (scds's hybrid method)[http://bioconductor.org/packages/release/bioc/html/scds.html], in terms of accuracy and speed:
+To benchmark `scDblFinder` against alternatives we used two datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via [demuxlet](https://github.com/statgen/demuxlet)), which also enables the identification of doublets from different individuals. `scDblFinder` is compared to two other excellent methods, [DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder) and [scds's hybrid method](http://bioconductor.org/packages/release/bioc/html/scds.html), in terms of accuracy and speed:
 
 <img src="inst/docs/scDblFinder_comparison.png" alt="Comparison with other tools"/>
