@@ -60,7 +60,8 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
   stats <- .compareToExpectedDoublets(o, expected, dbr)
   stats$combination <- as.character(stats$combination)
-  stats$FNR <- vapply(split(d, d$mostLikelyOrigin), FUN.VALUE=numeric(1L), 
+  stats$FNR <- vapply(split(as.data.frame(d), d$mostLikelyOrigin), 
+                      FUN.VALUE=numeric(1L), 
                   FUN=function(x) .FNR(x$type, x$score, th) )[stats$combination]
   stats$difficulty <- vapply(split(d$difficulty, d$mostLikelyOrigin), 
                              FUN.VALUE=numeric(1L), na.rm=TRUE, 
@@ -95,7 +96,9 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   if(moderate){
     diff <- sapply(split(difficulty,origins), na.rm=TRUE, FUN=median)
     diff <- diff[names(ths)]
-    mod <- MASS::rlm(ths~diff)
+    mod <- tryCatch({ MASS::rlm(ths~diff) }, error=function(e){
+        lm(ths~diff)
+    })
     ths2 <- (ths+predict(mod))/2
     if(length(w <- which(ths2<0.01))>0)
       ths2[w] <- apply(cbind(ths[w],rep(0.01,length(w))),1,FUN=max)
@@ -153,14 +156,16 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     .compareToExpectedDoublets(x$mostLikelyOrigin[which(x$score>=i & x$type=="real")], 
                                expected, dbr=dbr, od=od)
   })
-  a <- dplyr::bind_rows(a, .id="threshold")
+  a <- cbind(threshold=rep(names(a),vapply(a,nrow,integer(1))),
+             do.call(rbind, a))
   if(!all(x$type=="real")){
     b <- lapply( thresholds, FUN=function(i){
       y <- vapply(split(x, x$mostLikelyOrigin), FUN.VALUE=numeric(1L), 
                   FUN=function(x) .FNR(x$type, x$score, i) )
       data.frame(combination=names(y), FNR=y)
     })
-    b <- dplyr::bind_rows(b, .id="threshold")
+    b <- cbind(threshold=rep(names(b),vapply(b,nrow,integer(1))),
+               do.call(rbind, b))
     a <- merge(a,b,by=c("combination","threshold"),all.x=TRUE)
   }
   a$threshold <- as.numeric(a$threshold)

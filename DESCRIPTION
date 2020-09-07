@@ -1,7 +1,7 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 1.1.19
+Version: 1.1.21
 Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -18,11 +18,10 @@ Imports:
     BiocParallel, 
     BiocNeighbors, 
     BiocSingular,
-    BiocGenerics,
     S4Vectors,
     SummarizedExperiment, 
     SingleCellExperiment, 
-    scran, 
+    scran,
     scater, 
     scuttle,
     data.table, 
@@ -35,6 +34,7 @@ Imports:
     xgboost,
     stats,
     ComplexHeatmap,
+    scds,
     utils
 Suggests: 
     BiocStyle, 

@@ -22,16 +22,7 @@ library(BiocStyle)
 # scDblFinder
 
 scDblFinder identifies doublets in single-cell RNAseq by creating artificial doublets and looking at their
-prevalence in the neighborhood of each cell, along with a few other covariates. The rough logic is very similar to 
-other methods (e.g. `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")` or `r Biocpkg("scds")`), with a few twists 
-that make it more efficient and provide extra features.
-
-The approach described here is complementary to doublets identified via cell hashes and SNPs in multiplexed samples.  
-The latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable
-from real cells transcriptionally (and hence generally unidentifiable through the present package), but cannot 
-identify doublets made by cells of the same sample. Moreover, when such inter-sample doublets are available, they
-can be provided to `scDblFinder` through the `knownDoublets` argument to improve the identification of further doublets.
-
+prevalence (as well as that of any known doublets) in the neighborhood of each cell, along with a few other covariates. The rough logic is very similar to other methods (e.g. `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")`, `r Biocpkg("scds")`), with a few twists that make it more efficient and provide extra features.
 
 ## Installation
 
@@ -126,7 +117,7 @@ Thresholding then tries to simultaneously minimize: 1) the classification error 
 
 Doublets that are located in an otherwise sparse region of the space are easier to identify (and hence will have a higher score) that those located in a dense region. In other words, the aforementioned doublet scores are biased against rarer cell states. To correct for this, it is possible to perform threshold optimization separately for different groups of cells, depending on the type of artificial doublets (i.e. their originating clusters) closest to them. In this context, the expected number of doublets is calculated for each combination of clusters.
 
-This procedure can be problematic whenever the doublets are not random (e.g. when two cell types preferentially stick together). For this reason, instead of using the local threshold directly, `scDblFinder` moderates it by establishing a relationship between the local threshold and the difficultly in indentifying doublets, and pulling the threshold towards this expectation.
+This procedure can be problematic whenever the doublets are not random (e.g. when two cell types preferentially stick together). For this reason, instead of using the local threshold directly, `scDblFinder` moderates it by establishing a relationship between the local threshold and the difficultly in indentifying doublets, and pulling the threshold towards this expectation. Nevertheless, this procedure should be considered experimental and used with care.
 
 The cells' scores are then transformed so that the different local thresholds are equalized, by substracting the logit-threshold to the logit-score and transforming back to a 0-1 score. Finally, the global threshold is calculated as described above. When the local calibration is enabled, the calibrated score is available in `scDblFinder.score`, and the original one in `scDblFinder.score.global`.
 

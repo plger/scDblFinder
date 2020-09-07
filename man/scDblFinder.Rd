@@ -11,6 +11,7 @@ scDblFinder(
   artificialDoublets = NULL,
   knownDoublets = NULL,
   clust.method = c("fastcluster", "overcluster"),
+  use.cxds = TRUE,
   minClusSize = min(50, ncol(sce)/5),
   maxClusSize = NULL,
   nfeatures = 1000,
@@ -20,6 +21,7 @@ scDblFinder(
   k = 20,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
+  threshold = TRUE,
   verbose = is.null(samples),
   BPPARAM = SerialParam()
 )
@@ -54,6 +56,9 @@ that information.}
 
 \item{clust.method}{The clustering method if \code{clusters} is not given.}
 
+\item{use.cxds}{Logical; whether to use `scds::cxds` scores in addition to 
+information from artificial/known doublets as part of the predictors.}
+
 \item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
 (default 50); ignored if \code{clusters} is given.}
 
@@ -77,6 +82,9 @@ cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
+
+\item{threshold}{Logical; whether to threshold scores into binary doublet 
+calls}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
