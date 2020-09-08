@@ -37,31 +37,33 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     ad <- ad[which(ad[,1]!=ad[,2]),]
     # create doublets
     ad.m <- x[,ad[,1]]+x[,ad[,2]]
-    colnames(ad.m) <- paste0("arificialDoublet.", seq_len(ncol(ad.m)))
+    colnames(ad.m) <- paste0("artDbl.", seq_len(ncol(ad.m)))
     return(ad.m)
   }
   
-  if(is.null(clusters) || length(unique(clusters))<3) n.meta.cells <- 0
+  if(length(unique(clusters))<3) n.meta.cells <- 0
     
   # create doublets across clusters:
   n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
   oc <- as.character(ca$orig.clusters)
-  names(oc) <- colnames(m2) <- paste0( "arificialDoublet.", seq_len(ncol(m2)) )
+  names(oc) <- colnames(m2) <- paste0( "artDbl.", seq_len(ncol(m2)) )
   ad.m <- m2
   rm(m2)
+  gc(verbose=FALSE)
   
   if(n.meta.cells>0){
     # create doublets from meta cells:
     meta <- .getMetaCells(x, clusters, n.meta.cells=n.meta.cells, 
                           meta.cell.size=30)
-    clusters <- rep(unique(clusters),each=n.meta.cells)
-    ca <- .getCellPairs(clusters, n=ceiling(n*0.2))
+    ca <- .getCellPairs(rep(unique(clusters),each=n.meta.cells), 
+                        n=ceiling(n*0.2))
     m2 <- meta[,ca[,1]]+meta[,ca[,2]]
+    if(is(ad.m,"dgCMatrix")) m2 <- as(round(m2),"dgCMatrix")
     oc2 <- ca$orig.clusters
     names(oc2) <- colnames(m2) <- 
-      paste0("arificialMetaDoublet.",ncol(ad.m)+seq_len(ncol(m2)))
+      paste0("artMetaDbl.",ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc,as.character(oc2))
   }
@@ -80,9 +82,10 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     ca <- expand.grid(i, i, i)
     ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
     m2 <- meta[,ca[,1],drop=FALSE]+meta[,ca[,2],drop=FALSE]+meta[,ca[,3],drop=FALSE]
+    if(is(ad.m,"dgCMatrix")) m2 <- as(round(m2),"dgCMatrix")
     oc2 <- rep(NA_character_, ncol(m2))
     names(oc2) <- colnames(m2) <- 
-      paste0("artificialTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
+      paste0("artTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc, oc2)
   }

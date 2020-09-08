@@ -137,6 +137,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   }
   if(ncol(sce)<100)
     warning("scDblFinder might not work well with very low numbers of cells.")
+  if(ncol(sce)>25000)
+    warning("You are trying to run scDblFinder on a very large number of ",
+            "cells. If these are from different captures, please specify this",
+            " using the `samples` argument.", immediate=TRUE)
 
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
@@ -179,13 +183,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
             "of the clusters, it is possible that some of the smaller clusters",
             " are composed of doublets of the same type.")
   }
-  cli <- split(seq_len(ncol(sce)), clusters)
-  
+
   # get the artificial doublets
-  if(is.null(artificialDoublets)){
-    artificialDoublets <- max( ncol(sce), 
-                               min(40000, 5*length(unique(clusters))^2))
-  }
+  if(is.null(artificialDoublets))
+    artificialDoublets <- min(max(ncol(sce), 5*length(unique(clusters))^2),
+                              25000)
   
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
@@ -196,6 +198,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                                                   n=artificialDoublets, 
                                                   clusters=clusters ) )
   }
+  gc(verbose=FALSE)
+  
   ado <- ad$origins
   ad <- ad$counts
   
@@ -207,18 +211,19 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   
   if(verbose) message("Dimensional reduction")
   
-  e <- as.matrix(counts(sce))
-  if(!is.null(wDbl)) e <- cbind(e, as.matrix(counts(sce.dbl)))
+  e <- counts(sce)
+  if(!is.null(wDbl)) e <- cbind(e, counts(sce.dbl))
   e <- cbind(e, ad[row.names(sce),])
   
   # evaluate by library size and non-zero features
-  lsizes <- colSums(e)
+  lsizes <- Matrix::colSums(e)
   cxds_score <- NULL
   if(use.cxds)
     cxds_score <- scds::cxds(SingleCellExperiment(list(counts=e)))$cxds_score
-  nfeatures <- colSums(e>0)
+  nfeatures <- Matrix::colSums(e>0)
   
-  e <- normalizeCounts(e)
+  # skip normalization if data is too large
+  if(ncol(e)<=25000) e <- normalizeCounts(e)
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
                                  BSPARAM=BiocSingular::IrlbaParam())
@@ -245,8 +250,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(returnType=="table") return(d)
   if(returnType=="full"){
       sce_out <- SingleCellExperiment(list(
-          counts=cbind(as.matrix(counts(sce)), ad[row.names(sce),]),
-          logcounts=e), colData=d)
+          counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
       reducedDim(sce_out, "PCA") <- pca
       if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats)) 
         metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
@@ -442,6 +446,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   }
   if( !("counts" %in% assayNames(sce)) ) 
       stop("`sce` should have an assay named 'counts'")
+  counts(sce) <- as(counts(sce),"dgCMatrix")
   if(is.null(colnames(sce)))
       colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   if(is.null(row.names(sce)))

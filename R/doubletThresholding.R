@@ -140,7 +140,8 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   d
 }
   
-.getThresholdStats <- function(x, expected=NULL, thresholds=(0:100/100), dbr=NULL, od=0.05){
+.getThresholdStats <- function(x, expected=NULL, thresholds=(0:100/100), 
+                               dbr=NULL, od=0.05){
   if(is(x,"SingleCellExperiment")){
     x <- as.data.frame(colData(x))
     if(is.null(x$scDblFinder.type)) x$scDblFinder.type <- "real"
@@ -151,7 +152,8 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   if(is.null(expected)) expected <- getExpectedDoublets(x$clusters[w], dbr)
   if(is.null(names(thresholds))) names(thresholds) <- thresholds
   a <- lapply( thresholds, FUN=function(i){
-    .compareToExpectedDoublets(x$mostLikelyOrigin[which(x$score>=i & x$type=="real")], 
+    .compareToExpectedDoublets(x$mostLikelyOrigin[which(x$score>=i & 
+                                                            x$type=="real")], 
                                expected, dbr=dbr, od=od)
   })
   a <- cbind(threshold=rep(names(a),vapply(a,nrow,integer(1))),
