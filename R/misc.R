@@ -134,9 +134,9 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
     Matrix::rowMeans(counts(sce)[,x,drop=FALSE])
   })
   # grab the top genes in each cluster
-  g <- unique(as.numeric(apply(cl.means, 2, FUN=function(x){
+  g <- unique(as.numeric(t(apply(cl.means, 2, FUN=function(x){
     order(x, decreasing=TRUE)[seq_len(nfeatures)]
-  })))
+  }))))[seq_len(nfeatures)]
   g
 }
 
