@@ -25,8 +25,9 @@ The `scDblFinder` package gathers various methods for the detection and handling
 
 All methods require as an input either a matrix of counts or a `r Biocpkg("SingleCellExperiment")` containing count data. With the exception of [findDoubletClusters](findDoubletClusters.html), which operates at the level of clusters (and consequently requires clustering information), all methods try to assign each cell a score indicating its likelihood (broadly understood) of being a doublet.
 
-The approaches described here are _complementary_ to doublets identified via cell hashes and SNPs in multiplexed samples: while the latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample.
+The approaches described here are _complementary_ to doublets identified via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
+<br/>
 
 ## computeDoubletDensity
 
@@ -34,7 +35,7 @@ The `computeDoubletDensity` method (formerly `scran::doubletCells`) generates ra
 
 ## recoverDoublets
 
-The `recoverDoublets` method is meant to be used when some doublets are already known, for instance through genotype-based calls or cell hashing in multiplexed experiments. The function then tries to identify intra-sample doublets that are neighbors to the known inter-sample doublets. See `?recoverDoublets` for more information.
+The `recoverDoublets` method is meant to be used when some doublets are already known, for instance through genotype-based calls or cell hashing in multiplexed experiments. The function then tries to identify intra-sample doublets that are neighbors to the known inter-sample doublets. See [recoverDoublets](recoverDoublets.html) for more information.
 
 ## scDblFinder
 
