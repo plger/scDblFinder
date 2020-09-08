@@ -34,7 +34,7 @@ The `computeDoubletDensity` method (formerly `scran::doubletCells`) generates ra
 
 ## recoverDoublets
 
-The `recoverDoublets` method is meant to be used when some doublets are already known, for instance through genotype-based calls or cell hashing in multiplexed experiments. The function then tries to identify intra-sample doublets that are neighbors to the known inter-sample doublets. See `?recoverDoublets` for more information.
+The `recoverDoublets` method is meant to be used when some doublets are already known, for instance through genotype-based calls or cell hashing in multiplexed experiments. The function then tries to identify intra-sample doublets that are neighbors to the known inter-sample doublets. See [recoverDoublets](recoverDoublets.html) for more information.
 
 ## scDblFinder
 
