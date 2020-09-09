@@ -34,7 +34,7 @@
 #' # get threshold
 #' doubletThresholding(scores, celltypes, do.plot=FALSE)
 #' 
-#' @importFrom stats pcauchy optimize ecdf
+#' @importFrom stats pcauchy optimize ecdf lm predict dnbinom
 #' @export
 doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   # check that we have all necessary fields:

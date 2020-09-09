@@ -58,10 +58,11 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 #' @param nfeatures Number of features to use if doing PCA
 #'
 #' @return A vector of cluster labels
-#' @export
 #' @importFrom igraph cluster_louvain membership
 #' @importFrom intrinsicDimension maxLikGlobalDimEst
 #' @importFrom scran buildKNNGraph
+#' @importFrom stats kmeans
+#' @export
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
                          ndims=NULL, nfeatures=1000 ){
   if(!(rdname %in% reducedDimNames(x)))

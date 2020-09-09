@@ -315,6 +315,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   list(knn=knn, d=d)
 }
 
+#' @importFrom stats quantile weighted.mean
 .knnSmooth <- function(knn, score, use.distance=TRUE, type=NULL){
   w <- seq_len(ncol(knn$index))
   if(use.distance){
@@ -340,6 +341,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 
 #' @import xgboost
 #' @importFrom S4Vectors DataFrame metadata
+#' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=60, threshold=TRUE, 
                         verbose=TRUE, dbr=NULL, ...){
     if(scoreType %in% c("xgb.local.optim","xgb")){
@@ -426,6 +428,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 }
 
 # add the relevant fields of the scDblFinder results table to the SCE
+#' @importFrom stats relevel
 .scDblAddCD <- function(sce, d){
   d <- d[colnames(sce),]
   for(f in c("sample","cluster","distanceToNearest","nearestClass","difficulty",

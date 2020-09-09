@@ -29,6 +29,7 @@ Imports:
     xgboost,
     stats,
     scds,
+    intrinsicDimension,
     utils
 Suggests: 
     BiocStyle, 
