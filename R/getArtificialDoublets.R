@@ -47,6 +47,12 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
+  # downsample a random subset of the doublets:
+  w <- sample.int(ncol(m2),max(2,ceiling(0.1*ncol(m2))))
+  m2b <- t(as.matrix(m2[,w]))
+  m2b <- Matrix::colSums(x[,sample.int(ncol(x),length(w))])*m2b/rowSums(m2b)
+  m2[,w] <- rpois(length(m2b),as.numeric(m2b))
+  rm(m2b)
   oc <- as.character(ca$orig.clusters)
   names(oc) <- colnames(m2) <- paste0( "artDbl.", seq_len(ncol(m2)) )
   ad.m <- m2
