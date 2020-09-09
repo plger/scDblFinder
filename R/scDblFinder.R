@@ -13,7 +13,8 @@
 #' clustering). This is used to make doublets more efficiently. \code{clusters} 
 #' should either be a vector of labels for each cell, or the name of a colData 
 #' column of \code{sce}.
-#' @param clust.method The clustering method if \code{clusters} is not given.
+#' @param clust.method The clustering method if \code{clusters} is not given 
+#' (we recommend the `fastcluster` method).
 #' @param samples A vector of the same length as cells (or the name of a column 
 #' of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
@@ -33,11 +34,13 @@
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
 #' \code{clusters} is given or if \code{clust.method!='overcluster'}.
 #' @param nfeatures The number of top features to use (default 1000)
-#' @param dims The number of dimensions used to build the network (default 20)
+#' @param dims The number of dimensions used to build the network. If omitted,
+#' will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
-#' appropriate for 10x datasets.
-#' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
+#' appropriate for 10x datasets. Corrections for homeotypic doublets will be
+#' performed on the given rate.
+#' @param dbr.sd The standard deviation of the doublet rate.
 #' @param k Number of nearest neighbors (for KNN graph).
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
@@ -66,13 +69,15 @@
 #' same sample. See \code{vignette("scDblFinder")} for more details on the 
 #' method.
 #' 
+#' When multiple samples/captures are present, they should be specified using 
+#' the \code{samples} argument. Although the classifier will be trained 
+#' globally, thresholding and the more computationally-intensive steps will be 
+#' performed separately for each sample (in parallel if \code{BPPARAM} is 
+#' given).
+#'
 #' When inter-sample doublets are available, they can be provided to 
 #' `scDblFinder` through the \code{knownDoublets} argument to improve the 
 #' identification of further doublets.
-#' 
-#' When multiple samples/captures are present, they can be specified using the 
-#' \code{samples} argument and will be processed separately (in parallel if 
-#' \code{BPPARAM} is given).
 #' 
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
@@ -97,8 +102,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          artificialDoublets=NULL, knownDoublets=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
-                         maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
-                         dbr.sd=0.015, k=20, returnType=c("sce","table","full"),
+                         maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
+                         dbr.sd=0.02, k=15, returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          threshold=TRUE, verbose=is.null(samples), 
                          BPPARAM=SerialParam()
@@ -186,7 +191,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 
   # get the artificial doublets
   if(is.null(artificialDoublets))
-    artificialDoublets <- min(max(ncol(sce), 5*length(unique(clusters))^2),
+    artificialDoublets <- min(max(ceiling(ncol(sce)*0.6),
+                                  10*length(unique(clusters))^2),
                               25000)
   
   if(verbose){
@@ -224,6 +230,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   
   # skip normalization if data is too large
   if(ncol(e)<=25000) e <- normalizeCounts(e)
+  if(is.null(dims)) dims <- 30
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
                                  BSPARAM=BiocSingular::IrlbaParam())
@@ -333,7 +340,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 
 #' @import xgboost
 #' @importFrom S4Vectors DataFrame metadata
-.scDblscore <- function(d, scoreType="xgb", nrounds=NULL, threshold=TRUE, 
+.scDblscore <- function(d, scoreType="xgb", nrounds=60, threshold=TRUE, 
                         verbose=TRUE, dbr=NULL, ...){
     if(scoreType %in% c("xgb.local.optim","xgb")){
         if(verbose) message("Training model...")
@@ -344,11 +351,12 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
         d2 <- d[,prds]
         
         # remove cells with a high chance of being doublets from the training
-        w <- which(d$type=="real" & d$ratio>=0.8)
+        rq <- quantile(d$ratio[d$type=="real"], prob=1-(dbr/2))
+        w <- which(d$type=="real" & d$ratio>=rq)
         if(!is.null(d$cxds_score))
             w <- union(w, which(d$type=="real" & 
-                                d$cxds_score>=quantile(d$cxds_score, 
-                                                       prob=1-(dbr/2))))
+                                d$cxds_score>=quantile(d$cxds_score,
+                                                      prob=1-dbr)))
         if(length(w)>0){
             ctype <- d$type[-w]
             d2 <- d2[-w,]
@@ -357,7 +365,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
         d2 <- as.matrix(d2)
         if(is.null(nrounds)){
             # use cross-validation
-            res <- xgb.cv(data=d2, label=ctype, nrounds=300, 
+            res <- xgb.cv(data=d2, label=ctype, nrounds=300, max_depth=6, 
                           objective="binary:logistic", nfold=5, 
                           early_stopping_rounds=3, tree_method="hist", 
                           metrics=list("error"), subsample=0.6, verbose=FALSE)

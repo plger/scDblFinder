@@ -10,7 +10,7 @@ fastcluster(
   rdname = "PCA",
   nstart = 2,
   iter.max = 20,
-  ndims = 30,
+  ndims = NULL,
   nfeatures = 1000
 )
 }

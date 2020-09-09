@@ -38,7 +38,7 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 
 .getMaxSize <- function(cl, max.size=NULL, min.size){
   if(!is.null(max.size)) return(max.size)
-  ceiling(max(length(cl)/(2*length(unique(cl))),min.size+1))
+  ceiling(max(length(cl)/(1.5*length(unique(cl))),min.size+1))
 }
 
 #' fastcluster
@@ -60,18 +60,25 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 #' @return A vector of cluster labels
 #' @export
 #' @importFrom igraph cluster_louvain membership
+#' @importFrom intrinsicDimension maxLikGlobalDimEst
 #' @importFrom scran buildKNNGraph
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
-                         ndims=30, nfeatures=1000){
+                         ndims=NULL, nfeatures=1000 ){
   if(!(rdname %in% reducedDimNames(x)))
     x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
   x <- reducedDim(x, rdname)
-  if(is.null(k)) k <- min(3000, floor(nrow(x)/10))
-  k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
-  ag <- sapply(split(names(k),k), FUN=function(i) colMeans(x[i,,drop=FALSE]))
-  cl <- membership(cluster_louvain(buildKNNGraph(ag)))
-  cl <- cl[k]
-  cl
+  if(is.null(ndims)){
+    ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
+    ndims <- min(50,max(c(ceiling(ndims),ncol(x)),na.rm=TRUE))
+  }
+  x <- x[,seq_len(min(ncol(x),as.integer(ndims)))]
+  if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
+  if(nrow(x)>1000 && nrow(x)>k){
+    k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
+    x <- sapply(split(names(k),k), FUN=function(i) colMeans(x[i,,drop=FALSE]))
+  }
+  cl <- membership(cluster_louvain(buildKNNGraph(x)))
+  cl[k]
 }
 
 
@@ -113,7 +120,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     }
     ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
     # restrict to clusters >limit
-    ll1 <- ll1[which(vapply(ll1,FUN.VALUE=integer(1),FUN=length)>max.size)]
+    ll1 <- ll1[names(which(.getClusterSizes(cl,nodesizes)>max.size))]
     # run clustering of clusters above size limit:
     ll2 <- lapply(ll1, FUN=function(x){
         membership(cluster_fast_greedy(
@@ -189,8 +196,8 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         sce <- logNormCounts(sce)
     }
     if(!("PCA" %in% reducedDimNames(sce))){
-        sce <- runPCA(sce, ncomponents=ndims, ntop=min(nfeatures,nrow(sce)),
-                      BSPARAM=IrlbaParam())
+        sce <- runPCA(sce, ncomponents=ifelse(is.null(ndims),30,ndims), 
+                      ntop=min(nfeatures,nrow(sce)), BSPARAM=IrlbaParam())
     }
     sce
 }

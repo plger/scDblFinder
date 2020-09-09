@@ -15,10 +15,10 @@ scDblFinder(
   minClusSize = min(50, ncol(sce)/5),
   maxClusSize = NULL,
   nfeatures = 1000,
-  dims = 20,
+  dims = NULL,
   dbr = NULL,
-  dbr.sd = 0.015,
-  k = 20,
+  dbr.sd = 0.02,
+  k = 15,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
   threshold = TRUE,
@@ -54,7 +54,8 @@ create. If \code{NULL}, will be the maximum of the number of cells or
 through cell barcodes), or the name of a colData column of `sce` containing
 that information.}
 
-\item{clust.method}{The clustering method if \code{clusters} is not given.}
+\item{clust.method}{The clustering method if \code{clusters} is not given 
+(we recommend the `fastcluster` method).}
 
 \item{use.cxds}{Logical; whether to use `scds::cxds` scores in addition to 
 information from artificial/known doublets as part of the predictors.}
@@ -67,13 +68,15 @@ information from artificial/known doublets as part of the predictors.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
-\item{dims}{The number of dimensions used to build the network (default 20)}
+\item{dims}{The number of dimensions used to build the network. If omitted,
+will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
 per thousand cells captured (so 4\% among 4000 thousand cells), which is 
-appropriate for 10x datasets.}
+appropriate for 10x datasets. Corrections for homeotypic doublets will be
+performed on the given rate.}
 
-\item{dbr.sd}{The standard deviation of the doublet rate, defaults to 0.015.}
+\item{dbr.sd}{The standard deviation of the doublet rate.}
 
 \item{k}{Number of nearest neighbors (for KNN graph).}
 
@@ -113,13 +116,15 @@ transcriptionally, but cannot identify doublets made by cells of the
 same sample. See \code{vignette("scDblFinder")} for more details on the 
 method.
 
+When multiple samples/captures are present, they should be specified using 
+the \code{samples} argument. Although the classifier will be trained 
+globally, thresholding and the more computationally-intensive steps will be 
+performed separately for each sample (in parallel if \code{BPPARAM} is 
+given).
+
 When inter-sample doublets are available, they can be provided to 
 `scDblFinder` through the \code{knownDoublets} argument to improve the 
 identification of further doublets.
-
-When multiple samples/captures are present, they can be specified using the 
-\code{samples} argument and will be processed separately (in parallel if 
-\code{BPPARAM} is given).
 }
 \examples{
 library(SingleCellExperiment)
