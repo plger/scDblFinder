@@ -155,7 +155,8 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 #' indicating from which cluster (or cluster combination) it was simulated.
 #' 
 #' @export
-#' @import SingleCellExperiment stats
+#' @import SingleCellExperiment
+#' @importFrom stats rnorm rpois
 #' @examples
 #' sce <- mockDoubletSCE()
 mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL, 
