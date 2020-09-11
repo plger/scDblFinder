@@ -40,12 +40,20 @@
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
 #' appropriate for 10x datasets. Corrections for homeotypic doublets will be
 #' performed on the given rate.
-#' @param dbr.sd The standard deviation of the doublet rate.
-#' @param k Number of nearest neighbors (for KNN graph).
+#' @param dbr.sd The uncertainty range in the doublet rate, interpreted as
+#' a +/- around `dbr`. During thresholding, deviation from the expected doublet
+#' rate will be calculated from these boundaries, and will be considered null 
+#' within these boundaries.
+#' @param k Number of nearest neighbors (for KNN graph). If more than one value
+#' is given, the doublet density will be calculated at each k (and other values
+#' at the highest k), and all the information will be used by the classifier.
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
 #' @param score Score to use for final classification.
+#' @param max_depth Maximum depth of decision trees
+#' @param nrounds Maximum rounds of boosting. If NULL, will be determined
+#' through cross-validation.
 #' @param threshold Logical; whether to threshold scores into binary doublet 
 #' calls
 #' @param verbose Logical; whether to print messages and the thresholding plot.
@@ -103,10 +111,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
                          maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.02, k=15, returnType=c("sce","table","full"),
+                         dbr.sd=0.02, k=c(3,10,20,40), 
+                         returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
-                         threshold=TRUE, verbose=is.null(samples), 
-                         BPPARAM=SerialParam()
+                         nrounds=NULL, max_depth=6, threshold=TRUE, 
+                         verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
   sce <- .checkSCE(sce)
   score <- match.arg(score)
@@ -135,8 +144,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                  levels=seq_along(names(d)), labels=names(d))
     d <- do.call(rbind, d)
     d$sample <- ss
-    d <- .scDblscore(d, scoreType=score, threshold=FALSE, verbose=verbose,
-                     dbr=dbr, dbr.sd=dbr.sd)
+    d <- .scDblscore(d,scoreType=score, threshold=FALSE, dbr=dbr, dbr.sd=dbr.sd, 
+                     max_depth=max_depth, nrounds=nrounds, verbose=verbose)
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
   }
@@ -191,7 +200,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 
   # get the artificial doublets
   if(is.null(artificialDoublets))
-    artificialDoublets <- min(max(ceiling(ncol(sce)*0.6),
+    artificialDoublets <- min(max(5000,
+                                  ceiling(ncol(sce)*0.6),
                                   10*length(unique(clusters))^2),
                               25000)
   
@@ -229,6 +239,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   nfeatures <- Matrix::colSums(e>0)
   
   # skip normalization if data is too large
+  saveRDS(e, file="~/TMP.rds")
   if(ncol(e)<=25000) e <- normalizeCounts(e)
   if(is.null(dims)) dims <- 30
   pca <- tryCatch({
@@ -251,9 +262,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   d$src <- src
   if(use.cxds) d$cxds_score <- cxds_score
   
-  d <- .scDblscore(cbind(d, pca[,1:2]), scoreType=score, 
-                   threshold=threshold, verbose=verbose, 
-                   dbr=dbr, dbr.sd=dbr.sd)
+  d <- .scDblscore(cbind(d, pca[,1:2]), scoreType=score, threshold=threshold, 
+                   dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds, max_depth=max_depth,
+                   verbose=verbose)
   if(returnType=="table") return(d)
   if(returnType=="full"){
       sce_out <- SingleCellExperiment(list(
@@ -269,7 +280,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 .evaluateKNN <- function(pca, ctype, origins, expected, k, 
                          BPPARAM=SerialParam(), verbose=TRUE){
   if(verbose) message("Finding KNN...")
-  knn <- suppressWarnings(findKNN(pca, k, BPPARAM=BPPARAM))
+  knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM))
   
   if(verbose) message("Evaluating cell neighborhoods...")
   knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
@@ -296,8 +307,13 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                    distanceToNearestDoublet=dr[,1],
                    distanceToNearestReal=dr[,2],
                    nearestClass=knn$type[,1],
-                   ratio=rowSums(knn$type)/k,
+                   ratio=rowSums(knn$type)/max(k),
                    .getMostLikelyOrigins(knn, origins) )
+  if(length(k)>1){
+      for(ki in rev(k)[-1])
+          d[[paste0("ratio.k",ki)]] <- rowSums(knn$type[,seq_len(ki)])/ki
+  }
+  
   w <- which(d$type=="doublet")
   class.weighted <- vapply( split(d$weighted[w], d$mostLikelyOrigin[w]), 
                             FUN.VALUE=numeric(1L), FUN=mean )
@@ -342,42 +358,42 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 #' @import xgboost
 #' @importFrom S4Vectors DataFrame metadata
 #' @importFrom stats predict quantile
-.scDblscore <- function(d, scoreType="xgb", nrounds=60, threshold=TRUE, 
-                        verbose=TRUE, dbr=NULL, ...){
+.scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, 
+                        threshold=TRUE, verbose=TRUE, dbr=NULL, ...){
     if(scoreType %in% c("xgb.local.optim","xgb")){
         if(verbose) message("Training model...")
         d$score <- NULL
         prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
                                        "type","src","distanceToNearest","class",
-                                       "nearestClass","cluster","sample"))
+                                       "nearestClass","cluster","sample",
+                                       "include.in.training"))
         d2 <- d[,prds]
         
         # remove cells with a high chance of being doublets from the training
-        rq <- quantile(d$ratio[d$type=="real"], prob=1-(dbr/2))
+        rq <- quantile(d$ratio[d$type=="real"], prob=1-dbr/2)
         w <- which(d$type=="real" & d$ratio>=rq)
         if(!is.null(d$cxds_score))
             w <- union(w, which(d$type=="real" & 
                                 d$cxds_score>=quantile(d$cxds_score,
                                                       prob=1-dbr)))
-        if(length(w)>0){
-            ctype <- d$type[-w]
-            d2 <- d2[-w,]
-        }
-        ctype <- as.integer(ctype)-1
+        d$include.in.training <- TRUE
+        d$include.in.training[w] <- FALSE
+        d2 <- d2[-w,]
+        ctype <- as.integer(d$type[-w])-1
         d2 <- as.matrix(d2)
         if(is.null(nrounds)){
             # use cross-validation
-            res <- xgb.cv(data=d2, label=ctype, nrounds=300, max_depth=6, 
-                          objective="binary:logistic", nfold=5, 
-                          early_stopping_rounds=3, tree_method="hist", 
-                          metrics=list("error"), subsample=0.6, verbose=FALSE)
+            res <- xgb.cv(data=d2, label=ctype, nrounds=500, max_depth=max_depth, 
+                          objective="binary:logistic", nfold=5, eval_metric="aucpr",
+                          early_stopping_rounds=5, tree_method="hist", 
+                          metrics=list("aucpr","error"), subsample=0.6, verbose=FALSE)
             ni = res$best_iteration
             ac = res$evaluation_log$test_error_mean[ni] + 
                 1 * res$evaluation_log$test_error_std[ni]
             nrounds = min(which(res$evaluation_log$test_error_mean <= ac))
         }
-        fit <- xgboost(d2, ctype, nrounds=nrounds, 
-                       objective="binary:logistic", max_depth=6, 
+        fit <- xgboost(d2, ctype, nrounds=nrounds, eval_metric="aucpr",
+                       objective="binary:logistic", max_depth=max_depth, 
                        early_stopping_rounds=5, verbose=FALSE )
         d$score <- predict(fit, as.matrix(d[,prds]))
     }else{
