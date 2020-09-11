@@ -47,12 +47,6 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
-  # downsample a random subset of the doublets:
-  w <- sample.int(ncol(m2),max(2,ceiling(0.1*ncol(m2))))
-  m2b <- t(as.matrix(m2[,w]))
-  m2b <- Matrix::colSums(x[,sample.int(ncol(x),length(w))])*m2b/rowSums(m2b)
-  m2[,w] <- rpois(length(m2b),as.numeric(m2b))
-  rm(m2b)
   oc <- as.character(ca$orig.clusters)
   names(oc) <- colnames(m2) <- paste0( "artDbl.", seq_len(ncol(m2)) )
   ad.m <- m2
@@ -97,3 +91,35 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   }
   list( counts=ad.m, origins=as.factor(oc) )
 }
+
+# get random cross-cluster pairs of cells from a cluster assignment vector
+.getCellPairs <- function(clusters, n=1000){
+  cli <- split(seq_along(clusters), clusters)
+  ca <- expand.grid(seq_along(cli), seq_along(cli))
+  ca <- ca[ca[,1]<ca[,2],]
+  n <- ceiling(n/nrow(ca))
+  oc <- paste( names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
+    cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
+           sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
+  }))
+  ca <- data.frame(ca, orig.clusters=rep(as.factor(oc), each=n))
+  ca[!duplicated(ca),]
+}  
+
+# creates within-cluster meta-cells from a count matrix
+.getMetaCells <- function(x, clusters, n.meta.cells=20, meta.cell.size=20){
+  if(is.factor(clusters)) clusters <- droplevels(clusters)
+  cli <- split(seq_along(clusters), clusters)
+  meta <- unlist(lapply(cli, FUN=function(x){
+    lapply(seq_len(n.meta.cells), FUN=function(y){
+      sample(x,min(ceiling(0.6*length(x)),meta.cell.size),replace=FALSE)
+    })
+  }), recursive=FALSE)
+  meta <- vapply(meta, FUN.VALUE=double(nrow(x)), 
+                 FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
+  colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
+  meta
+}
+
+
