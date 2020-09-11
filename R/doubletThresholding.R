@@ -54,7 +54,11 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     adjp[is.na(adjp)] <- median(ths)
     d$score <- 1/(1+exp(-(logit(d$score)-logit(sqrt(adjp)))))
   }
-  th <- .optimThreshold(d$score, d$type, sum(expected, na.rm=TRUE))
+  w <- NULL
+  if(!is.null(d$include.in.training)) w <- which(!d$include.in.training)
+  ee <- sum(expected,na.rm=TRUE)
+  ee <- c(ee*(1-dbr.sd), ee*(1+dbr.sd))
+  th <- .optimThreshold(d$score, d$type, ee, fdr.include=w)
   o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
   stats <- .compareToExpectedDoublets(o, expected, dbr)
   stats$combination <- as.character(stats$combination)
@@ -71,10 +75,12 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   list(th=th, stats=stats, finalScores=d$score)
 }
 
-.optimThreshold <- function(score, type, expected){
+.optimThreshold <- function(score, type, expected, fdr.include=NULL){
+  type <- type=="real"
+  if(!is.null(fdr.include)) fdr.include <- seq_along(score)
   totfn <- function(x){
-    .FNR(type, score, x)*2 + .FDR(type, score, x) + 
-      .prop.dev(type,score,expected,x)^2
+    .FNR(type, score, x)*2 + .FDR(type[fdr.include], score[fdr.include], x) +
+          .prop.dev(type,score,expected,x)^2
   }
   optimize(totfn, c(0,1), maximum=FALSE)$minimum
 }
@@ -85,6 +91,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
   names(n) <- n <- names(ll)
   ths <- vapply(n, FUN.VALUE=numeric(1L), FUN=function(comb){
     i <- ll[[comb]]
+    type <- type=="real"
     totfn <- function(x){
       .FNR(type[i], score[i], x)*2 + .FDR(type[i], score[i], x) + 
         .prop.dev(type[i],score[i],expected[comb],x)^2
@@ -107,16 +114,18 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
 }
 
 .FNR <- function(type, score, threshold){
-  sum(type!="real" & score<threshold, na.rm=TRUE)/sum(type!="real")
+  if(!is.logical(type)) type <- type=="real"
+  sum(!type & score<threshold, na.rm=TRUE)/sum(!type)
 }
-.FDR <- function(type, score, threshold){
+.FDR <- function(type, score, threshold, include=FALSE){
   if(sum(score>=threshold, na.rm=TRUE)==0) return(0)
-  # real cells with a score haflway from threshold to 1 aren't considered FN
-  sum(type=="real" & score>=mean(c(threshold,1)), na.rm=TRUE)/
-      sum(score>=threshold, na.rm=TRUE)
+  if(!is.logical(type)) type <- type=="real"
+  sum(type & score>=threshold, na.rm=TRUE)/sum(score>=threshold, na.rm=TRUE)
 }
+
 .prop.dev <- function(type, score, expected, threshold){
-  x <- 1+sum(score>=threshold & type=="real")
+  if(!is.logical(type)) type <- type=="real"
+  x <- 1+sum(score>=threshold & type)
   expected <- expected + 1
   if(length(expected)>1 && x>min(expected) && x<max(expected)) return(0)
   min(abs(x-expected)/expected)
