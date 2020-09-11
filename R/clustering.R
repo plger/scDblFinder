@@ -70,15 +70,17 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   x <- reducedDim(x, rdname)
   if(is.null(ndims)){
     ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
-    ndims <- min(50,max(c(ceiling(ndims),ncol(x)),na.rm=TRUE))
+    ndims <- min(c(50,ceiling(ndims),ncol(x)),na.rm=TRUE)
   }
   x <- x[,seq_len(min(ncol(x),as.integer(ndims)))]
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
-  if(nrow(x)>1000 && nrow(x)>k){
+  if(nrow(x)>2000 && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
-    x <- sapply(split(names(k),k), FUN=function(i) colMeans(x[i,,drop=FALSE]))
+    x <- t(sapply(split(names(k),k), FUN=function(i)colMeans(x[i,,drop=FALSE])))
+  }else{
+    k <- seq_len(nrow(x))
   }
-  cl <- membership(cluster_louvain(buildKNNGraph(x)))
+  cl <- membership(cluster_louvain(buildKNNGraph(x, d=NA, transposed=TRUE)))
   cl[k]
 }
 
