@@ -1,34 +1,3 @@
-# get random cross-cluster pairs of cells from a cluster assignment vector
-.getCellPairs <- function(clusters, n=1000){
-  cli <- split(seq_along(clusters), clusters)
-  ca <- expand.grid(seq_along(cli), seq_along(cli))
-  ca <- ca[ca[,1]<ca[,2],]
-  n <- ceiling(n/nrow(ca))
-  oc <- paste( names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
-    cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
-           sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
-  }))
-  ca <- data.frame(ca, orig.clusters=rep(as.factor(oc), each=n))
-  ca[!duplicated(ca),]
-}  
-
-# creates within-cluster meta-cells from a count matrix
-.getMetaCells <- function(x, clusters, n.meta.cells=20, meta.cell.size=20){
-  cli <- split(seq_along(clusters), clusters)
-  meta <- unlist(lapply(cli, FUN=function(x){
-    lapply(seq_len(n.meta.cells), FUN=function(y){
-      sample(x,min(ceiling(0.6*length(x)),meta.cell.size),replace=FALSE)
-    })
-  }), recursive=FALSE)
-  meta <- vapply(meta, FUN.VALUE=double(nrow(x)), 
-                 FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
-  colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
-  meta
-}
-
-
-
 .tablevec <- function(x){
   if(!is(x, "table")) x <- table(x)
   y <- as.numeric(x)
@@ -90,21 +59,18 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   clusters <- factor(clusters)
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
-  if(only.heterotypic) dbr <- .adjust.dbr.homotypy(clusters, dbr)
-  cs <- table(clusters)
+
+  cs <- table(clusters)/ncells
   eg <- expand.grid(seq_along(cs), seq_along(cs))
-  if(only.heterotypic){
-    eg <- eg[eg[,1]<eg[,2],]
-  }else{
-    eg <- eg[eg[,1]<=eg[,2],]
-  }
-  nd <- ceiling(dbr*ncells)
+  eg <- eg[eg[,1]<=eg[,2],]
   expected <- apply(eg,1, FUN=function(x){
-    nd*(cs[[x[[1]]]]/ncells)*(cs[[x[[2]]]]/ncells)
+    cs[[x[[1]]]]*cs[[x[[2]]]]
   })
+  expected <- dbr*ncells*expected/sum(expected)
   names(expected) <- apply(eg,1,FUN=function(x){
     paste(names(cs)[x], collapse="+")
   })
+  if(only.heterotypic) expected <- expected[which(eg[,1]!=eg[,2])]
   expected
 }
 
