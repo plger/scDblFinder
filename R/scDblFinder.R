@@ -100,8 +100,8 @@
 #' @examples
 #' library(SingleCellExperiment)
 #' sce <- mockDoubletSCE()
-#' sce <- scDblFinder(sce, verbose=FALSE)
-#' table(sce$scDblFinder.class)
+#' sce <- scDblFinder(sce, dbr=0.1)
+#' table(truth=sce$type, call=sce$scDblFinder.class)
 #' 
 #' @export
 #' @rdname scDblFinder
@@ -111,7 +111,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
                          maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.02, k=c(3,10,20,40), 
+                         dbr.sd=0.015, k=c(3,10,20,40), 
                          returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          nrounds=NULL, max_depth=6, threshold=TRUE, 
@@ -142,7 +142,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     })
     ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
                  levels=seq_along(names(d)), labels=names(d))
-    d <- do.call(rbind, d)
+    d <- do.call(rbind, lapply(d, FUN=function(x){
+      d$total.prop.real <- sum(d$type=="real",na.rm=TRUE)/nrow(d)
+      d
+    }))
     d$sample <- ss
     d <- .scDblscore(d,scoreType=score, threshold=FALSE, dbr=dbr, dbr.sd=dbr.sd, 
                      max_depth=max_depth, nrounds=nrounds, verbose=verbose)
@@ -234,12 +237,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
   cxds_score <- NULL
-  if(use.cxds)
-    cxds_score <- scds::cxds(SingleCellExperiment(list(counts=e)))$cxds_score
+  if(use.cxds) cxds_score <- scds::cxds(SingleCellExperiment(list(counts=e)),
+                                        ntop=min(500,nrow(e)))$cxds_score
   nfeatures <- Matrix::colSums(e>0)
   
   # skip normalization if data is too large
-  saveRDS(e, file="~/TMP.rds")
   if(ncol(e)<=25000) e <- normalizeCounts(e)
   if(is.null(dims)) dims <- 30
   pca <- tryCatch({

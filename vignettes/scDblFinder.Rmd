@@ -38,16 +38,13 @@ BiocManager::install("plger/scDblFinder")
 ## Usage
 
 Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered) :
-```{r, message=FALSE, warning=FALSE}
+```{r, warning=FALSE}
+set.seed(123)
 library(scDblFinder)
-# we create a dummy dataset
-sce <- mockDoubletSCE()
-```
-
-We run `scDblFinder` simply with:
-
-```{r}
-sce <- scDblFinder(sce, verbose=FALSE)
+# we create a dummy dataset; since it's small we set a higher doublet rate
+sce <- mockDoubletSCE(dbl.rate=0.1)
+# we run scDblFinder (giving the unsually high doublet rate)
+sce <- scDblFinder(sce, dbr=0.1)
 ```
 
 
@@ -57,7 +54,7 @@ This will add a number of columns to the colData of `sce` prefixed with 'scDblFi
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
 ```{r}
-table(sce$scDblFinder.class)
+table(truth=sce$type, call=sce$scDblFinder.class)
 ```
 
 
