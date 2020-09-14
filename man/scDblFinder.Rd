@@ -17,10 +17,14 @@ scDblFinder(
   nfeatures = 1000,
   dims = NULL,
   dbr = NULL,
-  dbr.sd = 0.02,
-  k = 15,
+  dbr.sd = 0.015,
+  k = NULL,
+  includePCs = c(),
+  propRandom = 0.2,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
+  nrounds = 50,
+  max_depth = 5,
   threshold = TRUE,
   verbose = is.null(samples),
   BPPARAM = SerialParam()
@@ -76,15 +80,35 @@ per thousand cells captured (so 4\% among 4000 thousand cells), which is
 appropriate for 10x datasets. Corrections for homeotypic doublets will be
 performed on the given rate.}
 
-\item{dbr.sd}{The standard deviation of the doublet rate.}
+\item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
+a +/- around `dbr`. During thresholding, deviation from the expected doublet
+rate will be calculated from these boundaries, and will be considered null 
+within these boundaries.}
 
-\item{k}{Number of nearest neighbors (for KNN graph).}
+\item{k}{Number of nearest neighbors (for KNN graph). If more than one value
+is given, the doublet density will be calculated at each k (and other values
+at the highest k), and all the information will be used by the classifier.
+If omitted, a reasonable set of values is used.}
+
+\item{includePCs}{The index of principal components to include in the 
+predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
+doublets among the real cells), in our experience this tends to lead to 
+overfitting.}
+
+\item{propRandom}{The proportion of the artificial doublets which should 
+made of entirely random cells (as opposed to inter-cluster combinations).}
 
 \item{returnType}{Either "sce" (default), "table" (to return the table of 
 cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
+
+\item{nrounds}{Maximum rounds of boosting. If NULL, will be determined
+through cross-validation. When the training is based only on simulated 
+doublets, we generally find lower limits to outperform cross-validation.}
+
+\item{max_depth}{Maximum depth of decision trees}
 
 \item{threshold}{Logical; whether to threshold scores into binary doublet 
 calls}
@@ -129,7 +153,7 @@ identification of further doublets.
 \examples{
 library(SingleCellExperiment)
 sce <- mockDoubletSCE()
-sce <- scDblFinder(sce, verbose=FALSE)
-table(sce$scDblFinder.class)
+sce <- scDblFinder(sce, dbr=0.1)
+table(truth=sce$type, call=sce$scDblFinder.class)
 
 }

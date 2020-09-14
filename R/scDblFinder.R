@@ -47,13 +47,21 @@
 #' @param k Number of nearest neighbors (for KNN graph). If more than one value
 #' is given, the doublet density will be calculated at each k (and other values
 #' at the highest k), and all the information will be used by the classifier.
+#' If omitted, a reasonable set of values is used.
+#' @param includePCs The index of principal components to include in the 
+#' predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
+#' doublets among the real cells), in our experience this tends to lead to 
+#' overfitting.
+#' @param propRandom The proportion of the artificial doublets which should 
+#' made of entirely random cells (as opposed to inter-cluster combinations).
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
 #' @param score Score to use for final classification.
 #' @param max_depth Maximum depth of decision trees
 #' @param nrounds Maximum rounds of boosting. If NULL, will be determined
-#' through cross-validation.
+#' through cross-validation. When the training is based only on simulated 
+#' doublets, we generally find lower limits to outperform cross-validation.
 #' @param threshold Logical; whether to threshold scores into binary doublet 
 #' calls
 #' @param verbose Logical; whether to print messages and the thresholding plot.
@@ -111,10 +119,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
                          maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.015, k=c(3,10,20,40), 
-                         returnType=c("sce","table","full"),
+                         dbr.sd=0.015, k=NULL, includePCs=c(),
+                         propRandom=0.2, returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
-                         nrounds=NULL, max_depth=6, threshold=TRUE, 
+                         nrounds=50, max_depth=5, threshold=TRUE, 
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
   sce <- .checkSCE(sce)
@@ -137,7 +145,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                     clusters=clusters[x], minClusSize=minClusSize, 
                     maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
                     dbr.sd=dbr.sd, k=k, clust.method=clust.method,
-                    score="weighted", nfeatures=nfeatures, returnType="table",
+                    score="weighted", nfeatures=nfeatures,
+                    propRandom=propRandom, returnType="table",
                     knownDoublets=knownDoublets, threshold=FALSE, verbose=FALSE)
     })
     ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
@@ -162,6 +171,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(is.null(dbr)){
       ## dbr estimated as for chromium data, 1% per 1000 cells captured:
       dbr <- (0.01*ncol(sce)/1000)
+  }
+  if(is.null(k)){
+      k <- c(3,10)
+      if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=40) k <- c(k,20)
+      k <- c(k,kmax)
   }
   
   orig <- sce
@@ -203,19 +217,21 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 
   # get the artificial doublets
   if(is.null(artificialDoublets))
-    artificialDoublets <- min(max(5000,
-                                  ceiling(ncol(sce)*0.6),
-                                  10*length(unique(clusters))^2),
-                              25000)
+    artificialDoublets <- min( 25000, max(5000,
+                                          ceiling(ncol(sce)*0.6),
+                                          10*length(unique(clusters))^2 ) )
+  if(artificialDoublets<2)
+      artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
   
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
-    ad <- getArtificialDoublets( as.matrix(counts(sce)), n=artificialDoublets, 
-                                 clusters=clusters )
+    ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets, 
+                                clusters=clusters, prop.fullyRandom=propRandom)
   }else{
     ad <- suppressWarnings( getArtificialDoublets(as.matrix(counts(sce)), 
                                                   n=artificialDoublets, 
-                                                  clusters=clusters ) )
+                                                  clusters=clusters,
+                                                  prop.fullyRandom=propRandom))
   }
   gc(verbose=FALSE)
   
@@ -264,9 +280,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   d$src <- src
   if(use.cxds) d$cxds_score <- cxds_score
   
-  d <- .scDblscore(cbind(d, pca[,1:2]), scoreType=score, threshold=threshold, 
-                   dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds, max_depth=max_depth,
-                   verbose=verbose)
+  d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score, 
+                   threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
+                   max_depth=max_depth, verbose=verbose)
   if(returnType=="table") return(d)
   if(returnType=="full"){
       sce_out <- SingleCellExperiment(list(
@@ -323,7 +339,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   d$difficulty <- 1
   w <- which(!is.na(d$mostLikelyOrigin))
   d$difficulty[w] <- 1-class.weighted[d$mostLikelyOrigin[w]]
-  d$difficulty <- .knnSmooth(knn, d$difficulty)
+  #d$difficulty <- .knnSmooth(knn, d$difficulty)
   
   d$expected <- expected[d$mostLikelyOrigin]
   ob <- table(d$mostLikelyOrigin)
