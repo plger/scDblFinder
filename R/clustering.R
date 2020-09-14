@@ -74,7 +74,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   }
   x <- x[,seq_len(min(ncol(x),as.integer(ndims)))]
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
-  if(nrow(x)>2000 && nrow(x)>k){
+  if(nrow(x)>1000 && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
     x <- t(sapply(split(names(k),k), FUN=function(i)colMeans(x[i,,drop=FALSE])))
   }else{

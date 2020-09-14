@@ -22,7 +22,8 @@ sce <- scDblFinder(sce)
 
 This will add a number of columns to the `colData` of `sce`, the most important of which are:
 
-* `sce$scDblFinder.score` : the doublet score (the higher the more likely that the cell is a doublet)
+* `sce$scDblFinder.score` : the final doublet score (the higher the more likely that the cell is a doublet)
+* `sce$scDblFinder.ratio` : the ratio of artificial doublets in the cell's neighborhood
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
 There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the (vignette)[vignettes/scDblFinder.Rmd] (`vignette("scDblFinder")`).

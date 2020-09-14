@@ -93,11 +93,12 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 
 .clusterTopG <- function(sce, clusters=NULL, nfeatures=1000){
   if(is.null(clusters))
-    return(row.names(sce)[order(Matrix::rowMeans(counts(sce)),decreasing=TRUE)])
+    return(row.names(sce)[order(Matrix::rowMeans(counts(sce),na.rm=TRUE),
+                                decreasing=TRUE)])
   # get mean expression across clusters
   cli <- split(seq_len(ncol(sce)), clusters)
   cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce)), FUN=function(x){
-    Matrix::rowMeans(counts(sce)[,x,drop=FALSE])
+    Matrix::rowMeans(counts(sce)[,x,drop=FALSE], na.rm=TRUE)
   })
   # grab the top genes in each cluster
   g <- unique(as.numeric(t(apply(cl.means, 2, FUN=function(x){
