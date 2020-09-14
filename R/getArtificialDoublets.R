@@ -4,17 +4,20 @@
 #'
 #' @param x A count matrix, with features as rows and cells as columns.
 #' @param n The approximate number of doublet to generate (default 3000).
-#' @param prop.fullyRandom The proportion of the created doublets that are fully
-#'  random (default 0); the rest will be doublets created across clusters. 
-#'  Ignored if `clusters` is NULL.
 #' @param clusters The optional clusters labels to use to build cross-cluster 
 #' doublets.
+#' @param prop.fullyRandom The proportion of the created doublets that are fully
+#'  random (default 0.1); the rest will be doublets created across clusters. 
+#'  Ignored if `clusters` is NULL.
 #' @param n.meta.cells The number of meta-cell per cluster to create. If given,
 #' additional doublets will be created from cluster meta-cells.
 #' @param meta.triplets Logical; whether to create triplets from meta cells. 
 #' Ignored if `clusters` is missing.
 #'
-#' @return A count matrix for artificial doublets.
+#' @return If `clusters` is Null, returns a count matrix of artificial doublets.
+#' Otherwise, returns a list with two elements: `counts` (the count matrix of
+#' the artificial doublets) and `origins` the clusters from which each 
+#' artificial doublets originated.
 #' 
 #' @examples
 #' m <- t(sapply( seq(from=0, to=5, length.out=50), 
@@ -22,16 +25,16 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL,
-                                   n.meta.cells=1, meta.triplets=TRUE ){
+getArtificialDoublets <- function( x, n=3000, clusters=NULL, 
+                                   prop.fullyRandom=0.1, n.meta.cells=1,
+                                   meta.triplets=TRUE ){
   if(is.null(clusters)){
     # create random combinations
-    nr <- ifelse(is.null(clusters), n, ceiling(prop.fullyRandom*n))
-    if(ncol(x)^2 <= nr){
+    if(ncol(x)^2 <= n){
       # few combinations, get them all
       ad <- expand.grid(seq_len(ncol(x)),seq_len(ncol(x)))
     }else{
-      ad <- matrix(sample.int(ncol(x), 2*nr, replace=(2*nr >= ncol(x))),ncol=2)
+      ad <- matrix(sample.int(ncol(x), 2*n, replace=(2*n >= ncol(x))),ncol=2)
     }
     # remove doublets of the same cell
     ad <- ad[which(ad[,1]!=ad[,2]),]
@@ -40,16 +43,26 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     colnames(ad.m) <- paste0("artDbl.", seq_len(ncol(ad.m)))
     return(ad.m)
   }
+    
+  if((nr <- ceiling(n*prop.fullyRandom))>0){
+    ad.m <- getArtificialDoublets(x, n=nr, n.meta.cells=0)
+    colnames(ad.m) <- paste0("R",colnames(ad.m))
+    oc <- rep(NA_character_, ncol(ad.m))
+    n <- ceiling(n*(1-prop.fullyRandom))
+  }else{
+    ad.m <- x[,c(),drop=FALSE]
+    oc <- character()
+  }
   
   if(length(unique(clusters))<3) n.meta.cells <- 0
-    
+  
   # create doublets across clusters:
   n <- ceiling(n)
   ca <- .getCellPairs(clusters, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
   m2 <- x[,ca[,1]]+x[,ca[,2]]
-  oc <- as.character(ca$orig.clusters)
+  oc <- c(oc, as.character(ca$orig.clusters))
   names(oc) <- colnames(m2) <- paste0( "artDbl.", seq_len(ncol(m2)) )
-  ad.m <- m2
+  ad.m <- cbind(ad.m, m2)
   rm(m2)
   gc(verbose=FALSE)
   

@@ -8,6 +8,7 @@ getArtificialDoublets(
   x,
   n = 3000,
   clusters = NULL,
+  prop.fullyRandom = 0.1,
   n.meta.cells = 1,
   meta.triplets = TRUE
 )
@@ -20,18 +21,21 @@ getArtificialDoublets(
 \item{clusters}{The optional clusters labels to use to build cross-cluster 
 doublets.}
 
+\item{prop.fullyRandom}{The proportion of the created doublets that are fully
+random (default 0.1); the rest will be doublets created across clusters. 
+Ignored if `clusters` is NULL.}
+
 \item{n.meta.cells}{The number of meta-cell per cluster to create. If given,
 additional doublets will be created from cluster meta-cells.}
 
 \item{meta.triplets}{Logical; whether to create triplets from meta cells. 
 Ignored if `clusters` is missing.}
-
-\item{prop.fullyRandom}{The proportion of the created doublets that are fully
-random (default 0); the rest will be doublets created across clusters. 
-Ignored if `clusters` is NULL.}
 }
 \value{
-A count matrix for artificial doublets.
+If `clusters` is Null, returns a count matrix of artificial doublets.
+Otherwise, returns a list with two elements: `counts` (the count matrix of
+the artificial doublets) and `origins` the clusters from which each 
+artificial doublets originated.
 }
 \description{
 Create expression profiles of random artificial doublets.
