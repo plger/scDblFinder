@@ -41,7 +41,8 @@ Suggests:
     knitr, 
     rmarkdown,
     testthat,
-    scRNAseq
+    scRNAseq,
+    bluster
 VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.1.1

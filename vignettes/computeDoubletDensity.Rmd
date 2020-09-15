@@ -62,7 +62,8 @@ plotTSNE(sce, colour_by=I(log1p(scores)))
 ```{r, echo=FALSE}
 # Sanity check that the plot has one cluster with much higher scores.
 # If this fails, we probably need to pick a more demonstrative example.
-clusters <- clusterSNNGraph(sce, use.dimred="PCA")
+library(bluster)
+clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
 by.clust <- split(scores, clusters)
 med.scores <- sort(vapply(by.clust, median, 0), decreasing=TRUE)
 stopifnot(med.scores[1] > med.scores[2] * 5)
