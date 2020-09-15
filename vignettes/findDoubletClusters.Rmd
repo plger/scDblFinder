@@ -96,16 +96,15 @@ The normalized expression value of the doublet cluster $j$ is subsequently
 $$
 \frac{\lambda_{gi_1} + \lambda_{gi_2}}{\sum_g (\lambda_{gi_1} + \lambda_{gi_2})} \;,
 $$
-and it is fairly easy to show that, under the above assumption, we have
+and it is fairly easy to show that
 $$
 \frac{\lambda_{gi_1}}{\sum_g \lambda_{gi_1}} < 
 \frac{\lambda_{gi_1} + \lambda_{gi_2}}{\sum_g (\lambda_{gi_1} + \lambda_{gi_2})}  < 
 \frac{\lambda_{gi_2}}{\sum_g \lambda_{gi_2}} \;.
 $$
-In other words, the library size-normalized expression of the doublet cluster lies between the two parents.
+In other words, the expected library size-normalized expression of our gene in the doublet cluster lies between that of the two parents.
 
 It is harder to provide theoretical guarantees with arbitrary size factors, which is why we only use the library sizes for normalization instead.
-Indeed, a size factor estimate for a doublet cell will not be equal to $s_j$ as it will absorb increases in total RNA content.
 The exception is that of spike-in size factors that would estimate $s_i$ directly.
 This would allow us to obtain estimates of $\lambda_{gi}$ for the parent clusters and of $\lambda_{gi_1} + \lambda_{gi_2}$ for the doublets.
 In this manner, we could more precisely identify doublet clusters as those where the normalized expression value is equal to the sum of the parents.
@@ -138,27 +137,23 @@ Clusters are likely to be doublets if they are outliers on this metric.
 Doublet clusters should also have larger library sizes than the proposed parent clusters.
 This is consistent with the presence of more RNA in each doublet, though the library size of the doublet cluster need not be a sum of that of the parent clusters
 (due to factors such as saturation and composition effects).
-The proportion of cells assigned to the doublet cluster should also be ``reasonable'';
+The proportion of cells assigned to the doublet cluster should also be "reasonable";
 exactly what this means depends on the experimental setup and the doublet rate of the protocol in use.
 
 # Discussion
 
-We have chosen the above approach due to its lack of assumptions.
-Specifically, we do not need to know $s_i$ for each cluster in order to satisfy the intermediacy condition.
-This allows us to identify doublets even when the exact location of the doublet is unknown.
-In contrast, methods that attempt to reconstruct the doublet cluster need to know the ratio in which RNA from the parent populations are mixed.
-This requires knowledge of the total RNA content of each cell, which is not available without spike-ins;
-and $N_i$ is a poor substitute, especially in experiments that reach saturation.
+The biggest advantage of this approach lies in its interpretability.
+Given a set of existing clusters, we can explicitly identify those that are likely to be doublets.
+We also gain some insight onto the parental origins of each putative doublet cluster, which may be of some interest.
+We avoid any assumptions about doublet formation that are otherwise necessary for the simulation-based methods.
+In particular, we do not require any knowledge about exact the relationship between $s_j$ and $s_i$, allowing us to identify doublets even when the exact location of the doublet is unknown (e.g., due to differences in RNA content between the parent clusters).
 
-The intermediacy condition also provides robustness against misspecification of the clusters.
-Consider the situation where an adjacent population $x$ is merged into the doublet or parent clusters.
-The intermediacy condition would still hold for genes where the log-fold change between $x$ and its merged partner population is smaller than the log-fold change between the parents.
-The condition would only fail in extreme cases, e.g., for strong marker genes in $x$ that now appear to be uniquely expressed in the doublet cluster,
-or due to apparent downregulation of genes in the parent cluster when the cluster average includes a non-expressing population.
-The number of such genes should be low if $x$ was similar enough to be merged in the first place.
-This means that the doublet cluster should still be detected as a small outlier for the number of detected genes.
+The downside is that, of course, we are dependent on being supplied with sensible clusters where the parental and doublet cells are separated.
+The intermediacy requirement is loose enough to provide some robustness against misspecification, but this only goes so far.
+In addition, this strategy has a bias towards calling clusters with few cells as doublets (or parents of doublets) because the DE detection power is low.
+This can be somewhat offset by comparing `num.de` against `median.de` as latter will be low for clusters involved in systematically low-powered comparisons, though it is difficult to adjust for the exact effect of the differences of power on the IUT.
 
-# Session information
+# Session information {-}
 
 ```{r}
 sessionInfo()
