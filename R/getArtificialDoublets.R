@@ -28,6 +28,9 @@
 getArtificialDoublets <- function( x, n=3000, clusters=NULL, 
                                    prop.fullyRandom=0.1, n.meta.cells=1,
                                    meta.triplets=TRUE ){
+  ls <- colSums(x)
+  w <- which(ls>0 & ls>=quantile(ls,0.01) & ls<=quantile(ls,0.99))
+  x <- x[,w,drop=FALSE]
   if(is.null(clusters)){
     # create random combinations
     if(ncol(x)^2 <= n){
@@ -43,6 +46,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     colnames(ad.m) <- paste0("artDbl.", seq_len(ncol(ad.m)))
     return(ad.m)
   }
+  clusters <- clusters[w]
     
   if((nr <- ceiling(n*prop.fullyRandom))>0){
     ad.m <- getArtificialDoublets(x, n=nr, n.meta.cells=0)
