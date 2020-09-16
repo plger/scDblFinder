@@ -20,20 +20,6 @@
 #'
 #' @return A scaler indicating the decided threshold.
 #' 
-#' @examples
-#' # random data
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
-#'                FUN=function(x) rpois(30,x) ) )
-#' # generate doublets and merge them with real cells
-#' doublets <- getArtificialDoublets(m, 30)
-#' celltypes <- rep(c("real","doublet"), c(ncol(m), ncol(doublets)))
-#' m <- cbind(m,doublets)
-#' # dummy doublet scores:
-#' scores <- abs(jitter(1:ncol(m),amount=10))
-#' scores <- scores/max(scores)
-#' # get threshold
-#' doubletThresholding(scores, celltypes, do.plot=FALSE)
-#' 
 #' @importFrom stats pcauchy optimize ecdf lm predict dnbinom
 #' @export
 doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
