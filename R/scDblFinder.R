@@ -168,10 +168,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
             "cells. If these are from different captures, please specify this",
             " using the `samples` argument.", immediate=TRUE)
 
-  if(is.null(dbr)){
-      ## dbr estimated as for chromium data, 1% per 1000 cells captured:
-      dbr <- (0.01*ncol(sce)/1000)
-  }
   if(is.null(k)){
       k <- c(3,10)
       if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=40) k <- c(k,20)
@@ -206,14 +202,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   }
   if((nc <- length(unique(clusters))) == 1) stop("Only one cluster generated")
   if(verbose) message(nc, " clusters")
-
-  maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
-      prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
-  if(min(table(clusters)) <= maxSameDoublets){
-    warning("In light of the expected rate of doublets given, and of the size ",
-            "of the clusters, it is possible that some of the smaller clusters",
-            " are composed of doublets of the same type.")
-  }
 
   # get the artificial doublets
   if(is.null(artificialDoublets))
@@ -378,6 +366,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, 
                         threshold=TRUE, verbose=TRUE, dbr=NULL, ...){
+    if(is.null(dbr)) dbr <- (0.01*ncol(sce)/1000)
+
     if(scoreType %in% c("xgb.local.optim","xgb")){
         if(verbose) message("Training model...")
         d$score <- NULL
