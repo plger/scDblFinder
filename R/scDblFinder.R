@@ -152,8 +152,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
                  levels=seq_along(names(d)), labels=names(d))
     d <- do.call(rbind, lapply(d, FUN=function(x){
-      d$total.prop.real <- sum(d$type=="real",na.rm=TRUE)/nrow(d)
-      d
+      x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
+      x
     }))
     d$sample <- ss
     d <- .scDblscore(d,scoreType=score, threshold=FALSE, dbr=dbr, dbr.sd=dbr.sd, 
