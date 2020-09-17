@@ -142,7 +142,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     d <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                    clusters=clusters[x], minClusSize=minClusSize, 
+                    clusters=clusters, minClusSize=minClusSize, 
                     maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
                     dbr.sd=dbr.sd, k=k, clust.method=clust.method,
                     score="weighted", nfeatures=nfeatures,
