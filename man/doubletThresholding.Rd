@@ -4,7 +4,7 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(d, dbr = 0.025, dbr.sd = 0.02, local = TRUE)
+doubletThresholding(d, dbr = 0.025, dbr.sd = 0.015, local = TRUE)
 }
 \arguments{
 \item{dbr}{The expected (mean) doublet rate.}
@@ -35,17 +35,9 @@ Sets the doublet scores threshold; typically called by
 \code{\link[scDblFinder]{scDblFinder}}.
 }
 \examples{
-# random data
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
-               FUN=function(x) rpois(30,x) ) )
-# generate doublets and merge them with real cells
-doublets <- getArtificialDoublets(m, 30)
-celltypes <- rep(c("real","doublet"), c(ncol(m), ncol(doublets)))
-m <- cbind(m,doublets)
-# dummy doublet scores:
-scores <- abs(jitter(1:ncol(m),amount=10))
-scores <- scores/max(scores)
-# get threshold
-doubletThresholding(scores, celltypes, do.plot=FALSE)
+sce <- mockDoubletSCE()
+d <- scDblFinder(sce, verbose=FALSE, returnType="table")
+th <- doubletThresholding(d, dbr=0.05)
+th$th
 
 }

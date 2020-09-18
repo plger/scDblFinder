@@ -21,8 +21,15 @@
 #' @return A scaler indicating the decided threshold.
 #' 
 #' @importFrom stats pcauchy optimize ecdf lm predict dnbinom
+#' 
+#' @examples
+#' sce <- mockDoubletSCE()
+#' d <- scDblFinder(sce, verbose=FALSE, returnType="table")
+#' th <- doubletThresholding(d, dbr=0.05)
+#' th$th
+#' 
 #' @export
-doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
+doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=TRUE ){
   # check that we have all necessary fields:
   if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous") 
           %in% colnames(d))) stop("Input misses some columns.")
@@ -85,7 +92,8 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.02, local=TRUE ){
     optimize(totfn, c(0,1), maximum=FALSE)$minimum
   })
   if(moderate){
-    diff <- sapply(split(difficulty,origins), na.rm=TRUE, FUN=median)
+    diff <- vapply(split(difficulty,origins), na.rm=TRUE, FUN=median, 
+                   FUN.VALUE=numeric(1))
     diff <- diff[names(ths)]
     mod <- tryCatch({ MASS::rlm(ths~diff) }, error=function(e){
         lm(ths~diff)
