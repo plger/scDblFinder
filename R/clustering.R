@@ -26,8 +26,8 @@
 #' @export
 overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
   if(is.igraph(x)){
-      N <- length(V(x))
-      g <- x
+    N <- length(V(x))
+    g <- x
   }else{
     x <- .prepSCE(x, ...)
     g <- buildSNNGraph(x, use.dimred=rdname, BNPARAM=AnnoyParam())
@@ -55,13 +55,20 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 #' @param nstart Number of starts for k-means clustering
 #' @param iter.max Number of iterations for k-means clustering
 #' @param ndims Number of dimensions to use
-#' @param nfeatures Number of features to use if doing PCA
+#' @param nfeatures Number of features to use (ignored if `rdname` is given and
+#' the corresponding dimensional reduction exists in `sce`)
 #'
 #' @return A vector of cluster labels
+#' 
 #' @importFrom igraph cluster_louvain membership
 #' @importFrom intrinsicDimension maxLikGlobalDimEst
 #' @importFrom scran buildKNNGraph
 #' @importFrom stats kmeans
+#' 
+#' @examples
+#' sce <- mockDoubletSCE()
+#' sce$cluster <- fastcluster(sce)
+#' 
 #' @export
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
                          ndims=NULL, nfeatures=1000 ){
@@ -76,7 +83,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
   if(nrow(x)>1000 && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
-    x <- t(sapply(split(names(k),k), FUN=function(i)colMeans(x[i,,drop=FALSE])))
+    x <- t(vapply(split(names(k),k), FUN.VALUE=numeric(ncol(x)),
+                  FUN=function(i) colMeans(x[i,,drop=FALSE])))
   }else{
     k <- seq_len(nrow(x))
   }
@@ -180,7 +188,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
      stop("Cannot match nodes sizes and clusters.")
   if(!is.null(names(cl)) && is.null(names(cl)))
     nodesizes <- nodesizes[names(cl)]
-  sapply(split(nodesizes, cl), FUN=sum)
+  vapply(split(nodesizes, cl), FUN.VALUE=integer(1), FUN=sum)
 }
 
 #' @importFrom scater runPCA 

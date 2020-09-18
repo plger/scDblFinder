@@ -29,7 +29,8 @@ the number of cells with a maximum of 3000.}
 
 \item{ndims}{Number of dimensions to use}
 
-\item{nfeatures}{Number of features to use if doing PCA}
+\item{nfeatures}{Number of features to use (ignored if `rdname` is given and
+the corresponding dimensional reduction exists in `sce`)}
 }
 \value{
 A vector of cluster labels
@@ -38,4 +39,9 @@ A vector of cluster labels
 Performs a fast two-step clustering: first clusters using k-means with a very
 large k, then uses louvain clustering of the k cluster averages and reports
 back the cluster labels.
+}
+\examples{
+sce <- mockDoubletSCE()
+sce$cluster <- fastcluster(sce)
+
 }
