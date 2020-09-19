@@ -53,6 +53,7 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
           col=col, na_col=na_col,
           cell_fun = function(j, i, x, y, width, height, fill){
             if(is.na(ob[i, j])) return(NULL)
-            grid::grid.text(as.character(ob[i, j]), x, y, gp=gpar(fontsize=10))
+            grid::grid.text(as.character(ob[i, j]), x, y, 
+                            gp=grid::gpar(fontsize=10))
           }, ...)
 }
