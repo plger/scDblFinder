@@ -17,11 +17,7 @@ computeDoubletDensity(x, ...)
   subset.row = NULL,
   niters = max(10000, ncol(x)),
   block = 10000,
-  dims = 50,
-  adjust = TRUE,
-  force.match = FALSE,
-  force.k = 20,
-  force.ndist = 3,
+  dims = 25,
   BNPARAM = KmknnParam(),
   BSPARAM = bsparam(),
   BPPARAM = SerialParam()
@@ -59,14 +55,6 @@ This is orthogonal to the values in \code{size.factors.norm}, see Details.}
 
 \item{dims}{An integer scalar specifying the number of components to retain after the PCA.}
 
-\item{adjust}{Logical scalar indicating whether to adjust for differences in local density, see the vignette.}
-
-\item{force.match}{A logical scalar indicating whether remapping of simulated doublets to original cells should be performed.}
-
-\item{force.k}{An integer scalar specifying the number of neighbours to use for remapping if \code{force.match=TRUE}.}
-
-\item{force.ndist}{A numeric scalar specifying the bandwidth for remapping if \code{force.match=TRUE}.}
-
 \item{BNPARAM}{A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
 This should be an algorithm supported by \code{\link{findNeighbors}}.}
 
@@ -75,6 +63,8 @@ This should be an algorithm supported by \code{\link{findNeighbors}}.}
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether the neighbour searches should be parallelized.}
 
 \item{assay.type}{A string specifying which assay values contain the count matrix.}
+
+\item{adjust}{Logical scalar indicating whether to adjust for differences in local density, see the vignette.}
 }
 \value{
 A numeric vector of doublet scores for each cell in \code{x}.
@@ -87,11 +77,12 @@ This replaces the older \code{doubletCells} function from the \pkg{scran} packag
 This function simulates doublets by adding the count vectors for two randomly chosen cells in \code{x}.
 For each original cell, we compute the density of neighboring simulated doublets and compare it to the density of neighboring original cells.
 Genuine doublets should have a high density of simulated doublets relative to the density of its neighbourhood.
-Thus, the doublet score for each cell is defined as the ratio of densities of simulated doublets to the (squared) density of the original cells.
+Thus, the doublet score for each cell is defined as the ratio of densities of simulated doublets to the density of the original cells.
 
 Densities are calculated in low-dimensional space after a PCA on the log-normalized expression matrix of \code{x}.
 Simulated doublets are projected into the low-dimensional space using the rotation vectors computed from the original cells.
-The density is computed for a hypersphere with radius set to the median distance to the \code{k} nearest neighbour across all cells.
+For each cell, the density of simulated doublets is computed for a hypersphere with radius set to the median distance to the \code{k} nearest neighbour.
+This is normalized by \code{niters}, \code{k} and the total number of cells in \code{x} to yield the final score.
 
 The two size factor arguments have different roles:
 \itemize{
@@ -103,12 +94,6 @@ This is usually computed from spike-in RNA and ensures that the simulated double
 It is possible to set both of these arguments as they are orthogonal to each other.
 Setting \code{size.factors.content} will not affect the calculation of log-normalized expression values from \code{x}.
 Conversely, setting \code{size.factors.norm} will not affect the ratio in which cells are added together when simulating doublets.
-
-If \code{force.match=TRUE}, simulated doublets will be remapped to the nearest neighbours in the original data.
-This is done by taking the (tricube-weighted) average of the PC scores for the \code{force.k} nearest neighbors.
-The tricube bandwidth for remapping is chosen by taking the median distance and multiplying it by \code{force.ndist}, to protect against later neighbours that might be outliers.
-The aim is to adjust for unknown differences in RNA content that would cause the simulated doublets to be systematically displaced from their true locations.
-However, it may also result in spuriously high scores for single cells that happen to be close to a cluster of simulated doublets.
 }
 \examples{
 # Mocking up an example.

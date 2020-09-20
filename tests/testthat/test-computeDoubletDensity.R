@@ -88,37 +88,32 @@ test_that("size factor variations in computeDoubletDensity work correctly", {
 
 set.seed(9900004)
 test_that("high-level tests for computeDoubletDensity work correctly", {
-    mu1 <- 2^rnorm(ngenes)
-    mu2 <- 2^rnorm(ngenes)
+    mu1 <- 2^rnorm(ngenes) * 100 # using a really high count to reduce variance.
+    mu2 <- 2^rnorm(ngenes) * 100
     ncA <- 100
     ncB <- 100
-    ncC <- 20
+    ncC <- 51
 
-    counts.A <- matrix(mu1, ncol=ncA, nrow=ngenes)
-    counts.B <- matrix(mu2, ncol=ncB, nrow=ngenes)
-    counts.C <- matrix(mu1+mu2, ncol=ncC, nrow=ngenes)
+    counts.A <- matrix(rpois(ngenes*ncA, mu1), ncol=ncA, nrow=ngenes)
+    counts.B <- matrix(rpois(ngenes*ncB, mu2), ncol=ncB, nrow=ngenes)
+    counts.C <- matrix(rpois(ngenes*ncC, mu1+mu2), ncol=ncC, nrow=ngenes)
     clusters <- rep(1:3, c(ncA, ncB, ncC))
 
     out <- computeDoubletDensity(cbind(counts.A, counts.B, counts.C))
     expect_true(min(out[clusters==3]) > max(out[clusters!=3]))
 
     # Now with differences in RNA content.
-    counts.A <- matrix(mu1, ncol=ncA, nrow=ngenes)
-    counts.B <- matrix(mu2, ncol=ncB, nrow=ngenes)
-    counts.C <- matrix(mu1+2*mu2, ncol=ncC, nrow=ngenes)
+    counts.A <- matrix(rpois(ngenes*ncA, mu1), ncol=ncA, nrow=ngenes)
+    counts.B <- matrix(rpois(ngenes*ncB, mu2), ncol=ncB, nrow=ngenes)
+    counts.C <- matrix(rpois(ngenes*ncC, (mu1+2*mu2)/3), ncol=ncC, nrow=ngenes)
     sf.spike <- 1/rep(1:3, c(ncA, ncB, ncC))
     
     X <- cbind(counts.A, counts.B, counts.C) 
     out <- computeDoubletDensity(X, size.factors.content=sf.spike)
     expect_true(min(out[clusters==3]) > max(out[clusters!=3]))
-    expect_true(min(out[clusters==3]) > 2 * max(out[clusters!=3]))
 
     out <- computeDoubletDensity(X) # fails without size factor info; differences are basically negligible.
-    expect_true(max(out[clusters==3]) < 2 * min(out[clusters!=3]))
-
-    out <- scran:::.doublet_cells(X, force.match=TRUE, k=20) # recovers with forced matching.
-    expect_true(min(out[clusters==3]) > max(out[clusters!=3]))
-    expect_true(min(out[clusters==3]) > 2*max(out[clusters!=3]))
+    expect_true(max(out[clusters==3]) < min(out[clusters!=3]))
 })
 
 set.seed(9900005)

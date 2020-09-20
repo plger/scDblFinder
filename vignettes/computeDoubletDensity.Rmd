@@ -66,7 +66,7 @@ library(bluster)
 clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
 by.clust <- split(scores, clusters)
 med.scores <- sort(vapply(by.clust, median, 0), decreasing=TRUE)
-stopifnot(med.scores[1] > med.scores[2] * 5)
+stopifnot(med.scores[1] > med.scores[2] * 4)
 ```
 
 # Algorithm overview {#overview}
@@ -74,10 +74,10 @@ stopifnot(med.scores[1] > med.scores[2] * 5)
 We use a fairly simple approach in `doubletCells` that involves creating simulated doublets from the original data set:
 
 1. Perform a PCA on the log-normalized expression for all cells in the dataset.
-2. Randomly select two cells and add their count profile together.
+2. Randomly select two cells and add their count profiles together.
 Compute the log-normalized profile and project it into the PC space.
 3. Repeat **2** to obtain $N_s$ simulated doublet cells.
-4. For each cell, compute the local density of simulated doublets, scaled by the squared density of the original cells.
+4. For each cell, compute the local density of simulated doublets, scaled by the density of the original cells.
 This is used as the doublet score.
 
 # Size factor handling
@@ -127,59 +127,18 @@ This also holds for doublets where the scaling biases and size factors are addit
 
 # Doublet score calculations
 
-## Theoretical basis
+We assume that the simulation accurately mimics doublet creation - amongst other things, we assume that doublets are equally likely to form between any cell populations and any differences in total RNA between subpopulations are captured or negligible.
+If these assumptions hold, then at any given region in the expression space, the number of doublets among the real cells is proportional to the number of simulated doublets lying in the same region.
+Thus, the probability that a cell is a doublet is proportional to the ratio of the number of neighboring simulated doublets to the number of neighboring real cells. 
 
-Consider a cell population with each subpopulation $x$ present in proportion $p_x$.
-For a doublet rate $r$, we would expect to see self-doublets for subpopulation $x$ at a frequency of $rp_x^2$.
-Inter-population doublets for subpopulations $x$ and $y$ should be observed at a frequency of $2rp_xp_y$.
+A mild additional challenge here is that the number of simulated cells $N_s$ can vary.
+Ideally, we would like the expected output of the function to be the same regardless of the user's choice of $N_s$, i.e., the chosen value should only affect the precision/speed trade-off.
+Many other doublet-based methods take a $k$-nearest neighbours approach to compute densities; but if $N_s$ is too large relative to the number of real cells, all of the $k$ nearest neighbours will be simulated, while if $N_s$ is too small, all of the nearest neighbors will be original cells.
 
-We assume that $r$ is low such that the simulated doublets are generated at close-to-theoretical frequencies (i.e., negligible simulated doublets of real doublets).
-To obtain a doublet score for each empirical cluster, we divide the number of simulated doublets mapped to each subpopulation by the squared cluster proportion. 
-For a cluster corresponding to a real (i.e., non-doublet) subpopulation, this gives us a constant value equal to $r$.
-For a doublet cluster, we should obtain $2(rp_xp_y)^{-1}$.
-This should be large for $r \ll 1$ and $p_x, p_y < 1$, indicating that it is indeed composed of doublets.
-
-We generalize this to each cell by:
-
-1. Computing the density of simulated doublets neighbouring each cell.
-This is a generalization for the number of simulated doublets mapped to each subpopulation, 
-where the concept of a subpopulation is generalized to a region of the high-dimensional expression space.
-2. Computing the density of original cells around each cell.
-This is a generalization of the subpopulation size for this region of the expression space.
-3. We divide the density of the simulated cells by the **squared** density of original cells to obtain a doublet score.
-This can be used for relative comparisons between cells, with high scores indicating that a cell is from a doublet-like region of the expression space.
-
-If `adjust=FALSE`, the squaring is omitted and the output score simply becomes the ratio of simulated to original densities.
-This is mostly provided for debugging purposes.
-
-## Density calculations
-
-Previously, we computed the density by applying a tricube-weighted kernel to the distances to the neighbouring cells.
-The bandwidth of the kernel is defined as the median distance to the 50th nearest neighbour across all cells.
-The aim was to provide a threshold that adapts to the data and captures sufficient neighbours for stable density calculations.
-We use a constant bandwidth to make it easier to compare densities between cells (no need for normalization, less imprecision).
-
-Now, we simply count the proportion of cells in a hypersphere with radius set to the median distance to the 50th nearest neighbor.
-This is deliberately insensitive to distances within the hypersphere.
-In theory, the distance information should yield more accurate density estimates,
-but in practice, it yields excessively high densities for doublet populations that have few cells but are very compact.
-
-**Comment:** Many other doublet-based methods take a $k$-nearest neighbours approach to compute densities.
-This is faster but is sensitive to the choice of $N_s$.
-If $N_s$ is too large relative to the number of real cells, all of the $k$ nearest neighbours will be simulated, while if $N_s$ is too small, all of the nearest neighbors will be original cells.
-Our density calculations separate considerations of speed and precision (dependent on $N_s$) from the expected value of the density (independent of $N_s$), which enables more predictable function behavior.
-
-# Force matching
-
-As mentioned above, there is a risk of mismatch between simulated and real doublets when RNA content is not considered.
-This can be mitigated by forcing all simulated doublets to the closest neighbours in the original data set.
-We identify the $k$ nearest original cells for each simulated doublet and we define new coordinates for the simulated doublet as the average profile across the $k$ neighbours.
-(In practice, this is weighted by distance using a tricube kernel to avoid being skewed by distant cells in the $k$ nearest set.)
-
-The force matching approach remaps simulated doublets to the closest cluster of original cells. 
-This corrects for any systematic shift due to RNA content, assuming that the content-related shift is not severe enough to change the nearest neighbouring cluster.
-The downside is that _all_ simulated doublets are mapped to their nearest original clusters.
-This inflates the scores for all cells, possibility incorrectly if a cluster of simulated doublets is forced somewhere it should not be.
+Thus, we use a modified version of the $k$NN approach whereby we identify the distance from each cell to its $k$-th nearest neighbor.
+This defines a hypersphere around that cell in which we count the number of simulated cells.
+We then compute the odds ratio of the number of simulated cells in the hypersphere to $N_s$, divided by the ratio of $k$ to the total number of cells in the dataset.
+This score captures the relative frequency of simulated cells to real cells while being robust to changes to $N_s$.
 
 # Session information {-}
 
