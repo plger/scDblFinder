@@ -3,20 +3,13 @@
 #' Sets the doublet scores threshold; typically called by 
 #' \code{\link[scDblFinder]{scDblFinder}}.
 #'
-#' @param scores A vector of the doublet score for each cell (real and 
-#' artificial); can be anything ranging from 0 to 1, with higher scores 
-#' indicating higher change of being a doublet.
-#' @param celltypes A vector of the same length as `scores` indicating, for each
-#'  cell, whether it is a 'real' cell or a 'doublet'. Missing values
-#'   not allowed.
-#' @param clusters Optional vector of cluster assignment for each (real) cell, 
-#' used for homotypic doublet correction.
+#' @param d A data.frame of properties of real and artificial cells, as produced
+#' by `scDblFinder(returnType="table")`.
 #' @param dbr The expected (mean) doublet rate.
 #' @param dbr.sd The standard deviation of the doublet rate, representing the 
 #' uncertainty in the estimate.
-#' @param prop.fullyRandom The proportion of artificical doublets that are fully
-#'  random, used for homotypy correction. Default 0.25 (the default value in 
-#' `getArtificialDoublets`). Ignored if `clusters=NULL`
+#' @param local Logical; whether to use local calibration (experimental 
+#' feature!)
 #'
 #' @return A scaler indicating the decided threshold.
 #' 
