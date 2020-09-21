@@ -132,7 +132,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   clusters <- .checkColArg(sce, clusters)
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
-  
 
   if(!is.null(samples)){
     # splitting by samples
