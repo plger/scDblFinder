@@ -15,16 +15,15 @@
 #' @return A vector of cluster labels.
 #' 
 #' @examples
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
-#'                FUN=function(x) rpois(50,x) ) )
-#' cc <- suppressWarnings(overcluster(m,min.size=5))
-#' table(cc)
+#' sce <- mockDoubletSCE()
+#' sce$cluster <- overcluster(sce, min.size=30, max.size=100)
+#' table(sce$cluster)
 #' 
 #' @importFrom scran buildSNNGraph
 #' @importFrom BiocNeighbors AnnoyParam
 #' @importFrom igraph V cluster_fast_greedy membership is.igraph
 #' @export
-overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
+overcluster <- function( x, min.size=50, max.size, rdname="PCA", ...){
   if(is.igraph(x)){
     N <- length(V(x))
     g <- x

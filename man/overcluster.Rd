@@ -4,7 +4,7 @@
 \alias{overcluster}
 \title{overcluster}
 \usage{
-overcluster(x, min.size = 50, max.size = NULL, rdname = "PCA", ...)
+overcluster(x, min.size = 50, max.size, rdname = "PCA", ...)
 }
 \arguments{
 \item{x}{A numeric matrix, with entities (e.g. cells) as columns and features
@@ -27,9 +27,8 @@ size. It uses iterative calls to `igraph::cluster_fast_greedy` until no
 cluster is above the size limits, and merges clusters that are too small.
 }
 \examples{
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
-               FUN=function(x) rpois(50,x) ) )
-cc <- suppressWarnings(overcluster(m,min.size=5))
-table(cc)
+sce <- mockDoubletSCE()
+sce$cluster <- overcluster(sce, min.size=30, max.size=100)
+table(sce$cluster)
 
 }
