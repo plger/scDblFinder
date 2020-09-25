@@ -21,7 +21,7 @@ vignette: |
 library(BiocStyle)
 ```
 
-The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volumne). This vignette provides a brief overview of the different approaches, which are covered in their own vignettes. For a more general introduction to the topic, refer to the (OCSA book)[https://osca.bioconductor.org/doublet-detection.html].
+The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volumne). This vignette provides a brief overview of the different approaches, which are covered in their own vignettes. For a more general introduction to the topic, refer to the [OCSA book](https://osca.bioconductor.org/doublet-detection.html).
 
 All methods require as an input either a matrix of counts or a `r Biocpkg("SingleCellExperiment")` containing count data. With the exception of [findDoubletClusters](findDoubletClusters.html), which operates at the level of clusters (and consequently requires clustering information), all methods try to assign each cell a score indicating its likelihood (broadly understood) of being a doublet.
 
