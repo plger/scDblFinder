@@ -2,7 +2,7 @@
 
 The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volume). The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
-For a brief overview of the methods, see the [introductory vignette](vignettes/introduction.Rmd) (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
+For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
 <br/><br/>
 
@@ -26,7 +26,7 @@ This will add a number of columns to the `colData` of `sce`, the most important 
 * `sce$scDblFinder.ratio` : the ratio of artificial doublets in the cell's neighborhood
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
-There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the (vignette)[vignettes/scDblFinder.Rmd] (`vignette("scDblFinder")`).
+There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the (vignette)[https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html] (`vignette("scDblFinder")`).
 
 ### Multiple samples
 
