@@ -56,8 +56,13 @@ overcluster <- function( x, min.size=50, max.size, rdname="PCA", ...){
 #' @param ndims Number of dimensions to use
 #' @param nfeatures Number of features to use (ignored if `rdname` is given and
 #' the corresponding dimensional reduction exists in `sce`)
+#' @param returnType See return.
 #'
-#' @return A vector of cluster labels
+#' @return By default, a vector of cluster labels. If 
+#' `returnType='preclusters'`, returns the k-means pre-clusters. If
+#' `returnType='metacells'`, returns the metacells aggretated by pre-clusters 
+#' and the corresponding cell indexes. If `returnType='graph'`, returns the
+#' graph of (meta-)cells and the corresponding cell indexes.
 #' 
 #' @importFrom igraph cluster_louvain membership
 #' @importFrom intrinsicDimension maxLikGlobalDimEst
@@ -70,7 +75,10 @@ overcluster <- function( x, min.size=50, max.size, rdname="PCA", ...){
 #' 
 #' @export
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
-                         ndims=NULL, nfeatures=1000 ){
+                         ndims=NULL, nfeatures=1000, 
+                         returnType=c("clusters","preclusters","metacells",
+                                      "graph") ){
+  returnType <- match.arg(returnType)
   if(!(rdname %in% reducedDimNames(x)))
     x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
   x <- reducedDim(x, rdname)
@@ -82,14 +90,19 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
   if(nrow(x)>1000 && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
+    if(returnType=="preclusters") return(k)
     x <- t(vapply(split(names(k),k), FUN.VALUE=numeric(ncol(x)),
                   FUN=function(i) colMeans(x[i,,drop=FALSE])))
+    if(returnType=="metacells") return(list(meta=x,idx=k))
   }else{
     k <- seq_len(nrow(x))
   }
-  cl <- membership(cluster_louvain(buildKNNGraph(x, d=NA, transposed=TRUE)))
+  x <- buildKNNGraph(x, d=NA, transposed=TRUE)
+  if(returnType=="graph") return(list(k=k, graph=x))
+  cl <- membership(cluster_louvain(x))
   cl[k]
 }
+
 
 
 #' resplitClusters

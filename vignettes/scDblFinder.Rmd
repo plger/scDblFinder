@@ -105,11 +105,13 @@ A new PCA is performed on the combination of real and artificial cells, from whi
 
 ### Training a classifier
 
-Unless the `score` argument is set to 'weighted' or 'ratio' (in which case the aforementioned ratio is directly used as a doublet score), `scDblFinder` then uses gradient boosted trees trained on the KNN-derived properties along with a few additional features (e.g. library size, number of non-zero features, and an estimate of the difficultly of detecting artificial doublets in the cell's neighborhood, etc.) to distinguish doublets (either artificial or given) from other cells, and assigns a score on this basis. If the `use.cxds=TRUE`, the `cxds` score from the `r Biocpkg("scds","scds")` package will also be included.
+Unless the `score` argument is set to 'weighted' or 'ratio' (in which case the aforementioned ratio is directly used as a doublet score), `scDblFinder` then uses gradient boosted trees trained on the KNN-derived properties along with a few additional features (e.g. library size, number of non-zero features, and an estimate of the difficultly of detecting artificial doublets in the cell's neighborhood, etc.) to distinguish doublets (either artificial or given) from other cells, and assigns a score on this basis. 
+If the `use.cxds=TRUE`, the `cxds` score from the `r Biocpkg("scds","scds")` package will also be included among the predictors.
 
-One problem of using a classifier for this task is that some of the real cells are mislabeled as singlet, so to speak. We therefore exclude from training cells that have high (dependent on `dbr`) prior scores (doublet density and cxds).
+One problem of using a classifier for this task is that some of the real cells (the actual doublets) are mislabeled as singlet, so to speak. 
+`scDblFinder` therefore iteratively retrains the classifier, each time excluding from the training the (real) cells called as doublets in the previous step (the number of steps being controlled by the `iter` parameter).
 
-This score is available in the output as either `scDblFinder.score` or `scDblFinder.score.global` (see below). If the data is multi-sample, a single model is trained for all samples.
+This score is available in the output as either `scDblFinder.score` or `scDblFinder.score.global` (when local calibration is used - see below). If the data is multi-sample, a single model is trained for all samples.
 
 ### Thresholding and local calibration
 
@@ -153,4 +155,5 @@ Since doublets are created across clusters, it is important that subpopulations 
 
 ## Combination with other tools
 
-If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`. In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest to increase the `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`.
+In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest not to use a too low `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
