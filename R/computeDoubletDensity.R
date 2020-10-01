@@ -19,9 +19,6 @@
 #' @param block An integer scalar controlling the rate of doublet generation, to keep memory usage low.
 #' @param dims An integer scalar specifying the number of components to retain after the PCA.
 #' @param adjust Logical scalar indicating whether to adjust for differences in local density, see the vignette.
-#' @param force.match A logical scalar indicating whether remapping of simulated doublets to original cells should be performed.
-#' @param force.k An integer scalar specifying the number of neighbours to use for remapping if \code{force.match=TRUE}.
-#' @param force.ndist A numeric scalar specifying the bandwidth for remapping if \code{force.match=TRUE}.
 #' @param BNPARAM A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
 #' This should be an algorithm supported by \code{\link{findNeighbors}}.
 #' @param BSPARAM A \linkS4class{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.
@@ -38,11 +35,12 @@
 #' This function simulates doublets by adding the count vectors for two randomly chosen cells in \code{x}.
 #' For each original cell, we compute the density of neighboring simulated doublets and compare it to the density of neighboring original cells.
 #' Genuine doublets should have a high density of simulated doublets relative to the density of its neighbourhood.
-#' Thus, the doublet score for each cell is defined as the ratio of densities of simulated doublets to the (squared) density of the original cells.
+#' Thus, the doublet score for each cell is defined as the ratio of densities of simulated doublets to the density of the original cells.
 #' 
 #' Densities are calculated in low-dimensional space after a PCA on the log-normalized expression matrix of \code{x}.
 #' Simulated doublets are projected into the low-dimensional space using the rotation vectors computed from the original cells.
-#' The density is computed for a hypersphere with radius set to the median distance to the \code{k} nearest neighbour across all cells.
+#' For each cell, the density of simulated doublets is computed for a hypersphere with radius set to the median distance to the \code{k} nearest neighbour.
+#' This is normalized by \code{niters}, \code{k} and the total number of cells in \code{x} to yield the final score.
 #' 
 #' The two size factor arguments have different roles:
 #' \itemize{
@@ -55,11 +53,6 @@
 #' Setting \code{size.factors.content} will not affect the calculation of log-normalized expression values from \code{x}.
 #' Conversely, setting \code{size.factors.norm} will not affect the ratio in which cells are added together when simulating doublets.
 #' 
-#' If \code{force.match=TRUE}, simulated doublets will be remapped to the nearest neighbours in the original data.
-#' This is done by taking the (tricube-weighted) average of the PC scores for the \code{force.k} nearest neighbors.
-#' The tricube bandwidth for remapping is chosen by taking the median distance and multiplying it by \code{force.ndist}, to protect against later neighbours that might be outliers.
-#' The aim is to adjust for unknown differences in RNA content that would cause the simulated doublets to be systematically displaced from their true locations.
-#' However, it may also result in spuriously high scores for single cells that happen to be close to a cluster of simulated doublets.
 #' @author
 #' Aaron Lun
 #' 
@@ -111,8 +104,7 @@ NULL
 #' @importFrom methods is
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .doublet_cells <- function(x, size.factors.norm=NULL, size.factors.content=NULL,
-    k=50, subset.row=NULL, niters=max(10000, ncol(x)), block=10000, 
-    dims=50, adjust=TRUE, force.match=FALSE, force.k=20, force.ndist=3,
+    k=50, subset.row=NULL, niters=max(10000, ncol(x)), block=10000, dims=25, 
     BNPARAM=KmknnParam(), BSPARAM=bsparam(), BPPARAM=SerialParam())
 {
     # Setting up the parallelization.
@@ -145,29 +137,17 @@ NULL
     pcs <- pc.out$x
     sim.pcs <- .spawn_doublet_pcs(x, size.factors.norm, V=pc.out$rotation, centers=rowMeans(y), niters=niters, block=block)
 
-    # Force doublets to nearest neighbours in the original data set.
-    pre.pcs <- buildIndex(pcs, BNPARAM=BNPARAM)
-    if (force.match) {
-        closest <- queryKNN(query=sim.pcs, k=force.k, BNINDEX=pre.pcs, BPPARAM=BPPARAM)
-        sim.pcs <- .compute_tricube_average(pcs, closest$index, closest$distance, ndist=force.ndist)
-    }
-
     # Computing densities, using a distance computed from the kth nearest neighbor.
+    pre.pcs <- buildIndex(pcs, BNPARAM=BNPARAM)
     self.dist <- findKNN(BNINDEX=pre.pcs, k=k, BPPARAM=BPPARAM, last=1, get.index=FALSE, warn.ties=FALSE)$distance
-    dist2nth <- pmax(1e-8, median(self.dist))
 
-    self.n <- findNeighbors(threshold=dist2nth, BNINDEX=pre.pcs, BNPARAM=BNPARAM, BPPARAM=BPPARAM, 
-        get.distance=FALSE, get.index=FALSE)
-    sim.n <- queryNeighbors(sim.pcs, query=pcs, threshold=dist2nth, BNPARAM=BNPARAM, BPPARAM=BPPARAM, 
+    sim.n <- queryNeighbors(sim.pcs, query=pcs, 
+        threshold=self.dist * 1.00000001, # bump it up to avoid issues with numerical precision during tests.
+        BNPARAM=BNPARAM, BPPARAM=BPPARAM, 
         get.distance=FALSE, get.index=FALSE)
 
-    self.prop <- self.n/ncol(x)
     sim.prop <- sim.n/niters
-    density <- sim.prop/self.prop
-    if (adjust) {
-        density <- density/self.prop
-    }
-    density
+    sim.prop/(k/ncol(x))
 }
 
 #' @importFrom Matrix crossprod

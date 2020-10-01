@@ -124,7 +124,7 @@ NULL
 
     degs <- findMarkers(sce, clusters, subset.row=subset.row, full.stats=TRUE, ...)
     med.lib.size <- vapply(split(sizeFactors(sce), clusters), FUN=median, FUN.VALUE=0)
-	n.cluster <- table(clusters)/length(clusters)
+    n.cluster <- table(clusters)/length(clusters)
 
     # Setting up the output.
     all.clusters <- names(degs)
@@ -174,7 +174,7 @@ NULL
             best=rownames(ref.stats)[all.gene], 
             p.value=all.p,
             lib.size1=unname(med.lib.size[parent1]/med.lib.size[ref]), 
-			lib.size2=unname(med.lib.size[parent2]/med.lib.size[ref]))
+            lib.size2=unname(med.lib.size[parent2]/med.lib.size[ref]))
 
         o <- order(all.N, -all.p)
         top <- cbind(stats[o[1],], prop=n.cluster[[ref]])

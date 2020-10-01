@@ -46,5 +46,6 @@ log2-enrichment over expectation) or any column of
 a Heatmap object
 }
 \description{
-Plots a heatmap of observed versus expected doublets
+Plots a heatmap of observed versus expected doublets. 
+Requires the `ComplexHeatmap` package.
 }

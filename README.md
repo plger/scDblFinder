@@ -1,95 +1,63 @@
 # scDblFinder
 
-## Introduction
+The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell RNA sequencing data (i.e. multiple cells captured within the same droplet or reaction volume). The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
-scDblFinder identifies doublets in single-cell RNAseq directly by creating artificial doublets and looking at their 
-prevalence in the neighborhood of each cell. The rough logic is very similar to 
-*[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*, but it is simpler and more efficient. In a 
-nutshell, instead of creating doublets from random pairs of cells, scDblFinder first overclusters the cells and 
-create cross-cluster doublets. It also uses meta-cells from each cluster to create triplets. This strategy avoids 
-creating homotypic doublets and enables the detection of most heterotypic doublets with much fewer artificial doublets. 
-We also rely on the expected proportion of doublets to threshold the scores, we include a variability in the estimate 
-of the doublet proportion (`dbr.sd`), and use the error rate of the real/artificial predicition in conjunction with 
-the deviation in global doublet rate to set the threshold.
+For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
-The approach described here is complementary to doublets identified via cell hashes and SNPs in multiplexed samples. 
-The latter can identify doublets formed by cells of the same type from two samples, which are nearly undistinguishable
-from real cells transcriptionally (and hence unidentifiable through the present package), but cannot identify doublets
-made by cells of the same sample.
+<br/><br/>
 
-**Note that scDblFinder is currently undergoing major updates, which involve several new functionalities and improvements, as well as the migration of [scran](https://bioconductor.org/packages/release/bioc/html/scran.html)'s doublet-related functions to this package. The version in this repository should therefore be considered as a development version, and users required a more stable release with more adequate documentation should rely on the [bioconductor 3.11 release](https://bioconductor.org/packages/release/bioc/html/scDblFinder.html).**
+## Getting started
 
-## Installation
+You may install the latest version of the package with:
+```r
+BiocManager::install("plger/scDblFinder")
+```
 
-scDblFinder was developed under R 3.6. As major changes were made to the package after the BioConductor release, we strongly recommend to install the development version, either from Bioconductor:
-`BiocManager::install("scDblFinder", version="devel")`
-or directly through github:
-`BiocManager::install("plger/scDblFinder")`
-
-## Usage
-
-Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered):
+Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered), you can launch the doublet detection with:
 
 ```r
 library(scDblFinder)
 sce <- scDblFinder(sce)
 ```
 
-This will add the following columns to the colData of `sce`:
+This will add a number of columns to the `colData` of `sce`, the most important of which are:
 
-* `sce$scDblFinder.ratio` :  the proportion of artificial doublets among the neighborhood (the higher, the more chances that the cell is a doublet)
-* `sce$scDblFinder.weighted` :  the proportion of artificial doublets among the neighborhood, weighted by distance
-* `sce$scDblFinder.score` :  the final doublet score
+* `sce$scDblFinder.score` : the final doublet score (the higher the more likely that the cell is a doublet)
+* `sce$scDblFinder.ratio` : the ratio of artificial doublets in the cell's neighborhood
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
+
+There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the (vignette)[https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html] (`vignette("scDblFinder")`).
 
 ### Multiple samples
 
-If you have multiple samples (understood as different cell captures), then it is
-preferable to look for doublets separately for each sample (for multiplexed samples with cell hashes, rather use the well/batch). You can do this by 
-simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or,
+If you have multiple samples (understood as different cell captures, i.e. for multiplexed samples with cell hashes, rather use the well/batch), then it is preferable to provide `scDblFinder` with this information. The generation of artificial doublets and the characterization of the nearest neighbors will be performed separately for each capture, the final scoring will be performed globally, and the thresholding will take into consideration batch/sample-specific doublet rates. You can do this by simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or,
 if these are stored in a column of `colData`, the name of the column. In this case,
 you might also consider multithreading it using the `BPPARAM` parameter. For example:
 
-```{r, eval=FALSE}
+```r
 library(BiocParallel)
 sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
 table(sce$scDblFinder.class)
 ```
 
-### Parameters
+### Expected proportion of doublets
 
-The important sets of parameters in `scDblFinder` refer respectively to the expected proportion of doublets, to the clustering, and to the number of artificial doublets used.
+The expected proportion of doublets has no impact on the score, but a very strong impact on where the threshold will be placed (the thresholding procedure simultaneously minimizes classification error and departure from the expected doublet rate). It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
 
-#### Expected proportion of doublets
+### Providing your own clustering
 
-The expected proportion of doublets has no impact on the score (the `ratio` above), but a very strong impact on where the threshold will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
+Contrarily to other methods also based on the generation of artificial doublets, `scDblFinder` does not generate them in an entirely random fashion, but specifically generates inter-cluster doublets. This also means that, for putative doublets among the real cells, `scDblFinder` can guess from what clusters their originate. To make this information easier to interpret, you may provide your own clusters (though the `clusters` argument) rather than use the fast internal procedure to determine them. It is important that subpopulations are not misrepresented as belonging to the same cluster, and for this reason, we favor over-clustering for this purpose.
 
-#### Clustering
+### Including known doublets
 
-Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we favor over-clustering at this stage. This is for instance implemented by scDblFinder's `overcluster` function, and controlled by specifying minimum and maximum cluster sizes. Alternatively, cluster labels can be directly provided.
+If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` argument will improve the `scDblFinder` scoring and calling of new doublets.
 
-#### Number of artificial doublets
-
-`scDblFinder` itself determines a reasonable number of artificial doublets to create on the basis of the size of the population and the number of clusters, but increasing this number can only increase the accuracy.
+For more detail, please see `vignette("scDblFinder")`.
 
 <br/><br/>
 
-# Comparison with other tools
+## Comparison with other tools
 
-To benchmark scDblFinder against alternatives, we used datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via *[demuxlet](https://github.com/statgen/demuxlet)*), which also enables the identification of doublets from different individuals.
+To benchmark `scDblFinder` against alternatives we used two datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via [demuxlet](https://github.com/statgen/demuxlet)), which also enables the identification of doublets from different individuals. `scDblFinder` is compared to two other excellent methods, [DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder) and [scds's hybrid method](http://bioconductor.org/packages/release/bioc/html/scds.html), in terms of accuracy and speed:
 
-The datasets are:
-
-* mixology10x3cl: a mixture of 3 cancer cell lines from the RNA mixology paper
-* mixology10x5cl: a mixture of 5 cancer cell lines from the RNA mixology paper
-* demuxlet: the demuxlet control (Batch 2) dataset (GSM2560248)
-
-The other methods tested are:
-
-* *[DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder)*
-* *[scran](https://bioconductor.org/packages/3.9/scran)*'s `doubletCells` function
-* *[scds](https://bioconductor.org/packages/3.9/scds)* (hybrid method)
-
-![Accuracy and running time of the doublet detection methods](inst/docs/scDblFinder_comparison.png)
-
-NB: DoubletFinder failed on the Mixology10x3cl dataset.
+<img src="inst/docs/scDblFinder_comparison.png" alt="Comparison with other tools"/>

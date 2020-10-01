@@ -13,7 +13,8 @@
 #' clustering). This is used to make doublets more efficiently. \code{clusters} 
 #' should either be a vector of labels for each cell, or the name of a colData 
 #' column of \code{sce}.
-#' @param clust.method The clustering method if \code{clusters} is not given.
+#' @param clust.method The clustering method if \code{clusters} is not given 
+#' (we recommend the `fastcluster` method).
 #' @param samples A vector of the same length as cells (or the name of a column 
 #' of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
@@ -26,21 +27,43 @@
 #' @param knownDoublets An optional logical vector of known doublets (e.g. 
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information.
+#' @param use.cxds Logical; whether to use `scds::cxds` scores in addition to 
+#' information from artificial/known doublets as part of the predictors.
 #' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
 #' (default 50); ignored if \code{clusters} is given.
 #' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
 #' \code{clusters} is given or if \code{clust.method!='overcluster'}.
 #' @param nfeatures The number of top features to use (default 1000)
-#' @param dims The number of dimensions used to build the network (default 20)
+#' @param dims The number of dimensions used to build the network. If omitted,
+#' will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
-#' appropriate for 10x datasets.
-#' @param dbr.sd The standard deviation of the doublet rate, defaults to 0.015.
-#' @param k Number of nearest neighbors (for KNN graph).
+#' appropriate for 10x datasets. Corrections for homeotypic doublets will be
+#' performed on the given rate.
+#' @param dbr.sd The uncertainty range in the doublet rate, interpreted as
+#' a +/- around `dbr`. During thresholding, deviation from the expected doublet
+#' rate will be calculated from these boundaries, and will be considered null 
+#' within these boundaries.
+#' @param k Number of nearest neighbors (for KNN graph). If more than one value
+#' is given, the doublet density will be calculated at each k (and other values
+#' at the highest k), and all the information will be used by the classifier.
+#' If omitted, a reasonable set of values is used.
+#' @param includePCs The index of principal components to include in the 
+#' predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
+#' doublets among the real cells), in our experience this tends to lead to 
+#' overfitting.
+#' @param propRandom The proportion of the artificial doublets which should 
+#' made of entirely random cells (as opposed to inter-cluster combinations).
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
 #' @param score Score to use for final classification.
+#' @param max_depth Maximum depth of decision trees
+#' @param nrounds Maximum rounds of boosting. If NULL, will be determined
+#' through cross-validation. When the training is based only on simulated 
+#' doublets, we generally find lower limits to outperform cross-validation.
+#' @param threshold Logical; whether to threshold scores into binary doublet 
+#' calls
 #' @param verbose Logical; whether to print messages and the thresholding plot.
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
@@ -62,19 +85,21 @@
 #' same sample. See \code{vignette("scDblFinder")} for more details on the 
 #' method.
 #' 
+#' When multiple samples/captures are present, they should be specified using 
+#' the \code{samples} argument. Although the classifier will be trained 
+#' globally, thresholding and the more computationally-intensive steps will be 
+#' performed separately for each sample (in parallel if \code{BPPARAM} is 
+#' given).
+#'
 #' When inter-sample doublets are available, they can be provided to 
 #' `scDblFinder` through the \code{knownDoublets} argument to improve the 
 #' identification of further doublets.
-#' 
-#' When multiple samples/captures are present, they can be specified using the 
-#' \code{samples} argument and will be processed separately (in parallel if 
-#' \code{BPPARAM} is given).
 #' 
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
 #' @importFrom scuttle normalizeCounts
 #' @importFrom scater runPCA
-#' @importFrom dplyr bind_rows
+#' @importFrom scds cxds
 #' @importFrom methods is
 #' @importFrom DelayedArray as.matrix
 #' @importFrom BiocNeighbors findKNN
@@ -83,8 +108,8 @@
 #' @examples
 #' library(SingleCellExperiment)
 #' sce <- mockDoubletSCE()
-#' sce <- scDblFinder(sce, verbose=FALSE)
-#' table(sce$scDblFinder.class)
+#' sce <- scDblFinder(sce, dbr=0.1)
+#' table(truth=sce$type, call=sce$scDblFinder.class)
 #' 
 #' @export
 #' @rdname scDblFinder
@@ -92,63 +117,60 @@
 scDblFinder <- function( sce, clusters=NULL, samples=NULL, 
                          artificialDoublets=NULL, knownDoublets=NULL,
                          clust.method=c("fastcluster","overcluster"),
-                         minClusSize=min(50,ncol(sce)/5), 
-                         maxClusSize=NULL, nfeatures=1000, dims=20, dbr=NULL, 
-                         dbr.sd=0.015, k=20, returnType=c("sce","table","full"),
+                         use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
+                         maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
+                         dbr.sd=0.015, k=NULL, includePCs=c(),
+                         propRandom=0.2, returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
+                         nrounds=50, max_depth=5, threshold=TRUE, 
                          verbose=is.null(samples), BPPARAM=SerialParam()
                         ){
-  if(is(sce, "SummarizedExperiment")){
-    sce <- as(sce, "SingleCellExperiment")
-  }else if(!is(sce, "SingleCellExperiment")){
-    if(is.null(dim(sce)))
-      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
-           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
-    sce <- SingleCellExperiment(list(counts=sce))
-  }
+  sce <- .checkSCE(sce)
+  score <- match.arg(score)
   clust.method <- match.arg(clust.method)
   returnType <- match.arg(returnType)
   clusters <- .checkColArg(sce, clusters)
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
-  
-  if(!is.null(score)) score <- match.arg(score)
-  stopifnot(is(sce, "SingleCellExperiment"))
-  if( !("counts" %in% assayNames(sce)) ) 
-      stop("`sce` should have an assay named 'counts'")
-  if(is.null(colnames(sce)))
-      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
-  if(is.null(row.names(sce)))
-      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
+
   if(!is.null(samples)){
     # splitting by samples
-    if(returnType!="sce") 
-        warning("`returnType` param ignored when splitting by samples")
-    if(verbose) message("`verbose` param ignored when splitting by samples.")
+    if(returnType=="full") 
+        warning("`returnType='full'` ignored when splitting by samples")
     cs <- split(seq_along(samples), samples, drop=TRUE)
-    tmp <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
+    d <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
-        x <- colData( scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                                  clusters=clusters[x], minClusSize=minClusSize, 
-                                  maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
-                                  dbr.sd=dbr.sd, k=k, clust.method=clust.method,
-                                  score=score, nfeatures=nfeatures, 
-                                  knownDoublets=knownDoublets,
-                                  verbose=FALSE ) )
-        fields <- paste0("scDblFinder.",c("weighted","ratio","class","score"))
-        as.data.frame(x[,fields])
+        scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
+                    clusters=clusters, minClusSize=minClusSize, 
+                    maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
+                    dbr.sd=dbr.sd, k=k, clust.method=clust.method,
+                    score="weighted", nfeatures=nfeatures,
+                    propRandom=propRandom, returnType="table",
+                    knownDoublets=knownDoublets, threshold=FALSE, verbose=FALSE)
     })
-    CD <- bind_rows(tmp)
-    row.names(CD) <- unlist(lapply(tmp, row.names))
-    for(f in colnames(CD)) colData(sce)[[f]] <- CD[unlist(cs),f]
-    return(sce)
+    ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
+                 levels=seq_along(names(d)), labels=names(d))
+    d <- do.call(rbind, lapply(d, FUN=function(x){
+      x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
+      x
+    }))
+    d$sample <- ss
+    d <- .scDblscore(d,scoreType=score, threshold=TRUE, dbr=dbr, dbr.sd=dbr.sd, 
+                     max_depth=max_depth, nrounds=nrounds, verbose=verbose)
+    if(returnType=="table") return(d)
+    return(.scDblAddCD(sce, d))
   }
   if(ncol(sce)<100)
     warning("scDblFinder might not work well with very low numbers of cells.")
+  if(ncol(sce)>25000)
+    warning("You are trying to run scDblFinder on a very large number of ",
+            "cells. If these are from different captures, please specify this",
+            " using the `samples` argument.", immediate=TRUE)
 
-  if(is.null(dbr)){
-      ## dbr estimated as for chromium data, 1% per 1000 cells captured:
-      dbr <- (0.01*ncol(sce)/1000)
+  if(is.null(k)){
+      k <- c(3,10)
+      if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=40) k <- c(k,20)
+      k <- c(k,kmax)
   }
   
   orig <- sce
@@ -177,32 +199,29 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
         clusters <- fastcluster(sce, ndims=dims)
       }
   }
-  if(length(unique(clusters)) == 1) stop("Only one cluster generated")
+  if((nc <- length(unique(clusters))) == 1) stop("Only one cluster generated")
+  if(verbose) message(nc, " clusters")
 
-  maxSameDoublets <- length(clusters)*(dbr+2*dbr.sd) * 
-      prod(sort(table(clusters), decreasing=TRUE)[1:2] / length(clusters))
-  if(min(table(clusters)) <= maxSameDoublets){
-    warning("In light of the expected rate of doublets given, and of the size ",
-            "of the clusters, it is possible that some of the smaller clusters",
-            " are composed of doublets of the same type.")
-  }
-  cli <- split(seq_len(ncol(sce)), clusters)
-  
   # get the artificial doublets
-  if(is.null(artificialDoublets)){
-    artificialDoublets <- max( ncol(sce), 
-                               min(40000, 5*length(unique(clusters))^2))
-  }
+  if(is.null(artificialDoublets))
+    artificialDoublets <- min( 25000, max(5000,
+                                          ceiling(ncol(sce)*0.6),
+                                          10*length(unique(clusters))^2 ) )
+  if(artificialDoublets<2)
+      artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
   
   if(verbose){
     message("Creating ~", artificialDoublets, " artifical doublets...")
-    ad <- getArtificialDoublets( as.matrix(counts(sce)), n=artificialDoublets, 
-                                 clusters=clusters )
+    ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets, 
+                                clusters=clusters, prop.fullyRandom=propRandom)
   }else{
     ad <- suppressWarnings( getArtificialDoublets(as.matrix(counts(sce)), 
                                                   n=artificialDoublets, 
-                                                  clusters=clusters ) )
+                                                  clusters=clusters,
+                                                  prop.fullyRandom=propRandom))
   }
+  gc(verbose=FALSE)
+  
   ado <- ad$origins
   ad <- ad$counts
   
@@ -212,15 +231,22 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   ctype <- factor( rep(c(1,2,2), c(ncol(sce),length(wDbl),ncol(ad))), 
                    labels=c("real","doublet") )
   
-  e <- as.matrix(counts(sce))
-  if(!is.null(wDbl)) e <- cbind(e, as.matrix(counts(sce.dbl)))
+  if(verbose) message("Dimensional reduction")
+  
+  e <- counts(sce)
+  if(!is.null(wDbl)) e <- cbind(e, counts(sce.dbl))
   e <- cbind(e, ad[row.names(sce),])
   
   # evaluate by library size and non-zero features
-  lsizes <- colSums(e)
-  nfeatures <- colSums(e>0)
+  lsizes <- Matrix::colSums(e)
+  cxds_score <- NULL
+  if(use.cxds) cxds_score <- scds::cxds(SingleCellExperiment(list(counts=e)),
+                                        ntop=min(500,nrow(e)))$cxds_score
+  nfeatures <- Matrix::colSums(e>0)
   
-  e <- normalizeCounts(e)
+  # skip normalization if data is too large
+  if(ncol(e)<=25000) e <- normalizeCounts(e)
+  if(is.null(dims)) dims <- 30
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
                                  BSPARAM=BiocSingular::IrlbaParam())
@@ -233,83 +259,33 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   row.names(pca) <- colnames(e)
   
   ex <- getExpectedDoublets(clusters, dbr)
-  knn <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
-                      verbose=verbose)
-
-  d <- knn$d
-  knn <- knn$knn
+  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
+                      verbose=verbose)$d
+  d[colnames(sce),"cluster"] <- clusters
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
   d$src <- src
-  d$type <- ctype
-
-  if(is.null(score)) return(d)
-
-  if(score %in% c("xgb.local.optim","xgb")){
-    if(verbose) message("Training model...")
-    prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous","type",
-                                   "src","distanceToNearest"))
-    d2  <- as.matrix(d[,prds])
-    nd <- round(sum(ex))+sum(d$type!="real")
-    fit <- xgboost(d2, as.integer(d$type)-1, nrounds=50, 
-                   max_depth=6, objective="binary:logistic", 
-                   #scale_pos_weight=sqrt(nd/(nrow(d)-nd)),
-                   early_stopping_rounds=5, verbose=FALSE )
-    d$score <- predict(fit, d2)
-  }else{
-    if(score=="ratio"){
-      d$score <- d$ratio
-    }else{
-      d$score <- d$weighted
-    }
-  }
+  if(use.cxds) d$cxds_score <- cxds_score
   
-  d$cluster <- NA
-  d[colnames(sce),"cluster"] <- clusters
-  d$smoothed.score <- .knnSmooth(knn, d$score, type=0)
-  rm(knn)
-  
-  if(verbose) message("Finding threshold...")
-  th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, 
-                             local=score=="xgb.local.optim" )
-  if(score=="xgb.local.optim"){
-    d$score.global <- d$score
-    d$score <- th$finalScores
-  }
-  metadata(orig)$scDblFinder.stats <- th$stats
-  th <- th$th
-  if(verbose) message("Threshold found:", round(th,3))
-
-  d$nearestClass <- factor(d$nearestClass, levels = 0:1, 
-                           labels=c("cell","artificialDoublet"))
-  d$class <- ifelse(d$score >= th, "doublet", "singlet")
-  
+  d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score, 
+                   threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
+                   max_depth=max_depth, verbose=verbose)
   if(returnType=="table") return(d)
   if(returnType=="full"){
       sce_out <- SingleCellExperiment(list(
-          counts=cbind(as.matrix(counts(sce)), ad[row.names(sce),]),
-          logcounts=e), colData=d)
+          counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
       reducedDim(sce_out, "PCA") <- pca
-      metadata(sce_out)$scDblFinder.stats <- metadata(orig)$scDblFinder.stats
+      if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats)) 
+        metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
       return(sce_out)
   }
-  
-  d <- d[colnames(orig),]
-  
-  orig$scDblFinder.cluster <- d$cluster
-  for(f in c("cluster","distanceToNearest","nearestClass","difficulty","ratio",
-             "weighted","score.global","score","smoothed.score","class",
-             "mostLikelyOrigin","originAmbiguous")){
-    if(!is.null(d[[f]])) orig[[paste0("scDblFinder.",f)]] <- d[[f]]
-  }
-  orig$scDblFinder.class <- relevel(as.factor(orig$scDblFinder.class),"singlet")
-  orig
+  .scDblAddCD(orig, d)
 }
 
-.evaluateKNN <- function(pca, ctype, origins, expected, k, BPPARAM=SerialParam(), 
-                         verbose=TRUE){
+.evaluateKNN <- function(pca, ctype, origins, expected, k, 
+                         BPPARAM=SerialParam(), verbose=TRUE){
   if(verbose) message("Finding KNN...")
-  knn <- suppressWarnings(findKNN(pca, k, BPPARAM=BPPARAM))
+  knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM))
   
   if(verbose) message("Evaluating cell neighborhoods...")
   knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
@@ -330,21 +306,27 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   
   dw <- 1/knn$distance
   dw <- dw/rowSums(dw)
-  d <- data.frame( row.names=row.names(pca), type=ctype,
+  d <- data.frame( row.names=row.names(pca), type=ctype, cluster=NA, 
                    weighted=rowSums(knn$type*dw),
                    distanceToNearest=knn$distance[,1],
                    distanceToNearestDoublet=dr[,1],
                    distanceToNearestReal=dr[,2],
                    nearestClass=knn$type[,1],
-                   ratio=rowSums(knn$type)/k,
+                   ratio=rowSums(knn$type)/max(k),
                    .getMostLikelyOrigins(knn, origins) )
-  w <- which(d$type=="artificial")
+  if(length(k)>1){
+      for(ki in rev(k)[-1])
+          d[[paste0("ratio.k",ki)]] <- rowSums(knn$type[,seq_len(ki)])/ki
+  }
+  
+  w <- which(d$type=="doublet")
   class.weighted <- vapply( split(d$weighted[w], d$mostLikelyOrigin[w]), 
                             FUN.VALUE=numeric(1L), FUN=mean )
+  
   d$difficulty <- 1
   w <- which(!is.na(d$mostLikelyOrigin))
   d$difficulty[w] <- 1-class.weighted[d$mostLikelyOrigin[w]]
-  d$difficulty <- .knnSmooth(knn, d$difficulty)
+  #d$difficulty <- .knnSmooth(knn, d$difficulty)
   
   d$expected <- expected[d$mostLikelyOrigin]
   ob <- table(d$mostLikelyOrigin)
@@ -354,6 +336,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   list(knn=knn, d=d)
 }
 
+#' @importFrom stats quantile weighted.mean
 .knnSmooth <- function(knn, score, use.distance=TRUE, type=NULL){
   w <- seq_len(ncol(knn$index))
   if(use.distance){
@@ -375,4 +358,132 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     }
     weighted.mean(c(score[i],score[x]),weights)
   })
+}
+
+#' @import xgboost
+#' @importFrom S4Vectors DataFrame metadata
+#' @importFrom stats predict quantile
+.scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, 
+                        threshold=TRUE, verbose=TRUE, dbr=NULL, ...){
+    if(is.null(dbr)) dbr <- (0.01*ncol(sce)/1000)
+
+    if(scoreType %in% c("xgb.local.optim","xgb")){
+        if(verbose) message("Training model...")
+        d$score <- NULL
+        prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
+                                       "type","src","distanceToNearest","class",
+                                       "nearestClass","cluster","sample",
+                                       "include.in.training"))
+        d2 <- d[,prds]
+        
+        # remove cells with a high chance of being doublets from the training
+        rq <- quantile(d$ratio[d$type=="real"], prob=1-dbr/2)
+        w <- which(d$type=="real" & d$ratio>=rq)
+        if(!is.null(d$cxds_score))
+            w <- union(w, which(d$type=="real" & 
+                                d$cxds_score>=quantile(d$cxds_score,
+                                                      prob=1-dbr)))
+        d$include.in.training <- TRUE
+        d$include.in.training[w] <- FALSE
+        d2 <- d2[-w,]
+        ctype <- as.integer(d$type[-w])-1
+        d2 <- as.matrix(d2)
+        if(is.null(nrounds)){
+            # use cross-validation
+            res <- xgb.cv(data=d2, label=ctype, nrounds=500, max_depth=max_depth, 
+                          objective="binary:logistic", nfold=5, eval_metric="aucpr",
+                          early_stopping_rounds=5, tree_method="hist", 
+                          metrics=list("aucpr","error"), subsample=0.6, verbose=FALSE)
+            ni = res$best_iteration
+            ac = res$evaluation_log$test_error_mean[ni] + 
+                1 * res$evaluation_log$test_error_std[ni]
+            nrounds = min(which(res$evaluation_log$test_error_mean <= ac))
+        }
+        fit <- xgboost(d2, ctype, nrounds=nrounds, eval_metric="aucpr",
+                       objective="binary:logistic", max_depth=max_depth, 
+                       early_stopping_rounds=5, verbose=FALSE )
+        d$score <- predict(fit, as.matrix(d[,prds]))
+    }else{
+        if(scoreType=="ratio"){
+            d$score <- d$ratio
+        }else{
+            d$score <- d$weighted
+        }
+    }
+    d <- DataFrame(d)
+    if(threshold){
+        if(verbose) message("Finding threshold...")
+        if(!is.null(d$sample) && is.null(dbr) && scoreType!="xgb.local.optim"){
+            # per-sample thresholding
+            th <- lapply(split(d[,c("cluster","src","type","mostLikelyOrigin",
+                                    "originAmbiguous","score")], FUN=fun),
+                         FUN=function(x){
+                             dbr <- 0.01*sum(d$src=="real",na.rm=TRUE)/1000
+                             doubletThresholding(x, local=FALSE, dbr=dbr, ...)
+                         })
+            th.stats <- lapply(th, FUN=function(x) x$stats)
+            th <- vapply(th, FUN=function(x) x$th, FUN.VALUE=numeric(1))
+            d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
+            if(verbose) message("Thresholds found:\n", 
+                                paste(paste(names(th),round(th,3),sep="="),
+                                      collapse=", "))
+        }else{
+            th <- doubletThresholding( d, local=scoreType=="xgb.local.optim", 
+                                       dbr=dbr, ... )
+            if(scoreType=="xgb.local.optim"){
+                d$score.global <- d$score
+                d$score <- th$finalScores
+            }
+            th.stats <- th$stats
+            th <- th$th
+            d$class <- ifelse(d$score >= th, "doublet", "singlet")
+            if(verbose) message("Threshold found:", round(th,3))
+        }
+        metadata(d)$scDblFinder.stats <- th.stats
+        metadata(d)$scDblFinder.threshold <- th
+        d$nearestClass <- factor(d$nearestClass, levels = 0:1, 
+                                 labels=c("cell","artificialDoublet"))
+        dbr <- sum(d$class=="doublet" & d$src=="real")/sum(d$src=="real")
+        if(verbose) message(sum(d$class=="doublet" & d$src=="real"), " (", 
+                            round(100*dbr,1),"%) doublets called")
+    }
+    d
+}
+
+# add the relevant fields of the scDblFinder results table to the SCE
+#' @importFrom stats relevel
+.scDblAddCD <- function(sce, d){
+  d <- d[colnames(sce),]
+  for(f in c("sample","cluster","distanceToNearest","nearestClass","difficulty",
+             "ratio","cxds_score","weighted","score.global","score",
+             "class","mostLikelyOrigin","originAmbiguous")){
+    if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
+  }
+  if(!is.null(sce$scDblFinder.class)) sce$scDblFinder.class <- 
+    relevel(as.factor(sce$scDblFinder.class),"singlet")
+  if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
+      metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+  sce
+}
+
+
+
+.checkSCE <- function(sce){
+  if(is(sce, "SummarizedExperiment")){
+    sce <- as(sce, "SingleCellExperiment")
+  }else if(!is(sce, "SingleCellExperiment")){
+    if(is.null(dim(sce)) || any(sce<0))
+      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    message("Assuming the input to be a matrix of counts or expected counts.")
+    sce <- SingleCellExperiment(list(counts=sce))
+  }
+  if( !("counts" %in% assayNames(sce)) ) 
+      stop("`sce` should have an assay named 'counts'")
+  counts(sce) <- as(counts(sce),"dgCMatrix")
+  if(is.null(colnames(sce)))
+      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(is.null(row.names(sce)))
+      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
+  sce
 }

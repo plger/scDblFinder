@@ -15,19 +15,18 @@
 #' @return A vector of cluster labels.
 #' 
 #' @examples
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
-#'                FUN=function(x) rpois(50,x) ) )
-#' cc <- suppressWarnings(overcluster(m,min.size=5))
-#' table(cc)
+#' sce <- mockDoubletSCE()
+#' sce$cluster <- overcluster(sce, min.size=30, max.size=100)
+#' table(sce$cluster)
 #' 
 #' @importFrom scran buildSNNGraph
 #' @importFrom BiocNeighbors AnnoyParam
 #' @importFrom igraph V cluster_fast_greedy membership is.igraph
 #' @export
-overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
+overcluster <- function( x, min.size=50, max.size, rdname="PCA", ...){
   if(is.igraph(x)){
-      N <- length(V(x))
-      g <- x
+    N <- length(V(x))
+    g <- x
   }else{
     x <- .prepSCE(x, ...)
     g <- buildSNNGraph(x, use.dimred=rdname, BNPARAM=AnnoyParam())
@@ -38,7 +37,7 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 
 .getMaxSize <- function(cl, max.size=NULL, min.size){
   if(!is.null(max.size)) return(max.size)
-  ceiling(max(length(cl)/(2*length(unique(cl))),min.size+1))
+  ceiling(max(length(cl)/(1.5*length(unique(cl))),min.size+1))
 }
 
 #' fastcluster
@@ -55,23 +54,41 @@ overcluster <- function( x, min.size=50, max.size=NULL, rdname="PCA", ...){
 #' @param nstart Number of starts for k-means clustering
 #' @param iter.max Number of iterations for k-means clustering
 #' @param ndims Number of dimensions to use
-#' @param nfeatures Number of features to use if doing PCA
+#' @param nfeatures Number of features to use (ignored if `rdname` is given and
+#' the corresponding dimensional reduction exists in `sce`)
 #'
 #' @return A vector of cluster labels
-#' @export
+#' 
 #' @importFrom igraph cluster_louvain membership
+#' @importFrom intrinsicDimension maxLikGlobalDimEst
 #' @importFrom scran buildKNNGraph
+#' @importFrom stats kmeans
+#' 
+#' @examples
+#' sce <- mockDoubletSCE()
+#' sce$cluster <- fastcluster(sce)
+#' 
+#' @export
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
-                         ndims=30, nfeatures=1000){
+                         ndims=NULL, nfeatures=1000 ){
   if(!(rdname %in% reducedDimNames(x)))
     x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
   x <- reducedDim(x, rdname)
-  if(is.null(k)) k <- min(3000, floor(nrow(x)/10))
-  k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
-  ag <- sapply(split(names(k),k), FUN=function(i) colMeans(x[i,,drop=FALSE]))
-  cl <- membership(cluster_louvain(buildKNNGraph(ag)))
-  cl <- cl[k]
-  cl
+  if(is.null(ndims)){
+    ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
+    ndims <- min(c(50,ceiling(ndims),ncol(x)),na.rm=TRUE)
+  }
+  x <- x[,seq_len(min(ncol(x),as.integer(ndims)))]
+  if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
+  if(nrow(x)>1000 && nrow(x)>k){
+    k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
+    x <- t(vapply(split(names(k),k), FUN.VALUE=numeric(ncol(x)),
+                  FUN=function(i) colMeans(x[i,,drop=FALSE])))
+  }else{
+    k <- seq_len(nrow(x))
+  }
+  cl <- membership(cluster_louvain(buildKNNGraph(x, d=NA, transposed=TRUE)))
+  cl[k]
 }
 
 
@@ -97,7 +114,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
 #' @examples
 #' m <- t(sapply( seq(from=0, to=5, length.out=50), 
 #'                FUN=function(x) rpois(50,x) ) )
-#' g <- scran::buildSNNGraph(rankTrans(m))
+#' g <- scran::buildSNNGraph(m)
 #' table(resplitClusters(g, min.size=2, max.size=20))
 #' 
 #' @importFrom igraph V E cluster_fast_greedy membership subgraph modularity
@@ -113,7 +130,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
     }
     ll1 <- split(seq_len(length(V(g))), cl) # split nodes by cluster
     # restrict to clusters >limit
-    ll1 <- ll1[which(vapply(ll1,FUN.VALUE=integer(1),FUN=length)>max.size)]
+    ll1 <- ll1[names(which(.getClusterSizes(cl,nodesizes)>max.size))]
     # run clustering of clusters above size limit:
     ll2 <- lapply(ll1, FUN=function(x){
         membership(cluster_fast_greedy(
@@ -170,7 +187,7 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
      stop("Cannot match nodes sizes and clusters.")
   if(!is.null(names(cl)) && is.null(names(cl)))
     nodesizes <- nodesizes[names(cl)]
-  sapply(split(nodesizes, cl), FUN=sum)
+  vapply(split(nodesizes, cl), FUN.VALUE=integer(1), FUN=sum)
 }
 
 #' @importFrom scater runPCA 
@@ -189,8 +206,8 @@ resplitClusters <- function( g, cl=NULL, max.size=500, min.size=50,
         sce <- logNormCounts(sce)
     }
     if(!("PCA" %in% reducedDimNames(sce))){
-        sce <- runPCA(sce, ncomponents=ndims, ntop=min(nfeatures,nrow(sce)),
-                      BSPARAM=IrlbaParam())
+        sce <- runPCA(sce, ncomponents=ifelse(is.null(ndims),30,ndims), 
+                      ntop=min(nfeatures,nrow(sce)), BSPARAM=IrlbaParam())
     }
     sce
 }

@@ -4,30 +4,19 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(d, dbr = 0.025, dbr.sd = 0.02, local = TRUE)
+doubletThresholding(d, dbr = 0.025, dbr.sd = 0.015, local = TRUE)
 }
 \arguments{
+\item{d}{A data.frame of properties of real and artificial cells, as produced
+by `scDblFinder(returnType="table")`.}
+
 \item{dbr}{The expected (mean) doublet rate.}
 
 \item{dbr.sd}{The standard deviation of the doublet rate, representing the 
 uncertainty in the estimate.}
 
-\item{scores}{A vector of the doublet score for each cell (real and 
-artificial); can be anything ranging from 0 to 1, with higher scores 
-indicating higher change of being a doublet.}
-
-\item{celltypes}{A vector of the same length as `scores` indicating, for each
-cell, whether it is a 'real' cell or a 'doublet'. Missing values
- not allowed.}
-
-\item{clusters}{Optional vector of cluster assignment for each (real) cell, 
-used for homotypic doublet correction.}
-
-\item{prop.fullyRandom}{The proportion of artificical doublets that are fully
- random, used for homotypy correction. Default 0.25 (the default value in 
-`getArtificialDoublets`). Ignored if `clusters=NULL`}
-
-\item{do.plot}{Logical; whether to plot the thresholding data (default TRUE).}
+\item{local}{Logical; whether to use local calibration (experimental 
+feature!)}
 }
 \value{
 A scaler indicating the decided threshold.
@@ -37,17 +26,9 @@ Sets the doublet scores threshold; typically called by
 \code{\link[scDblFinder]{scDblFinder}}.
 }
 \examples{
-# random data
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
-               FUN=function(x) rpois(30,x) ) )
-# generate doublets and merge them with real cells
-doublets <- getArtificialDoublets(m, 30)
-celltypes <- rep(c("real","doublet"), c(ncol(m), ncol(doublets)))
-m <- cbind(m,doublets)
-# dummy doublet scores:
-scores <- abs(jitter(1:ncol(m),amount=10))
-scores <- scores/max(scores)
-# get threshold
-doubletThresholding(scores, celltypes, do.plot=FALSE)
+sce <- mockDoubletSCE()
+d <- scDblFinder(sce, verbose=FALSE, returnType="table")
+th <- doubletThresholding(d, dbr=0.05)
+th$th
 
 }
