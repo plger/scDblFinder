@@ -155,7 +155,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
       x
     }))
     d$sample <- ss
-    d <- .scDblscore(d,scoreType=score, threshold=FALSE, dbr=dbr, dbr.sd=dbr.sd, 
+    d <- .scDblscore(d,scoreType=score, threshold=TRUE, dbr=dbr, dbr.sd=dbr.sd, 
                      max_depth=max_depth, nrounds=nrounds, verbose=verbose)
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
