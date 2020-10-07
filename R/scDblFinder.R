@@ -13,7 +13,9 @@
 #' clustering). This is used to make doublets more efficiently. \code{clusters} 
 #' should either be a vector of labels for each cell, or the name of a colData 
 #' column of \code{sce}. Alternatively, if it is a single integer, will 
-#' determine how many clusters to create (using k-means clustering).
+#' determine how many clusters to create (using k-means clustering). This 
+#' options should be used when distinct subpopulations are not expected in the 
+#' data (e.g. trajectories).
 #' @param clust.method The clustering method if \code{clusters} is not given 
 #' (we recommend the `fastcluster` method).
 #' @param samples A vector of the same length as cells (or the name of a column 
@@ -55,6 +57,10 @@
 #' overfitting.
 #' @param propRandom The proportion of the artificial doublets which should 
 #' made of entirely random cells (as opposed to inter-cluster combinations).
+#' @param adjustDoubletSizes Whether to adjust doublet library sizes (adjusting
+#' by cluster-medians). Alternatively, a number between 0 and 1 can be given, 
+#' determining the proportion of the artificial doublets for which to perform 
+#' the size adjustment.
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
@@ -124,8 +130,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          clust.method=c("fastcluster","overcluster"),
                          use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
                          maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.015, k=NULL, includePCs=c(),
-                         propRandom=0.1, returnType=c("sce","table","full"),
+                         dbr.sd=0.015, k=NULL, includePCs=c(), 
+                         propRandom=0.1, adjustDoubletSizes=0.1,
+                         returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          nrounds=50, max_depth=5, iter=2, threshold=TRUE, 
                          verbose=is.null(samples), BPPARAM=SerialParam()
@@ -154,13 +161,16 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                     dbr.sd=dbr.sd, k=k, clust.method=clust.method,
                     score="weighted", nfeatures=nfeatures,
                     propRandom=propRandom, returnType="table",
-                    knownDoublets=knownDoublets, threshold=FALSE, verbose=FALSE)
+                    adjustDoubletSizes=adjustDoubletSizes, threshold=FALSE, 
+                    knownDoublets=knownDoublets, verbose=FALSE)
     })
+    cn <- table(unlist(lapply(d, colnames)))
+    cn <- names(cn)[cn==length(d)]
     ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
                  levels=seq_along(names(d)), labels=names(d))
     d <- do.call(rbind, lapply(d, FUN=function(x){
       x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
-      x
+      x[,cn]
     }))
     d$sample <- ss
     d <- .scDblscore(d,scoreType=score, threshold=TRUE, dbr=dbr, dbr.sd=dbr.sd, 
@@ -177,9 +187,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
             " using the `samples` argument.", immediate=TRUE)
 
   if(is.null(k)){
-      k <- c(3,10)
-      if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=40) k <- c(k,20)
-      k <- c(k,kmax)
+      k <- c(3,5,10,20)
+      if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=30) k <- c(k,kmax)
   }
   
   orig <- sce
@@ -226,16 +235,12 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(artificialDoublets<2)
       artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
   
-  if(verbose){
+  if(verbose)
     message("Creating ~", artificialDoublets, " artifical doublets...")
-    ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets, 
-                                clusters=clusters, prop.fullyRandom=propRandom)
-  }else{
-    ad <- suppressWarnings( getArtificialDoublets(as.matrix(counts(sce)), 
-                                                  n=artificialDoublets, 
-                                                  clusters=clusters,
-                                                  prop.fullyRandom=propRandom))
-  }
+  ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets, 
+                              clusters=clusters, prop.fullyRandom=propRandom,
+                              adjustSize=adjustDoubletSizes)
+
   gc(verbose=FALSE)
   
   ado <- ad$origins
@@ -261,7 +266,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   nfeatures <- Matrix::colSums(e>0)
   
   # skip normalization if data is too large
-  if(ncol(e)<=25000) e <- normalizeCounts(e)
+  if(ncol(e)<=25000) e <- tryCatch(normalizeCounts(e), error=function(er){
+    warning("An error was encountered calculating normalization factors.")
+    e
+  })
+  
   if(is.null(dims)) dims <- 30
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),

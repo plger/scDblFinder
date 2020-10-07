@@ -20,11 +20,13 @@ scDblFinder(
   dbr.sd = 0.015,
   k = NULL,
   includePCs = c(),
-  propRandom = 0.2,
+  propRandom = 0.1,
+  adjustDoubletSizes = 0.1,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
   nrounds = 50,
   max_depth = 5,
+  iter = 2,
   threshold = TRUE,
   verbose = is.null(samples),
   BPPARAM = SerialParam()
@@ -38,7 +40,10 @@ counts.}
 \item{clusters}{The optional cluster assignments (if omitted, will run 
 clustering). This is used to make doublets more efficiently. \code{clusters} 
 should either be a vector of labels for each cell, or the name of a colData 
-column of \code{sce}.}
+column of \code{sce}. Alternatively, if it is a single integer, will 
+determine how many clusters to create (using k-means clustering). This 
+options should be used when distinct subpopulations are not expected in the 
+data (e.g. trajectories).}
 
 \item{samples}{A vector of the same length as cells (or the name of a column 
 of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
@@ -98,6 +103,11 @@ overfitting.}
 \item{propRandom}{The proportion of the artificial doublets which should 
 made of entirely random cells (as opposed to inter-cluster combinations).}
 
+\item{adjustDoubletSizes}{Whether to adjust doublet library sizes (adjusting
+by cluster-medians). Alternatively, a number between 0 and 1 can be given, 
+determining the proportion of the artificial doublets for which to perform 
+the size adjustment.}
+
 \item{returnType}{Either "sce" (default), "table" (to return the table of 
 cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
@@ -109,6 +119,11 @@ through cross-validation. When the training is based only on simulated
 doublets, we generally find lower limits to outperform cross-validation.}
 
 \item{max_depth}{Maximum depth of decision trees}
+
+\item{iter}{A positive integer indicating the number of scoring iterations
+(ignored if `score` isn't based on classifiers). At each iteration, real 
+cells that would be called as doublets are excluding from the training, and
+new scores are calculated.}
 
 \item{threshold}{Logical; whether to threshold scores into binary doublet 
 calls}

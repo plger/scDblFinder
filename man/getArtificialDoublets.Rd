@@ -10,7 +10,8 @@ getArtificialDoublets(
   clusters = NULL,
   prop.fullyRandom = 0.1,
   n.meta.cells = 1,
-  meta.triplets = TRUE
+  meta.triplets = TRUE,
+  adjustSize = TRUE
 )
 }
 \arguments{
@@ -30,6 +31,11 @@ additional doublets will be created from cluster meta-cells.}
 
 \item{meta.triplets}{Logical; whether to create triplets from meta cells. 
 Ignored if `clusters` is missing.}
+
+\item{adjustSize}{Logical; whether to adjust the size of the doublets using
+the ratio between each cluster's median library size. Alternatively, a number
+between 0 and 1 can be given, determining the proportion of the doublets for
+which to perform the size adjustment.}
 }
 \value{
 If `clusters` is Null, returns a count matrix of artificial doublets.

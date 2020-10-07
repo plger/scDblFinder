@@ -11,7 +11,8 @@ fastcluster(
   nstart = 2,
   iter.max = 20,
   ndims = NULL,
-  nfeatures = 1000
+  nfeatures = 1000,
+  returnType = c("clusters", "preclusters", "metacells", "graph")
 )
 }
 \arguments{
@@ -31,9 +32,15 @@ the number of cells with a maximum of 3000.}
 
 \item{nfeatures}{Number of features to use (ignored if `rdname` is given and
 the corresponding dimensional reduction exists in `sce`)}
+
+\item{returnType}{See return.}
 }
 \value{
-A vector of cluster labels
+By default, a vector of cluster labels. If 
+`returnType='preclusters'`, returns the k-means pre-clusters. If
+`returnType='metacells'`, returns the metacells aggretated by pre-clusters 
+and the corresponding cell indexes. If `returnType='graph'`, returns the
+graph of (meta-)cells and the corresponding cell indexes.
 }
 \description{
 Performs a fast two-step clustering: first clusters using k-means with a very
