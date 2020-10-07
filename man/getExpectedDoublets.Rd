@@ -22,6 +22,6 @@ getExpectedDoublets
 }
 \examples{
 # random cluster labels
-cl <- sample(LETTERS[1:4], size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
+cl <- sample(head(LETTERS,4), size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
 getExpectedDoublets(cl)
 }

@@ -47,7 +47,7 @@
 #'
 #' @examples
 #' # random cluster labels
-#' cl <- sample(LETTERS[1:4], size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
+#' cl <- sample(head(LETTERS,4), size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
 #' getExpectedDoublets(cl)
 #' @export
 getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
@@ -81,8 +81,8 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   }
   if(is.null(val)) val <- rev(colnames(e))[1]
   names(n) <- n <- unique(as.character(as.matrix(e[,1:2])))
-  sapply(n, FUN=function(x){
-    sapply(n, FUN=function(y){
+  vapply(n, FUN.VALUE=numeric(length(n)), FUN=function(x){
+    vapply(n, FUN.VALUE=numeric(1), FUN=function(y){
       if(x==y) return(NA)
       w <- which(e[,1] %in% c(x,y) & e[,2] %in% c(x,y))
       if(length(w)==0) return(0)
@@ -92,6 +92,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 }
 
 .clusterTopG <- function(sce, clusters=NULL, nfeatures=1000){
+  if(nfeatures>=nrow(sce)) return(row.names(sce))
   if(is.null(clusters))
     return(row.names(sce)[order(Matrix::rowMeans(counts(sce),na.rm=TRUE),
                                 decreasing=TRUE)[seq_len(nfeatures)]])
@@ -116,6 +117,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 #' @param ngenes The number of genes to simulate. Ignored if `mus` is given.
 #' @param mus A list of cluster averages.
 #' @param dbl.rate The doublet rate
+#' @param only.heterotypic Whether to create only heterotypic doublets
 #'
 #' @return A SingleCellExperiment object, with the colData columns `type` 
 #' indicating whether the cell is a singlet or doublet, and `cluster` 
@@ -127,7 +129,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 #' @examples
 #' sce <- mockDoubletSCE()
 mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL, 
-                           dbl.rate=0.1){
+                           dbl.rate=0.1, only.heterotypic=TRUE){
   if(length(ncells)<2)
     stop("ncells should be a positive integer vector of length >=2")
   if(is.null(names(ncells))) names(ncells)<-paste0("cluster",seq_along(ncells))
@@ -151,13 +153,14 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
                                            origin=rep(names(ncells), ncells)))
   
   # doublets
-  expected <- getExpectedDoublets(sce$origin, dbl.rate, FALSE)
+  expected <- getExpectedDoublets(sce$origin, dbl.rate, 
+                                  only.heterotypic=only.heterotypic)
   simdbl <- rpois(length(expected), expected)
   mus <- lapply(strsplit(names(expected),"+",fixed=TRUE), FUN=function(x){
     mus[[x[[1]]]]+mus[[x[[2]]]]
   })
-  doublets <- do.call(cbind, mapply(mu=mus, n=simdbl, FUN=function(mu, n){
-    matrix(rpois(n*ngenes, mu), nrow=ngenes)
+  doublets <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
+    matrix(rpois(simdbl[[i]]*ngenes, mus[[i]]), nrow=ngenes)
   }))
   sce2 <- SingleCellExperiment( list(counts=doublets), 
                                 colData=data.frame(type="doublet", 

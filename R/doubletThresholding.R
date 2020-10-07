@@ -22,7 +22,7 @@
 #' th$th
 #' 
 #' @export
-doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=TRUE ){
+doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=FALSE ){
   # check that we have all necessary fields:
   if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous") 
           %in% colnames(d))) stop("Input misses some columns.")
