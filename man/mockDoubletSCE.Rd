@@ -4,7 +4,13 @@
 \alias{mockDoubletSCE}
 \title{mockDoubletSCE}
 \usage{
-mockDoubletSCE(ncells = c(200, 300), ngenes = 200, mus = NULL, dbl.rate = 0.1)
+mockDoubletSCE(
+  ncells = c(200, 300),
+  ngenes = 200,
+  mus = NULL,
+  dbl.rate = 0.1,
+  only.heterotypic = TRUE
+)
 }
 \arguments{
 \item{ncells}{A positive integer vector indicating the number of cells per
@@ -15,6 +21,8 @@ cluster (min 2 clusters)}
 \item{mus}{A list of cluster averages.}
 
 \item{dbl.rate}{The doublet rate}
+
+\item{only.heterotypic}{Whether to create only heterotypic doublets}
 }
 \value{
 A SingleCellExperiment object, with the colData columns `type` 
