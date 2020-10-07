@@ -29,7 +29,6 @@ Imports:
     scater, 
     scuttle,
     methods, 
-    stats, 
     DelayedArray,
     xgboost,
     stats,
