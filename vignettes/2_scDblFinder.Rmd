@@ -1,5 +1,5 @@
 ---
-title: "1 scDblFinder"
+title: "scDblFinder"
 author:
 - name: Pierre-Luc Germain
   affiliation: University and ETH Zürich
@@ -7,10 +7,10 @@ package: scDblFinder
 output:
   BiocStyle::html_document
 abstract: |
-  An introduction to the scDblFinder method, which identifies doublets in single-cell 
-  RNAseq directly from counts using overclustering-based generation of artifical doublets.
+  An introduction to the scDblFinder method for fast and comprehensive doublet 
+  identification in single-cell data.
 vignette: |
-  %\VignetteIndexEntry{1_scDblFinder}
+  %\VignetteIndexEntry{2_scDblFinder}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
