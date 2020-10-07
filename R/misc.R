@@ -159,8 +159,8 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   mus <- lapply(strsplit(names(expected),"+",fixed=TRUE), FUN=function(x){
     mus[[x[[1]]]]+mus[[x[[2]]]]
   })
-  doublets <- do.call(cbind, mapply(mu=mus, n=simdbl, FUN=function(mu, n){
-    matrix(rpois(n*ngenes, mu), nrow=ngenes)
+  doublets <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
+    matrix(rpois(simdbl[[i]]*ngenes, mus[[i]]), nrow=ngenes)
   }))
   sce2 <- SingleCellExperiment( list(counts=doublets), 
                                 colData=data.frame(type="doublet", 
