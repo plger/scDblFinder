@@ -4,7 +4,7 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(d, dbr = 0.025, dbr.sd = 0.015, local = TRUE)
+doubletThresholding(d, dbr = 0.025, dbr.sd = 0.015, local = FALSE)
 }
 \arguments{
 \item{d}{A data.frame of properties of real and artificial cells, as produced
