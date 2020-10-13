@@ -388,7 +388,17 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
                         threshold=TRUE, verbose=TRUE, dbr=NULL, ...){
-  if(is.null(dbr)) dbr <- (0.01*sum(d$src=="real",na.rm=TRUE)/1000)
+  gdbr <- dbr
+  if(is.null(gdbr)){
+    if(is.null(d$sample)){
+      sl <- sum(d$src=="real")
+    }else{
+      ## estimate a global doublet rate
+      sl <- as.numeric(table(d$sample, d$src=="real")[,2])
+    }
+    gdbr <- (0.01*sl/1000)
+    gdbr <- sum(gdbr*sl)/sum(sl)
+  }
   if(scoreType %in% c("xgb.local.optim","xgb")){
     if(verbose) message("Training model...")
     d$score <- NULL
@@ -401,14 +411,14 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     d$score[w] <- ecdf(d$ratio[w])(d$ratio[w])
     if(!is.null(d$cxds_score)) d$score[w] <- d$score[w]+
       2*ecdf(d$cxds_score[w])(d$cxds_score[w])
-    w <- which(d$type=="real" & d$score >= quantile(d$score[w], 1-dbr))
+    w <- which(d$type=="real" & d$score >= quantile(d$score[w], 1-gdbr))
     d$include.in.training <- TRUE
     d$include.in.training[w] <- FALSE
     
     while(iter>0){
       # remove cells with a high chance of being doublets from the training
       w <- which(d$type=="real" & 
-                   d$score >= quantile(d$score[which(d$type=="real")], 1-dbr))
+                   d$score >= quantile(d$score[which(d$type=="real")], 1-gdbr))
       fit <- .xgbtrain(d[-w,prds], d$type[-w], nrounds, 
                        max_depth=ifelse(iter==1,max_depth,50))
       d$score <- predict(fit, as.matrix(d[,prds]))
@@ -427,9 +437,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
       if(verbose) message("Finding threshold...")
       if(!is.null(d$sample) && is.null(dbr) && scoreType!="xgb.local.optim"){
           # per-sample thresholding
-          th <- lapply(split(d[,c("cluster","src","type","mostLikelyOrigin",
-                                  "originAmbiguous","score")], FUN=fun),
+          th <- lapply(split(seq_len(nrow(d)), d$sample),
                        FUN=function(x){
+                           x <- d[x,c("cluster","src","type","mostLikelyOrigin",
+                                  "difficulty","originAmbiguous","score")]
                            dbr <- 0.01*sum(d$src=="real",na.rm=TRUE)/1000
                            doubletThresholding(x, local=FALSE, dbr=dbr, ...)
                        })
