@@ -48,11 +48,19 @@ The expected proportion of doublets has no impact on the score, but a very stron
 
 Contrarily to other methods also based on the generation of artificial doublets, `scDblFinder` does not generate them in an entirely random fashion, but specifically generates inter-cluster doublets. This also means that, for putative doublets among the real cells, `scDblFinder` can guess from what clusters their originate. To make this information easier to interpret, you may provide your own clusters (though the `clusters` argument) rather than use the fast internal procedure to determine them. It is important that subpopulations are not misrepresented as belonging to the same cluster, and for this reason, we favor over-clustering for this purpose.
 
+#### Trajectories
+
+If the dataset is not expected to contain distinct subpopulations but rather continuous gradients, e.g. trajectories, then it might be advisable to employ a different approach and setting `clusters` to a positive integer (chosen depending on the number of cells and complexity, e.g. `k=20` for smaller datasets). This will split the cells into the given number of clusters using k-means clustering.
+
 ### Including known doublets
 
 If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` argument will improve the `scDblFinder` scoring and calling of new doublets.
 
 For more detail, please see `vignette("scDblFinder")`.
+
+## Single-cell ATACseq
+
+We have not yet thoroughly tested the `scDblFinder` paremeters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there (consider increasing the `nfeatures`).
 
 <br/><br/>
 
