@@ -266,10 +266,13 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   nfeatures <- Matrix::colSums(e>0)
   
   # skip normalization if data is too large
-  if(ncol(e)<=25000) e <- tryCatch(normalizeCounts(e), error=function(er){
-    warning("An error was encountered calculating normalization factors.")
-    e
-  })
+  if(ncol(e)<=25000){
+    tryCatch({
+      e <- normalizeCounts(e)
+    }, error=function(er){
+      warning("An error was encountered calculating normalization factors.")
+    })
+  }
   
   if(is.null(dims)) dims <- 30
   pca <- tryCatch({
@@ -350,7 +353,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   d$difficulty <- 1
   w <- which(!is.na(d$mostLikelyOrigin))
   d$difficulty[w] <- 1-class.weighted[d$mostLikelyOrigin[w]]
-  #d$difficulty <- .knnSmooth(knn, d$difficulty)
+  #d$difficulty <- .knnSmooth(knn, d$difficulty, use.distance=FALSE)
   
   d$expected <- expected[d$mostLikelyOrigin]
   ob <- table(d$mostLikelyOrigin)
@@ -441,7 +444,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                        FUN=function(x){
                            x <- d[x,c("cluster","src","type","mostLikelyOrigin",
                                   "difficulty","originAmbiguous","score")]
-                           dbr <- 0.01*sum(d$src=="real",na.rm=TRUE)/1000
+                           dbr <- 0.01*sum(x$src=="real",na.rm=TRUE)/1000
                            doubletThresholding(x, local=FALSE, dbr=dbr, ...)
                        })
           th.stats <- lapply(th, FUN=function(x) x$stats)
