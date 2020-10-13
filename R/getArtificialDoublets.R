@@ -35,7 +35,18 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   ls <- Matrix::colSums(x)
   w <- which(ls>0 & ls>=quantile(ls,0.01) & ls<=quantile(ls,0.99))
   x <- x[,w,drop=FALSE]
-  if(is.null(clusters)){
+  if(!is.null(clusters)){
+    if(is.list(clusters)){
+    clusters$k <- clusters$k[w]
+    clo <- clusters
+    clusters <- clusters$k
+    }else{
+    clo <- clusters <- clusters[w] 
+    }
+    clusters <- as.factor(clusters)
+  }
+  
+  if(is.null(clusters) || prop.fullyRandom==1){
     # create random combinations
     if(ncol(x)^2 <= n){
       # few combinations, get them all
@@ -46,22 +57,24 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     # remove doublets of the same cell
     ad <- ad[which(ad[,1]!=ad[,2]),]
     # create doublets
-    ad.m <- createDoublets(x, ad, adjustSize=FALSE, prefix="rDbl.")
-    return(ad.m)
+    if(is.null(clusters)){
+      ad.m <- createDoublets(x, ad, adjustSize=FALSE, prefix="rDbl.")
+      oc <- NULL
+    }else{
+      ad.m <- createDoublets(x, ad, clusters=clusters, adjustSize=adjustSize, 
+                             prefix="rDbl.")
+      oc <- matrix(clusters[as.numeric(ad)],ncol=2)
+      w <- which(oc[,1]>oc[,2])
+      oc[w,1:2] <- oc[w,2:1]
+      oc <- paste(oc[,1],oc[,2],sep="+")
+    }
+    return(list( counts=ad.m, origins=as.factor(oc) ))
   }
   
-  if(is.list(clusters)){
-    clusters$k <- clusters$k[w]
-    clo <- clusters
-    clusters <- clusters$k
-  }else{
-    clo <- clusters <- clusters[w] 
-  }
-
   if((nr <- ceiling(n*prop.fullyRandom))>0){
-    ad.m <- getArtificialDoublets(x, n=nr, n.meta.cells=0)
-    colnames(ad.m) <- paste0("R",colnames(ad.m))
-    oc <- rep(NA_character_, ncol(ad.m))
+    ad.m <- getArtificialDoublets(x,n=nr,clusters=clusters,prop.fullyRandom=1)
+    oc <- ad.m$origins
+    ad.m <- ad.m$counts
     n <- ceiling(n*(1-prop.fullyRandom))
   }else{
     ad.m <- x[,c(),drop=FALSE]
@@ -72,7 +85,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   
   # create doublets across clusters:
   n <- ceiling(n)
-  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.8),n))
+  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n))
   m2 <- createDoublets(x, ca, clusters=clusters, adjustSize=adjustSize)
   oc <- c(oc, as.character(ca$orig.clusters))
   names(oc) <- names(m2)
@@ -85,7 +98,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     meta <- .getMetaCells(x, clusters, n.meta.cells=n.meta.cells, 
                           meta.cell.size=30)
     cl2 <- rep(unique(clusters),each=n.meta.cells)
-    ca <- getCellPairs(cl2, n=ceiling(n*0.2))
+    ca <- getCellPairs(cl2, n=ceiling(n*0.1))
     m2 <- createDoublets(meta, ca, clusters=cl2, adjustSize=adjustSize, 
                          prefix="artMetaDbl.")
     oc2 <- ca$orig.clusters
