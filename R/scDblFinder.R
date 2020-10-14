@@ -270,8 +270,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     tryCatch({
       e <- normalizeCounts(e)
     }, error=function(er){
-      warning("An error was encountered calculating normalization factors.")
-      warning(er)
+      warning("Error in calculating norm factors:", er)
     })
   }
   
