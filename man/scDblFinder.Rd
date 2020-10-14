@@ -10,10 +10,7 @@ scDblFinder(
   samples = NULL,
   artificialDoublets = NULL,
   knownDoublets = NULL,
-  clust.method = c("fastcluster", "overcluster"),
   use.cxds = TRUE,
-  minClusSize = min(50, ncol(sce)/5),
-  maxClusSize = NULL,
   nfeatures = 1000,
   dims = NULL,
   dbr = NULL,
@@ -63,17 +60,8 @@ create. If \code{NULL}, will be the maximum of the number of cells or
 through cell barcodes), or the name of a colData column of `sce` containing
 that information.}
 
-\item{clust.method}{The clustering method if \code{clusters} is not given 
-(we recommend the `fastcluster` method).}
-
 \item{use.cxds}{Logical; whether to use `scds::cxds` scores in addition to 
 information from artificial/known doublets as part of the predictors.}
-
-\item{minClusSize}{The minimum cluster size for `quickCluster`/`overcluster` 
-(default 50); ignored if \code{clusters} is given.}
-
-\item{maxClusSize}{The maximum cluster size for `overcluster`. Ignored if 
-\code{clusters} is given or if \code{clust.method!='overcluster'}.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 

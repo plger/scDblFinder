@@ -16,8 +16,6 @@
 #' determine how many clusters to create (using k-means clustering). This 
 #' options should be used when distinct subpopulations are not expected in the 
 #' data (e.g. trajectories).
-#' @param clust.method The clustering method if \code{clusters} is not given 
-#' (we recommend the `fastcluster` method).
 #' @param samples A vector of the same length as cells (or the name of a column 
 #' of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
 #' sample is understood as being processed independently. If omitted, doublets 
@@ -32,10 +30,6 @@
 #' that information.
 #' @param use.cxds Logical; whether to use `scds::cxds` scores in addition to 
 #' information from artificial/known doublets as part of the predictors.
-#' @param minClusSize The minimum cluster size for `quickCluster`/`overcluster` 
-#' (default 50); ignored if \code{clusters} is given.
-#' @param maxClusSize The maximum cluster size for `overcluster`. Ignored if 
-#' \code{clusters} is given or if \code{clust.method!='overcluster'}.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used to build the network. If omitted,
 #' will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.
@@ -127,9 +121,7 @@
 #' @import SingleCellExperiment
 scDblFinder <- function( sce, clusters=NULL, samples=NULL, 
                          artificialDoublets=NULL, knownDoublets=NULL,
-                         clust.method=c("fastcluster","overcluster"),
-                         use.cxds=TRUE, minClusSize=min(50,ncol(sce)/5),
-                         maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
+                         use.cxds=TRUE, nfeatures=1000, dims=NULL, dbr=NULL, 
                          dbr.sd=0.015, k=NULL, includePCs=c(), 
                          propRandom=0.1, adjustDoubletSizes=0.1,
                          returnType=c("sce","table","full"), 
@@ -139,7 +131,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                         ){
   sce <- .checkSCE(sce)
   score <- match.arg(score)
-  clust.method <- match.arg(clust.method)
   returnType <- match.arg(returnType)
   if(!is.null(clusters)){
     if(length(clusters)>1 || !is.numeric(clusters))
@@ -156,10 +147,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     d <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                    clusters=clusters, minClusSize=minClusSize, 
-                    maxClusSize=maxClusSize, dims=dims, dbr=dbr, 
-                    dbr.sd=dbr.sd, k=k, clust.method=clust.method,
-                    score="weighted", nfeatures=nfeatures,
+                    clusters=clusters, dims=dims, dbr=dbr, 
+                    dbr.sd=dbr.sd, k=k, score="weighted", nfeatures=nfeatures,
                     propRandom=propRandom, returnType="table",
                     adjustDoubletSizes=adjustDoubletSizes, threshold=FALSE, 
                     knownDoublets=knownDoublets, verbose=FALSE)
@@ -210,16 +199,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   }
   if(is.null(clusters) || length(clusters)==1){
     if(verbose) message("Clustering cells...")
-    if(clust.method=="overcluster"){
-      clusters <- overcluster(sce, min.size=minClusSize, max.size=maxClusSize,
-                              ndims=dims)
+    if(!is.null(clusters)){
+      clusters <- fastcluster(sce, ndims=dims, k=clusters, 
+                              returnType="preclusters")  
     }else{
-      if(!is.null(clusters)){
-        clusters <- fastcluster(sce, ndims=dims, k=clusters, 
-                                returnType="preclusters")  
-      }else{
-        clusters <- fastcluster(sce, ndims=dims)
-      }
+      clusters <- fastcluster(sce, ndims=dims)
     }
   }
   if((nc <- length(unique(clusters))) == 1)
