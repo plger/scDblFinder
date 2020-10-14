@@ -132,7 +132,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
                          maxClusSize=NULL, nfeatures=1000, dims=NULL, dbr=NULL, 
                          dbr.sd=0.015, k=NULL, includePCs=c(), 
                          propRandom=0.1, adjustDoubletSizes=0.1,
-                         returnType=c("sce","table","full"), do.scale=FALSE,
+                         returnType=c("sce","table","full"), 
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          nrounds=50, max_depth=5, iter=2, threshold=TRUE, 
                          verbose=is.null(samples), BPPARAM=SerialParam()
@@ -269,7 +269,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(ncol(e)<=25000){
     tryCatch({
       e <- normalizeCounts(e)
-      if(do.scale) e <- FastRowScale(e)
     }, error=function(er){
       warning("An error was encountered calculating normalization factors.")
       warning(er)
