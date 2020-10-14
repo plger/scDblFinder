@@ -68,6 +68,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
       oc[w,1:2] <- oc[w,2:1]
       oc <- paste(oc[,1],oc[,2],sep="+")
     }
+    row.names(ad.m) <- row.names(x)
     return(list( counts=ad.m, origins=as.factor(oc) ))
   }
   
