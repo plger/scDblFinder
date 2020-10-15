@@ -37,16 +37,9 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
                          returnType=c("clusters","preclusters","metacells",
                                       "graph") ){
   returnType <- match.arg(returnType)
-  if(!(rdname %in% reducedDimNames(x)))
-    x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
-  x <- reducedDim(x, rdname)
-  if(is.null(ndims)){
-    ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
-    ndims <- min(c(50,ceiling(ndims),ncol(x)),na.rm=TRUE)
-  }
-  x <- x[,seq_len(min(ncol(x),as.integer(ndims)))]
+  x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname)
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
-  if(nrow(x)>1000 && nrow(x)>k){
+  if((returnType != "clusters" || nrow(x)>1000) && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
     if(returnType=="preclusters") return(k)
     x <- t(vapply(split(names(k),k), FUN.VALUE=numeric(ncol(x)),
@@ -55,7 +48,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   }else{
     k <- seq_len(nrow(x))
   }
-  x <- buildKNNGraph(x, d=NA, transposed=TRUE)
+  x <- buildKNNGraph(x, d=NA, transposed=TRUE, 
+                     k=min(max(2,floor(sqrt(length(unique(k))))-1),10))
   if(returnType=="graph") return(list(k=k, graph=x))
   cl <- membership(cluster_louvain(x))
   cl[k]
@@ -81,4 +75,22 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
                       ntop=min(nfeatures,nrow(sce)), BSPARAM=IrlbaParam())
     }
     sce
+}
+
+.getDR <- function(x, ndims=30, nfeatures=1000, rdname="PCA"){
+  if(!(rdname %in% reducedDimNames(x)))
+    x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
+  x <- reducedDim(x, rdname)
+  if(is.null(ndims)){
+    ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
+    ndims <- min(c(50,ceiling(ndims),ncol(x)),na.rm=TRUE)
+  }
+  x[,seq_len(min(ncol(x),as.integer(ndims)))]
+}
+
+.getMetaGraph <- function(x, clusters){
+  x <- t(vapply(split(seq_len(nrow(x)),clusters), FUN.VALUE=numeric(ncol(x)),
+                  FUN=function(i) colMeans(x[i,,drop=FALSE])))
+  buildKNNGraph(x, d=NA, transposed=TRUE, 
+                k=min(max(2,floor(sqrt(length(unique(clusters))))-1),10))
 }

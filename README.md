@@ -50,13 +50,13 @@ Contrarily to other methods also based on the generation of artificial doublets,
 
 #### Trajectories
 
-If the dataset is not expected to contain distinct subpopulations but rather continuous gradients, e.g. trajectories, then it might be advisable to employ a different approach and setting `clusters` to a positive integer (chosen depending on the number of cells and complexity, e.g. `k=20` for smaller datasets). This will split the cells into the given number of clusters using k-means clustering.
+If the dataset is not expected to contain distinct subpopulations but rather continuous gradients, e.g. trajectories, then it might be advisable to employ a different approach using `trajectoryMode=TRUE` and (unless you already have your clusters) setting `clusters` to a positive integer (chosen depending on the complexity of the trajectories, e.g. `k=12` for smaller datasets), which will split the cells into the given number of clusters using k-means clustering. See [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html) for more detail.
 
 ### Including known doublets
 
 If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` argument will improve the `scDblFinder` scoring and calling of new doublets.
 
-For more detail, please see `vignette("scDblFinder")`.
+For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html).
 
 ## Single-cell ATACseq
 

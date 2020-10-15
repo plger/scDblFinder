@@ -8,10 +8,11 @@ getArtificialDoublets(
   x,
   n = 3000,
   clusters = NULL,
-  prop.fullyRandom = 0.1,
-  n.meta.cells = 1,
+  adjustSize = FALSE,
+  propRandom = 0.1,
+  n.meta.cells = 2,
   meta.triplets = TRUE,
-  adjustSize = TRUE
+  traj.weightFun = NULL
 )
 }
 \arguments{
@@ -22,7 +23,12 @@ getArtificialDoublets(
 \item{clusters}{The optional clusters labels to use to build cross-cluster 
 doublets.}
 
-\item{prop.fullyRandom}{The proportion of the created doublets that are fully
+\item{adjustSize}{Logical; whether to adjust the size of the doublets using
+the ratio between each cluster's median library size. Alternatively, a number
+between 0 and 1 can be given, determining the proportion of the doublets for
+which to perform the size adjustment.}
+
+\item{propRandom}{The proportion of the created doublets that are fully
 random (default 0.1); the rest will be doublets created across clusters. 
 Ignored if `clusters` is NULL.}
 
@@ -32,10 +38,8 @@ additional doublets will be created from cluster meta-cells.}
 \item{meta.triplets}{Logical; whether to create triplets from meta cells. 
 Ignored if `clusters` is missing.}
 
-\item{adjustSize}{Logical; whether to adjust the size of the doublets using
-the ratio between each cluster's median library size. Alternatively, a number
-between 0 and 1 can be given, determining the proportion of the doublets for
-which to perform the size adjustment.}
+\item{traj.weightFun}{The function by which to weigh distances (steps) in 
+trajectory-based doublet generation.}
 }
 \value{
 If `clusters` is Null, returns a count matrix of artificial doublets.

@@ -8,6 +8,7 @@ scDblFinder(
   sce,
   clusters = NULL,
   samples = NULL,
+  trajectoryMode = FALSE,
   artificialDoublets = NULL,
   knownDoublets = NULL,
   use.cxds = TRUE,
@@ -18,7 +19,6 @@ scDblFinder(
   k = NULL,
   includePCs = c(),
   propRandom = 0.1,
-  adjustDoubletSizes = 0.1,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
   nrounds = 50,
@@ -26,7 +26,8 @@ scDblFinder(
   iter = 2,
   threshold = TRUE,
   verbose = is.null(samples),
-  BPPARAM = SerialParam()
+  BPPARAM = SerialParam(),
+  ...
 )
 }
 \arguments{
@@ -52,6 +53,10 @@ hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 
+\item{trajectoryMode}{Logical; whether to generate doublets in trajectory 
+mode (i.e. for datasets with gradients rather than separated subpopulations).
+See \code{vignette("scDblFinder")} for more details.}
+
 \item{artificialDoublets}{The approximate number of artificial doublets to 
 create. If \code{NULL}, will be the maximum of the number of cells or 
 \code{5*nbClusters^2}.}
@@ -66,7 +71,7 @@ information from artificial/known doublets as part of the predictors.}
 \item{nfeatures}{The number of top features to use (default 1000)}
 
 \item{dims}{The number of dimensions used to build the network. If omitted,
-will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.}
+will be estimated using \code{\link[intrinsicDimension]{maxLikGlobalDimEst}}.}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
 per thousand cells captured (so 4\% among 4000 thousand cells), which is 
@@ -88,13 +93,8 @@ predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
 doublets among the real cells), in our experience this tends to lead to 
 overfitting.}
 
-\item{propRandom}{The proportion of the artificial doublets which should 
-made of entirely random cells (as opposed to inter-cluster combinations).}
-
-\item{adjustDoubletSizes}{Whether to adjust doublet library sizes (adjusting
-by cluster-medians). Alternatively, a number between 0 and 1 can be given, 
-determining the proportion of the artificial doublets for which to perform 
-the size adjustment.}
+\item{propRandom}{The proportion of the artificial doublets which 
+should be made of random cells (as opposed to inter-cluster combinations).}
 
 \item{returnType}{Either "sce" (default), "table" (to return the table of 
 cell attributes including artificial doublets), or "full" (returns an SCE
@@ -120,6 +120,8 @@ calls}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
+
+\item{...}{further arguments passed to \code{\link{getArtificialDoublets}}.}
 }
 \value{
 The \code{sce} object with several additional colData columns, in 

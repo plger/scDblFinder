@@ -53,6 +53,8 @@
 getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
+  }else if(is(x,"list")){
+    clusters <- x$k
   }else{
     clusters <- x
   }

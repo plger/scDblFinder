@@ -25,6 +25,9 @@
 #' hashes, want you want to give here are the different batches/wells (i.e. 
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
+#' @param trajectoryMode Logical; whether to generate doublets in trajectory 
+#' mode (i.e. for datasets with gradients rather than separated subpopulations).
+#' See \code{vignette("scDblFinder")} for more details.
 #' @param knownDoublets An optional logical vector of known doublets (e.g. 
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information.
@@ -32,7 +35,7 @@
 #' information from artificial/known doublets as part of the predictors.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used to build the network. If omitted,
-#' will be estimated using `intrinsicDimension::maxLikGlobalDimEst`.
+#' will be estimated using \code{\link[intrinsicDimension]{maxLikGlobalDimEst}}.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\% 
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is 
 #' appropriate for 10x datasets. Corrections for homeotypic doublets will be
@@ -49,12 +52,8 @@
 #' predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
 #' doublets among the real cells), in our experience this tends to lead to 
 #' overfitting.
-#' @param propRandom The proportion of the artificial doublets which should 
-#' made of entirely random cells (as opposed to inter-cluster combinations).
-#' @param adjustDoubletSizes Whether to adjust doublet library sizes (adjusting
-#' by cluster-medians). Alternatively, a number between 0 and 1 can be given, 
-#' determining the proportion of the artificial doublets for which to perform 
-#' the size adjustment.
+#' @param propRandom The proportion of the artificial doublets which 
+#' should be made of random cells (as opposed to inter-cluster combinations).
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
@@ -72,6 +71,7 @@
 #' @param verbose Logical; whether to print messages and the thresholding plot.
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when 
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
+#' @param ... further arguments passed to \code{\link{getArtificialDoublets}}.
 #'
 #' @return The \code{sce} object with several additional colData columns, in 
 #' particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
@@ -119,15 +119,14 @@
 #' @export
 #' @rdname scDblFinder
 #' @import SingleCellExperiment
-scDblFinder <- function( sce, clusters=NULL, samples=NULL, 
+scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          artificialDoublets=NULL, knownDoublets=NULL,
                          use.cxds=TRUE, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.015, k=NULL, includePCs=c(), 
-                         propRandom=0.1, adjustDoubletSizes=0.1,
-                         returnType=c("sce","table","full"), 
+                         dbr.sd=0.015, k=NULL, includePCs=c(), propRandom=0.1,
+                         returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          nrounds=50, max_depth=5, iter=2, threshold=TRUE, 
-                         verbose=is.null(samples), BPPARAM=SerialParam()
+                         verbose=is.null(samples), BPPARAM=SerialParam(), ...
                         ){
   sce <- .checkSCE(sce)
   score <- match.arg(score)
@@ -144,14 +143,19 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
     if(returnType=="full") 
         warning("`returnType='full'` ignored when splitting by samples")
     cs <- split(seq_along(samples), samples, drop=TRUE)
-    d <- bplapply(cs, BPPARAM=BPPARAM, FUN=function(x){ 
+    names(nn) <- nn <- names(cs)
+    d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){ 
+        x <- cs[[n]]
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
-        scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                    clusters=clusters, dims=dims, dbr=dbr, 
-                    dbr.sd=dbr.sd, k=k, score="weighted", nfeatures=nfeatures,
-                    propRandom=propRandom, returnType="table",
-                    adjustDoubletSizes=adjustDoubletSizes, threshold=FALSE, 
-                    knownDoublets=knownDoublets, verbose=FALSE)
+        tryCatch(scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
+                    clusters=clusters, trajectoryMode=trajectoryMode, 
+                    dims=dims, dbr=dbr, dbr.sd=dbr.sd, k=k, nfeatures=nfeatures,
+                    score="weighted", propRandom=propRandom, returnType="table",
+                    threshold=FALSE, knownDoublets=knownDoublets, 
+                    verbose=FALSE, ...),
+                 error=function(e){
+                   stop("An error occured while processing sample '",n,"':\n",e)
+                 })
     })
     cn <- table(unlist(lapply(d, colnames)))
     cn <- names(cn)[cn==length(d)]
@@ -200,15 +204,19 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(is.null(clusters) || length(clusters)==1){
     if(verbose) message("Clustering cells...")
     if(!is.null(clusters)){
-      clusters <- fastcluster(sce, ndims=dims, k=clusters, 
-                              returnType="preclusters")  
+      clusters <- fastcluster(sce, ndims=dims, k=clusters, nfeatures=nfeatures,
+                    returnType=ifelse(trajectoryMode,"graph","preclusters"))
     }else{
-      clusters <- fastcluster(sce, ndims=dims)
+      clusters <- fastcluster(sce, ndims=dims, nfeatures=nfeatures)
     }
+  }else if(trajectoryMode && length(unique(clusters))>1){
+    clusters <- list( k=clusters,
+      graph=.getMetaGraph(.getDR(sce,ndims=dims,nfeatures=nfeatures) ,clusters))
   }
-  if((nc <- length(unique(clusters))) == 1)
-    stop("Only one cluster generated. Consider specifying `cluster` ",
-         "(e.g. `cluster=10`)")
+  nc <- ifelse(is.list(clusters),length(unique(clusters$k)),
+           length(unique(clusters)))
+  if(nc==1) stop("Only one cluster generated. Consider specifying `cluster` ",
+                 "(e.g. `cluster=10`)")
   if(verbose) message(nc, " clusters")
 
   # get the artificial doublets
@@ -222,8 +230,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   if(verbose)
     message("Creating ~", artificialDoublets, " artifical doublets...")
   ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets, 
-                              clusters=clusters, prop.fullyRandom=propRandom,
-                              adjustSize=adjustDoubletSizes)
+                              clusters=clusters, propRandom=propRandom, ...)
 
   gc(verbose=FALSE)
   
@@ -273,6 +280,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL,
   ex <- getExpectedDoublets(clusters, dbr)
   d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM, 
                       verbose=verbose)$d
+  if(is.list(clusters)) clusters <- clusters$k
   d[colnames(sce),"cluster"] <- clusters
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures

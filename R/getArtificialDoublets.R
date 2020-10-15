@@ -6,17 +6,19 @@
 #' @param n The approximate number of doublet to generate (default 3000).
 #' @param clusters The optional clusters labels to use to build cross-cluster 
 #' doublets.
-#' @param prop.fullyRandom The proportion of the created doublets that are fully
+#' @param adjustSize Logical; whether to adjust the size of the doublets using
+#' the ratio between each cluster's median library size. Alternatively, a number
+#' between 0 and 1 can be given, determining the proportion of the doublets for
+#' which to perform the size adjustment.
+#' @param propRandom The proportion of the created doublets that are fully
 #'  random (default 0.1); the rest will be doublets created across clusters. 
 #'  Ignored if `clusters` is NULL.
 #' @param n.meta.cells The number of meta-cell per cluster to create. If given,
 #' additional doublets will be created from cluster meta-cells.
 #' @param meta.triplets Logical; whether to create triplets from meta cells. 
 #' Ignored if `clusters` is missing.
-#' @param adjustSize Logical; whether to adjust the size of the doublets using
-#' the ratio between each cluster's median library size. Alternatively, a number
-#' between 0 and 1 can be given, determining the proportion of the doublets for
-#' which to perform the size adjustment.
+#' @param traj.weightFun The function by which to weigh distances (steps) in 
+#' trajectory-based doublet generation.
 #'
 #' @return If `clusters` is Null, returns a count matrix of artificial doublets.
 #' Otherwise, returns a list with two elements: `counts` (the count matrix of
@@ -29,24 +31,24 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL, 
-                                   prop.fullyRandom=0.1, n.meta.cells=1,
-                                   meta.triplets=TRUE, adjustSize=TRUE ){
+getArtificialDoublets <- function( x, n=3000, clusters=NULL, adjustSize=FALSE,
+                                   propRandom=0.1, n.meta.cells=2,
+                                   meta.triplets=TRUE, traj.weightFun=NULL ){
   ls <- Matrix::colSums(x)
   w <- which(ls>0 & ls>=quantile(ls,0.01) & ls<=quantile(ls,0.99))
   x <- x[,w,drop=FALSE]
   if(!is.null(clusters)){
     if(is.list(clusters)){
-    clusters$k <- clusters$k[w]
-    clo <- clusters
-    clusters <- clusters$k
+      clusters$k <- clusters$k[w]
+      clo <- clusters
+      clusters <- clusters$k
     }else{
-    clo <- clusters <- clusters[w] 
+      clo <- clusters <- clusters[w] 
     }
     clusters <- as.factor(clusters)
   }
   
-  if(is.null(clusters) || prop.fullyRandom==1){
+  if(is.null(clusters) || propRandom==1){
     # create random combinations
     if(ncol(x)^2 <= n){
       # few combinations, get them all
@@ -72,11 +74,12 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     return(list( counts=ad.m, origins=as.factor(oc) ))
   }
   
-  if((nr <- ceiling(n*prop.fullyRandom))>0){
-    ad.m <- getArtificialDoublets(x,n=nr,clusters=clusters,prop.fullyRandom=1)
+  if((nr <- ceiling(n*propRandom))>0){
+    ad.m <- getArtificialDoublets(x, n=nr, clusters=clusters, 
+                                  propRandom=1, adjustSize=adjustSize)
     oc <- ad.m$origins
     ad.m <- ad.m$counts
-    n <- ceiling(n*(1-prop.fullyRandom))
+    n <- ceiling(n*(1-propRandom))
   }else{
     ad.m <- x[,c(),drop=FALSE]
     oc <- character()
@@ -86,7 +89,8 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   
   # create doublets across clusters:
   n <- ceiling(n)
-  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n))
+  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n), 
+                     weightFun=traj.weightFun)
   m2 <- createDoublets(x, ca, clusters=clusters, adjustSize=adjustSize)
   oc <- c(oc, as.character(ca$orig.clusters))
   names(oc) <- names(m2)
@@ -117,7 +121,8 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     if(length(cl2)<3) cl2 <- names(sort(tt, decreasing=TRUE))[1:3]
     w <- which(clusters %in% cl2)
     # create triplets from meta cells:
-    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, meta.cell.size=100)
+    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, 
+                          meta.cell.size=100)
     i <- seq_len(ncol(meta))
     ca <- expand.grid(i, i, i)
     ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
@@ -129,6 +134,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc, oc2)
   }
+  
   list( counts=ad.m, origins=as.factor(oc) )
 }
 
@@ -156,7 +162,8 @@ getCellPairs <- function(x, n=1000, ...){
 }
 
 # get cross-cluster pairs of cells
-.getCellPairsFromClusters <- function(clusters, n=1000, ls=NULL, q=c(0.2,0.9)){
+.getCellPairsFromClusters <- function(clusters, n=1000, ls=NULL, q=c(0.2,0.9),
+                                      ...){
   cli <- split(seq_along(clusters), clusters)
   if(!is.null(ls)){
     ls <- split(ls, clusters)
@@ -180,11 +187,16 @@ getCellPairs <- function(x, n=1000, ...){
 
 # get pairs of cells based on distances on the meta-cell graph
 #' @importFrom igraph distances
-.getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000){
+.getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000, 
+                                   weightFun=NULL, ...){
   cli <- split(seq_along(k), k)
   ca <- expand.grid(seq_along(cli), seq_along(cli))
   ca <- as.data.frame(ca[ca[,1]<ca[,2],])
   d <- distances(g)
+  d[is.infinite(d)] <- max(d[!is.infinite(d)])
+  if(is.null(weightFun)) weightFun <- function(d) sqrt(d)-0.5
+  d <- weightFun(d)
+  d[is.nan(d) | d<0] <- 0
   ca$dist <- as.integer(vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1), 
                     FUN=function(i) d[ca[i,1],ca[i,2]]))
   ca$n <- rpois(nrow(ca), n/sum(ca$dist)*ca$dist)
@@ -275,6 +287,7 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=TRUE,
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   wAd <- sample.int(nrow(dbl.idx), size=round(adjustSize*nrow(dbl.idx)))
   wNad <- setdiff(seq_len(nrow(dbl.idx)),wAd)
+  #message("wAd=",length(wAd)," wNad=",length(wNad))
   x1 <- x[,dbl.idx[wNad,1]]+x[,dbl.idx[wNad,2]]
   if(length(wAd)>0){
     if(is.null(clusters)) stop("If `adjustSize=TRUE`, clusters must be given.")
@@ -289,7 +302,8 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=TRUE,
     dbl.idx$factor[dbl.idx$factor<0.2] <- 0.2
     dbl.idx$ls <- (ls[dbl.idx[,1]]+ls[dbl.idx[,2]])/2
     x2 <- x[,dbl.idx[,1]]*dbl.idx$factor+x[,dbl.idx[,2]]*(1-dbl.idx$factor)
-    x2 <- x2 %*% diag(dbl.idx$ls/Matrix::colSums(x2))
+    x2 <- tryCatch(x2 %*% diag(dbl.idx$ls/Matrix::colSums(x2)),
+                   error=function(e) t(t(x2)/Matrix::colSums(x2)))
     x1 <- cbind(x1,x2)
     rm(x2)
   }
