@@ -414,9 +414,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       # remove cells with a high chance of being doublets from the training
       w <- which(d$type=="real" & 
                    d$score >= quantile(d$score[which(d$type=="real")], 1-gdbr))
-      fit <- .xgbtrain(d[-w,prds], d$type[-w], nrounds, 
-                       max_depth=ifelse(iter==1,max_depth,50))
-      d$score <- predict(fit, as.matrix(d[,prds]))
+      d$score <- tryCatch({
+        fit <- .xgbtrain(d[-w,prds], d$type[-w], nrounds, 
+                         max_depth=ifelse(iter==1,max_depth,50))
+        predict(fit, as.matrix(d[,prds]))
+      }, error=function(e) d$score)
       iter <- iter-1
     }
 
