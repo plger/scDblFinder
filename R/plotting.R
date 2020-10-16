@@ -25,25 +25,36 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
                            addSizes=TRUE, col=NULL, column_title="Clusters", 
                            row_title="Clusters", column_title_side="bottom", 
                            na_col="white", ...){
-  s <- metadata(sce)$scDblFinder.stats
-  s$enrichment <- (s$observed+1)/(s$expected+1)
+  if(is.data.frame(sce)){
+    s <- sce
+  }else{
+    s <- metadata(sce)$scDblFinder.stats
+  }
+  if(is.null(s)) stop("Could not find doublet metadata. Was scDblFinder run?")
+  if(isMultiSample <- is(s,"list")) s <- dplyr::bind_rows(s, .id="sample")
+  s$enrichment <- log2((s$observed+1)/(s$expected+1))
   colorBy <- match.arg(colorBy, colnames(s))
   labelBy <- match.arg(labelBy, colnames(s))
   comb <- do.call(rbind,strsplit(s$combination,"+",fixed=TRUE))
   colnames(comb) <- paste0("cluster",1:2)
   s <- cbind(comb, s)
-  ob <- .castorigins(s, val="observed")
-  en <- .castorigins(s, val=colorBy)
+  if(isMultiSample)
+    ag <- aggregate(s[,c(labelBy,colorBy)], by=s[,1:2], na.rm=TRUE, FUN=mean)
+  doag <- function(x) isMultiSample && !(x %in% c("observed","expected"))
+  ob <- .castorigins(switch(as.character(doag(labelBy)),
+                           "TRUE"=ag, "FALSE"=s), val=labelBy)
+  en <- .castorigins(switch(as.character(doag(colorBy)),
+                           "TRUE"=ag, "FALSE"=s), val=colorBy)
   if(colorBy=="enrichment"){
-    en <- log2(en)
     colorBy <- "log2\nenrichment"
     if(is.null(col))
         col <- circlize::colorRamp2(c(min(en,na.rm=TRUE),0,max(en,na.rm=TRUE)),
                                      colors=c("blue","white","red"))
-  }else{
-     if(is.null(col)) col <- viridisLite::viridis(100) 
+  }else if(is.null(col)){
+    col <- viridisLite::viridis(100)
   }
-  if(addSizes){
+  if(doag(colorBy)) colorBy <- paste0("mean\n", colorBy)
+  if(addSizes && !is.null(sce$scDblFinder.cluster)){
     sizes <- table(sce$scDblFinder.cluster)
     n <- paste0(colnames(ob), " (", as.numeric(sizes[colnames(ob)]),")")
     colnames(ob) <- row.names(ob) <- colnames(en) <- row.names(en) <- n
