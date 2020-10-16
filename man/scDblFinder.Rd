@@ -89,9 +89,7 @@ at the highest k), and all the information will be used by the classifier.
 If omitted, a reasonable set of values is used.}
 
 \item{includePCs}{The index of principal components to include in the 
-predictors (e.g. `includePCs=1:2`). Given the imperfect training data (i.e.
-doublets among the real cells), in our experience this tends to lead to 
-overfitting.}
+predictors (e.g. `includePCs=1:2`).}
 
 \item{propRandom}{The proportion of the artificial doublets which 
 should be made of random cells (as opposed to inter-cluster combinations).}
