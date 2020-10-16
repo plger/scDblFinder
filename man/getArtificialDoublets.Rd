@@ -8,7 +8,8 @@ getArtificialDoublets(
   x,
   n = 3000,
   clusters = NULL,
-  adjustSize = FALSE,
+  halfSize = 0.5,
+  adjustSize = 0.2,
   propRandom = 0.1,
   n.meta.cells = 2,
   meta.triplets = TRUE,
@@ -22,6 +23,11 @@ getArtificialDoublets(
 
 \item{clusters}{The optional clusters labels to use to build cross-cluster 
 doublets.}
+
+\item{halfSize}{Logical; whether to half the library size of doublets 
+(instead of just summing up the cells). Alternatively, a number between 0 
+and 1 can be given, determining the proportion of the doublets for which
+to perform the size adjustment.}
 
 \item{adjustSize}{Logical; whether to adjust the size of the doublets using
 the ratio between each cluster's median library size. Alternatively, a number

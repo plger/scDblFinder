@@ -9,6 +9,7 @@ createDoublets(
   dbl.idx,
   clusters = NULL,
   resamp = TRUE,
+  halfSize = 0.5,
   adjustSize = FALSE,
   prefix = "dbl."
 )
@@ -23,6 +24,11 @@ the first two columns.}
 
 \item{resamp}{Logical; whether to resample the doublets using the poisson
 distribution.}
+
+\item{halfSize}{Logical; whether to half the library size of doublets 
+(instead of just summing up the cells). Alternatively, a number between 0 
+and 1 can be given, determining the proportion of the doublets for which
+to perform the size adjustment. Ignored if not resampling.}
 
 \item{adjustSize}{Logical; whether to adjust the size of the doublets using
 the median sizes per cluster of the originating cells. Requires `clusters` to

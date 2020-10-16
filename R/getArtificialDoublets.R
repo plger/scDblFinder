@@ -6,6 +6,10 @@
 #' @param n The approximate number of doublet to generate (default 3000).
 #' @param clusters The optional clusters labels to use to build cross-cluster 
 #' doublets.
+#' @param halfSize Logical; whether to half the library size of doublets 
+#' (instead of just summing up the cells). Alternatively, a number between 0 
+#' and 1 can be given, determining the proportion of the doublets for which
+#' to perform the size adjustment.
 #' @param adjustSize Logical; whether to adjust the size of the doublets using
 #' the ratio between each cluster's median library size. Alternatively, a number
 #' between 0 and 1 can be given, determining the proportion of the doublets for
@@ -31,7 +35,8 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL, adjustSize=FALSE,
+getArtificialDoublets <- function( x, n=3000, clusters=NULL, 
+                                   halfSize=0.5, adjustSize=0.2,
                                    propRandom=0.1, n.meta.cells=2,
                                    meta.triplets=TRUE, traj.weightFun=NULL ){
   ls <- Matrix::colSums(x)
@@ -195,10 +200,11 @@ getCellPairs <- function(x, n=1000, ...){
   d <- distances(g)
   d[is.infinite(d)] <- max(d[!is.infinite(d)])
   if(is.null(weightFun)) weightFun <- function(d) sqrt(d)-0.5
+  if(is.character(weightFun)) weightFun <- get(weightFun)
   d <- weightFun(d)
   d[is.nan(d) | d<0] <- 0
-  ca$dist <- as.integer(vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1), 
-                    FUN=function(i) d[ca[i,1],ca[i,2]]))
+  ca$dist <- vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1), 
+                    FUN=function(i) d[ca[i,1],ca[i,2]])
   ca$n <- rpois(nrow(ca), n/sum(ca$dist)*ca$dist)
   ca <- ca[ca$n>0,]
   oc <- rep(factor(paste(names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")),ca$n)
@@ -270,6 +276,10 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
 #' @param clusters An optional vector of cluster labels (for each column of `x`)
 #' @param resamp Logical; whether to resample the doublets using the poisson
 #' distribution.
+#' @param halfSize Logical; whether to half the library size of doublets 
+#' (instead of just summing up the cells). Alternatively, a number between 0 
+#' and 1 can be given, determining the proportion of the doublets for which
+#' to perform the size adjustment. Ignored if not resampling.
 #' @param adjustSize Logical; whether to adjust the size of the doublets using
 #' the median sizes per cluster of the originating cells. Requires `clusters` to
 #' be given. Alternatively to a logical value, a number between 0 and 1 can be 
@@ -280,10 +290,13 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
 #' @return A matrix of artificial doublets.
 #' @export
 createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=TRUE, 
-                           adjustSize=FALSE, prefix="dbl."){
+                           halfSize=0.5, adjustSize=FALSE, prefix="dbl."){
   dgc <- is(x,"dgCMatrix")
   adjustSize <- as.numeric(adjustSize)
+  halfSize <- as.numeric(halfSize)
   if(adjustSize>1 || adjustSize<0)
+      stop("`adjustSize` should be a logical or a number between 0 and 1.")
+  if(halfSize>1 || halfSize<0)
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   wAd <- sample.int(nrow(dbl.idx), size=round(adjustSize*nrow(dbl.idx)))
   wNad <- setdiff(seq_len(nrow(dbl.idx)),wAd)
@@ -300,7 +313,7 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=TRUE,
     dbl.idx$factor <- (dbl.idx$ls.ratio+ls1/(ls1+ls2))/2
     dbl.idx$factor[dbl.idx$factor>0.8] <- 0.8
     dbl.idx$factor[dbl.idx$factor<0.2] <- 0.2
-    dbl.idx$ls <- (ls[dbl.idx[,1]]+ls[dbl.idx[,2]])/2
+    dbl.idx$ls <- (ls[dbl.idx[,1]]+ls[dbl.idx[,2]])
     x2 <- x[,dbl.idx[,1]]*dbl.idx$factor+x[,dbl.idx[,2]]*(1-dbl.idx$factor)
     x2 <- tryCatch(x2 %*% diag(dbl.idx$ls/Matrix::colSums(x2)),
                    error=function(e) t(t(x2)/Matrix::colSums(x2)))
@@ -309,6 +322,11 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=TRUE,
   }
   x <- x1
   rm(x1)
+  if(halfSize>0 &&
+     length(wAd <- sample.int(nrow(dbl.idx), 
+                              size=round(halfSize*nrow(dbl.idx))))>1){
+    x[,wAd] <- x[,wAd]/2
+  }
   if(resamp){
     x <- matrix(as.integer(rpois(length(x), as.numeric(as.matrix(x)))), 
                 nrow=nrow(x))
