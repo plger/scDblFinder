@@ -122,7 +122,7 @@
 scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          artificialDoublets=NULL, knownDoublets=NULL,
                          use.cxds=TRUE, nfeatures=1000, dims=NULL, dbr=NULL, 
-                         dbr.sd=0.015, k=NULL, includePCs=c(), propRandom=0.1,
+                         dbr.sd=0.015, k=NULL, includePCs=1:5, propRandom=0.1,
                          returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
                          nrounds=50, max_depth=5, iter=2, threshold=TRUE, 
