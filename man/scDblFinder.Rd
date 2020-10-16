@@ -17,7 +17,7 @@ scDblFinder(
   dbr = NULL,
   dbr.sd = 0.015,
   k = NULL,
-  includePCs = c(),
+  includePCs = 1:5,
   propRandom = 0.1,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
