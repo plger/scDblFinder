@@ -8,7 +8,7 @@ createDoublets(
   x,
   dbl.idx,
   clusters = NULL,
-  resamp = TRUE,
+  resamp = 0.5,
   halfSize = 0.5,
   adjustSize = FALSE,
   prefix = "dbl."
@@ -23,7 +23,8 @@ the first two columns.}
 \item{clusters}{An optional vector of cluster labels (for each column of `x`)}
 
 \item{resamp}{Logical; whether to resample the doublets using the poisson
-distribution.}
+distribution. Alternatively, if a proportion between 0 and 1, the proportion
+of doublets to resample.}
 
 \item{halfSize}{Logical; whether to half the library size of doublets 
 (instead of just summing up the cells). Alternatively, a number between 0 

@@ -10,6 +10,7 @@ getArtificialDoublets(
   clusters = NULL,
   halfSize = 0.5,
   adjustSize = 0.2,
+  resamp = 0.5,
   propRandom = 0.1,
   n.meta.cells = 2,
   meta.triplets = TRUE,
@@ -34,12 +35,17 @@ the ratio between each cluster's median library size. Alternatively, a number
 between 0 and 1 can be given, determining the proportion of the doublets for
 which to perform the size adjustment.}
 
+\item{resamp}{Logical; whether to resample the doublets using the poisson
+distribution. Alternatively, if a proportion between 0 and 1, the proportion
+of doublets to resample.}
+
 \item{propRandom}{The proportion of the created doublets that are fully
 random (default 0.1); the rest will be doublets created across clusters. 
 Ignored if `clusters` is NULL.}
 
 \item{n.meta.cells}{The number of meta-cell per cluster to create. If given,
-additional doublets will be created from cluster meta-cells.}
+additional doublets will be created from cluster meta-cells. Ignored if 
+`clusters` is missing.}
 
 \item{meta.triplets}{Logical; whether to create triplets from meta cells. 
 Ignored if `clusters` is missing.}
@@ -48,10 +54,9 @@ Ignored if `clusters` is missing.}
 trajectory-based doublet generation.}
 }
 \value{
-If `clusters` is Null, returns a count matrix of artificial doublets.
-Otherwise, returns a list with two elements: `counts` (the count matrix of
+A list with two elements: `counts` (the count matrix of
 the artificial doublets) and `origins` the clusters from which each 
-artificial doublets originated.
+artificial doublets originated (NULL if `clusters` is not given).
 }
 \description{
 Create expression profiles of random artificial doublets.

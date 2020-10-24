@@ -27,7 +27,8 @@ addDoublets(
 \item{prefix}{Prefix for the colnames generated.}
 }
 \value{
-A `SingleCellExperiment`
+A `SingleCellExperiment` with the colData columns `cluster` and 
+`type` (indicating whether the cell is a singlet or doublet).
 }
 \description{
 Adds artificial doublets to an existing dataset

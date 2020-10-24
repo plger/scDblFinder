@@ -7,7 +7,8 @@
 getCellPairs(x, n = 1000, ...)
 }
 \arguments{
-\item{x}{A vector of cluster labels for each cell, or a graph}
+\item{x}{A vector of cluster labels for each cell, or a list containing 
+metacells and graph}
 
 \item{n}{The number of cell pairs to obtain}
 

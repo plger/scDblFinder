@@ -19,11 +19,12 @@ scDblFinder(
   k = NULL,
   includePCs = 1:5,
   propRandom = 0.1,
+  propMarkers = 0,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
   nrounds = 50,
   max_depth = 5,
-  iter = 2,
+  iter = 1,
   threshold = TRUE,
   verbose = is.null(samples),
   BPPARAM = SerialParam(),
@@ -65,7 +66,7 @@ create. If \code{NULL}, will be the maximum of the number of cells or
 through cell barcodes), or the name of a colData column of `sce` containing
 that information.}
 
-\item{use.cxds}{Logical; whether to use `scds::cxds` scores in addition to 
+\item{use.cxds}{Logical; whether to use the `cxds` scores in addition to 
 information from artificial/known doublets as part of the predictors.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
@@ -94,6 +95,9 @@ predictors (e.g. `includePCs=1:2`).}
 \item{propRandom}{The proportion of the artificial doublets which 
 should be made of random cells (as opposed to inter-cluster combinations).}
 
+\item{propMarkers}{The proportion of features to select based on marker 
+identification.}
+
 \item{returnType}{Either "sce" (default), "table" (to return the table of 
 cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
@@ -109,7 +113,7 @@ doublets, we generally find lower limits to outperform cross-validation.}
 \item{iter}{A positive integer indicating the number of scoring iterations
 (ignored if `score` isn't based on classifiers). At each iteration, real 
 cells that would be called as doublets are excluding from the training, and
-new scores are calculated.}
+new scores are calculated. Recommended values are 1 or 2.}
 
 \item{threshold}{Logical; whether to threshold scores into binary doublet 
 calls}

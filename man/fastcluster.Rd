@@ -8,11 +8,12 @@ fastcluster(
   x,
   k = NULL,
   rdname = "PCA",
-  nstart = 2,
+  nstart = 3,
   iter.max = 20,
   ndims = NULL,
   nfeatures = 1000,
-  returnType = c("clusters", "preclusters", "metacells", "graph")
+  returnType = c("clusters", "preclusters", "metacells", "graph"),
+  BPPARAM = SerialParam()
 )
 }
 \arguments{
