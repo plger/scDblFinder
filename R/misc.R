@@ -93,22 +93,57 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   })
 }
 
-.clusterTopG <- function(sce, clusters=NULL, nfeatures=1000){
-  if(nfeatures>=nrow(sce)) return(row.names(sce))
-  if(is.null(clusters))
-    return(row.names(sce)[order(Matrix::rowMeans(counts(sce),na.rm=TRUE),
-                                decreasing=TRUE)[seq_len(nfeatures)]])
-  # get mean expression across clusters
-  cli <- split(seq_len(ncol(sce)), clusters)
-  cl.means <- vapply(cli, FUN.VALUE=double(nrow(sce)), FUN=function(x){
-    Matrix::rowMeans(counts(sce)[,x,drop=FALSE], na.rm=TRUE)
-  })
-  # grab the top genes in each cluster
-  g <- unique(as.numeric(t(apply(cl.means, 2, FUN=function(x){
+#' selFeatures
+#' 
+#' Selects features based on cluster-wise expression or marker detection, or a
+#' combination.
+#'
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}} with a 
+#' 'counts' assay.
+#' @param clusters Optional cluster assignments. Should either be a vector of 
+#' labels for each cell.
+#' @param nfeatures The number of features to select.
+#' @param propMarkers The proportion of features to select from markers (rather
+#' than on the basis of high expression). Ignored if `clusters` isn't given.
+#' @param FDR.max The maximum marker binom FDR to be included in the selection.
+#' (see \code{\link[scran]{findMarkers}}).
+#'
+#' @return A vector of feature (i.e. row) names.
+#' @export
+#'
+#' @examples
+#' @importFrom scuttle sumCountsAcrossCells
+#' @importFrom scran findMarkers
+selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0.5, FDR.max=0.05){
+  if(nrow(sce)<=nfeatures) return(row.names(sce))
+  if(is.null(clusters)) propMarkers <- 0
+  g <- c()
+  if((ng <- ceiling((1-propMarkers)*nfeatures))>0){
+    if(is.null(clusters)){
+      g <- row.names(sce)[order(Matrix::rowMeans(counts(sce),na.rm=TRUE),
+                                decreasing=TRUE)[seq_len(ng)]]
+    }else{
+      cl.means <- as.matrix(assay(scuttle::sumCountsAcrossCells(counts(sce), clusters)))
+      g <- unique(as.numeric(t(apply(cl.means, 2, FUN=function(x){
     order(x, decreasing=TRUE)[seq_len(nfeatures)]
-  }))))[seq_len(nfeatures)]
-  g
+  }))))[seq_len(ng)]
+      g <- row.names(sce)[g]
+    }
+  }
+  if(ng==nfeatures) return(g)
+  mm <- scran::findMarkers(sce, groups=clusters, test.type="binom", assay.type="counts")
+	mm <- dplyr::bind_rows(lapply(mm, FUN=function(x){
+	  x <- x[x$FDR<FDR.max,]
+	  data.frame(gene=row.names(x), Top=x$Top, FDR=x$FDR, stringsAsFactors=FALSE)
+	}), .id = "cluster")
+	g2 <- unique(c(g,mm$gene))
+	if(length(g2)<nfeatures) return(g2)
+	i <- nfeatures/(2*length(unique(clusters)))
+	while(length(g <- unique(c(g,mm$gene[mm$Top<=i])))<nfeatures) i<-i+1
+	return(head(g,nfeatures))
 }
+
 
 #' mockDoubletSCE
 #' 
@@ -197,4 +232,44 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
          "`sce`.")
   }
   x
+}
+.checkPropArg <- function(x, acceptNull=TRUE){
+  arg <- deparse(substitute(x))
+  if( is.null(x) && acceptNull ) return(NULL)
+  if(is.null(x) || length(x)!=1 || !is.numeric(x) || x>1 || x<0)
+    stop("`",arg,"` should be a positive value between 0 and 1.")
+}
+
+#' cxds2
+#' 
+#' Calculates a coexpression-based doublet score using the method developed
+#' by \href{https://academic.oup.com/bioinformatics/article/36/4/1150/5566507}{Bais and Kostka 2020}.
+#' This is the original implementation from the `scds` package, but enabling
+#' scores to be calculated for all cells while the gene coexpression is based
+#'  only on a subset (i.e. excluding known/artificial doublets).
+#'
+#' @param x A matrix of counts.
+#' @param whichDbls The columns of `x` which are known doublets.
+#' @param ntop The number of top features to keep.
+#' @param binThresh The count threshold to be considered expressed.
+#'
+#' @return A cxds score.
+#' @export
+#' @importFrom stats pbinom
+cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
+  x <- x > binThresh
+  ps <- Matrix::rowMeans(x)
+  hvg = order(ps * (1 - ps), decreasing=TRUE)[seq_len(ntop)]
+  Bp <- x <- x[hvg, ]
+  ps <- ps[hvg]
+  if(length(whichDbls)>0) Bp <- Bp[,-whichDbls]
+  prb <- outer(ps, 1 - ps)
+  prb <- prb + t(prb)
+  obs <- Bp %*% (1 - Matrix::t(Bp))
+  obs <- obs + Matrix::t(obs)
+  S <- stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp), 
+        lower.tail = FALSE, log = TRUE)
+  s <- -Matrix::colSums(x * (S %*% x))
+  s <- s - min(s)
+  s/max(s)
 }
