@@ -32,24 +32,27 @@
 #' sce$cluster <- fastcluster(sce)
 #' 
 #' @export
-fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20, 
+#' @importFrom bluster makeKNNGraph
+#' @importFrom igraph membership cluster_louvain
+fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20, 
                          ndims=NULL, nfeatures=1000, 
                          returnType=c("clusters","preclusters","metacells",
-                                      "graph") ){
+                                      "graph"),
+                         BPPARAM=SerialParam() ){
   returnType <- match.arg(returnType)
   x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname)
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
   if((returnType != "clusters" || nrow(x)>1000) && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
     if(returnType=="preclusters") return(k)
-    x <- t(vapply(split(names(k),k), FUN.VALUE=numeric(ncol(x)),
-                  FUN=function(i) colMeans(x[i,,drop=FALSE])))
+    x <- t(vapply(split(seq_along(k),k), FUN.VALUE=numeric(ncol(x)), 
+               FUN=function(i) colMeans(x[i,,drop=FALSE])))
     if(returnType=="metacells") return(list(meta=x,idx=k))
   }else{
     k <- seq_len(nrow(x))
   }
-  x <- buildKNNGraph(x, d=NA, transposed=TRUE, 
-                     k=min(max(2,floor(sqrt(length(unique(k))))-1),10))
+  x <- makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(k))))-1),10),
+                    BPPARAM=BPPARAM)
   if(returnType=="graph") return(list(k=k, graph=x))
   cl <- membership(cluster_louvain(x))
   cl[k]
@@ -88,9 +91,9 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=2, iter.max=20,
   x[,seq_len(min(ncol(x),as.integer(ndims)))]
 }
 
-.getMetaGraph <- function(x, clusters){
-  x <- t(vapply(split(seq_len(nrow(x)),clusters), FUN.VALUE=numeric(ncol(x)),
-                  FUN=function(i) colMeans(x[i,,drop=FALSE])))
-  buildKNNGraph(x, d=NA, transposed=TRUE, 
-                k=min(max(2,floor(sqrt(length(unique(clusters))))-1),10))
+.getMetaGraph <- function(x, clusters, BPPARAM=SerialParam()){
+  x <- t(vapply(split(seq_along(clusters),clusters), FUN.VALUE=numeric(ncol(x)), 
+               FUN=function(i) colMeans(x[i,,drop=FALSE])))
+  makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(clusters))))-1),10),
+               BPPARAM=BPPARAM)
 }
