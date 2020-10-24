@@ -31,7 +31,7 @@
 #' @param knownDoublets An optional logical vector of known doublets (e.g. 
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information.
-#' @param use.cxds Logical; whether to use `scds::cxds` scores in addition to 
+#' @param use.cxds Logical; whether to use the `cxds` scores in addition to 
 #' information from artificial/known doublets as part of the predictors.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used to build the network. If omitted,
@@ -52,6 +52,8 @@
 #' predictors (e.g. `includePCs=1:2`).
 #' @param propRandom The proportion of the artificial doublets which 
 #' should be made of random cells (as opposed to inter-cluster combinations).
+#' @param propMarkers The proportion of features to select based on marker 
+#' identification.
 #' @param returnType Either "sce" (default), "table" (to return the table of 
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
@@ -63,7 +65,7 @@
 #' @param iter A positive integer indicating the number of scoring iterations
 #' (ignored if `score` isn't based on classifiers). At each iteration, real 
 #' cells that would be called as doublets are excluding from the training, and
-#' new scores are calculated.
+#' new scores are calculated. Recommended values are 1 or 2.
 #' @param threshold Logical; whether to threshold scores into binary doublet 
 #' calls
 #' @param verbose Logical; whether to print messages and the thresholding plot.
@@ -102,7 +104,6 @@
 #' @importFrom SummarizedExperiment colData<- assayNames
 #' @importFrom scuttle normalizeCounts
 #' @importFrom scater runPCA
-#' @importFrom scds cxds
 #' @importFrom methods is
 #' @importFrom DelayedArray as.matrix
 #' @importFrom BiocNeighbors findKNN
@@ -117,15 +118,18 @@
 #' @export
 #' @rdname scDblFinder
 #' @import SingleCellExperiment
+#' @importFrom SummarizedExperiment rowData<-
+#' @importFrom BiocParallel SerialParam bpnworkers
 scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          artificialDoublets=NULL, knownDoublets=NULL,
                          use.cxds=TRUE, nfeatures=1000, dims=NULL, dbr=NULL, 
                          dbr.sd=0.015, k=NULL, includePCs=1:5, propRandom=0.1,
-                         returnType=c("sce","table","full"),
+                         propMarkers=0, returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
-                         nrounds=50, max_depth=5, iter=2, threshold=TRUE, 
+                         nrounds=50, max_depth=5, iter=1, threshold=TRUE, 
                          verbose=is.null(samples), BPPARAM=SerialParam(), ...
                         ){
+  ## check arguments
   sce <- .checkSCE(sce)
   score <- match.arg(score)
   returnType <- match.arg(returnType)
@@ -135,7 +139,19 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   }
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
+  .checkPropArg(propMarkers)
+  .checkPropArg(propRandom)
+  .checkPropArg(dbr.sd)
 
+  ## if clusters are given, it's more efficient to do feature selection before
+  ## eventually splitting the dataset
+  if(!is.null(clusters) && length(clusters)>1){
+    sel_features <- selFeatures(sce, clusters, nfeatures=nfeatures, 
+                                propMarkers=propMarkers)
+  }else{
+    sel_features <- row.names(sce)
+  }
+  
   if(!is.null(samples)){
     # splitting by samples
     if(returnType=="full") 
@@ -145,11 +161,12 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){ 
         x <- cs[[n]]
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
-        tryCatch(scDblFinder(sce[,x], artificialDoublets=artificialDoublets, 
-                    clusters=clusters, trajectoryMode=trajectoryMode, 
-                    dims=dims, dbr=dbr, dbr.sd=dbr.sd, k=k, nfeatures=nfeatures,
-                    score="weighted", propRandom=propRandom, returnType="table",
-                    threshold=FALSE, knownDoublets=knownDoublets, 
+        tryCatch(scDblFinder(sce[sel_features,x], clusters=clusters, 
+                    knownDoublets=knownDoublets, dims=dims, dbr=dbr, 
+                    dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k, 
+                    nfeatures=nfeatures, propRandom=propRandom, 
+                    propMarkers=propMarkers, trajectoryMode=trajectoryMode, 
+                    returnType="table", threshold=FALSE, score="weighted", 
                     verbose=FALSE, ...),
                  error=function(e){
                    stop("An error occured while processing sample '",n,"':\n",e)
@@ -164,9 +181,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       x[,cn]
     }))
     d$sample <- ss
-    d <- .scDblscore(d,scoreType=score, threshold=TRUE, dbr=dbr, dbr.sd=dbr.sd, 
-                     max_depth=max_depth, nrounds=nrounds, iter=iter, 
-                     verbose=verbose)
+    d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr, 
+                     dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds, 
+                     iter=iter, BPPARAM=BPPARAM, verbose=verbose)
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
   }
@@ -183,11 +200,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   }
   
   orig <- sce
-  if(nrow(sce)>nfeatures){
-    if(verbose) message("Identifying top genes...")
-    sce <- sce[.clusterTopG(sce,nfeatures=nfeatures,clusters),]
-  }
-
   wDbl <- c()
   if(!is.null(knownDoublets) && length(wDbl <- which(knownDoublets))>0){
     sce$knownDoublet <- knownDoublets
@@ -203,25 +215,37 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     if(verbose) message("Clustering cells...")
     if(!is.null(clusters)){
       clusters <- fastcluster(sce, ndims=dims, k=clusters, nfeatures=nfeatures,
-                    returnType=ifelse(trajectoryMode,"graph","preclusters"))
+                    returnType=ifelse(trajectoryMode,"graph","preclusters"),
+                    BPPARAM=BPPARAM)
     }else{
-      clusters <- fastcluster(sce, ndims=dims, nfeatures=nfeatures)
+      clusters <- fastcluster(sce, ndims=dims, nfeatures=nfeatures,
+                              BPPARAM=BPPARAM)
     }
   }else if(trajectoryMode && length(unique(clusters))>1){
     clusters <- list( k=clusters,
-      graph=.getMetaGraph(.getDR(sce,ndims=dims,nfeatures=nfeatures) ,clusters))
+      graph=.getMetaGraph(.getDR(sce,ndims=dims,nfeatures=nfeatures),
+                          clusters, BPPARAM=BPPARAM) )
   }
-  nc <- ifelse(is.list(clusters),length(unique(clusters$k)),
-           length(unique(clusters)))
+  if(is.list(clusters)){
+    cl <- clusters$k
+  }else{
+    cl <- clusters
+  }
+  nc <- length(unique(cl))
   if(nc==1) stop("Only one cluster generated. Consider specifying `cluster` ",
                  "(e.g. `cluster=10`)")
   if(verbose) message(nc, " clusters")
-
+  
+  if(length(sel_features)>nfeatures)
+    sel_features <- selFeatures(sce[sel_features,], cl, nfeatures=nfeatures, 
+                                propMarkers=propMarkers)
+  sce <- sce[sel_features,]
+  
   # get the artificial doublets
   if(is.null(artificialDoublets))
     artificialDoublets <- min( 25000, max(5000,
                                           ceiling(ncol(sce)*0.6),
-                                          10*length(unique(clusters))^2 ) )
+                                          10*length(unique(cl))^2 ) )
   if(artificialDoublets<2)
       artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
   
@@ -250,13 +274,12 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
   cxds_score <- NULL
-  if(use.cxds) cxds_score <- scds::cxds(SingleCellExperiment(list(counts=e)),
-                                        ntop=min(500,nrow(e)))$cxds_score
+  if(use.cxds) cxds_score <- cxds2(e, whichDbls=which(ctype==2))
   nfeatures <- Matrix::colSums(e>0)
   
   # skip normalization if data is too large
-  if(ncol(e)<=25000){
-    tryCatch({
+  if(ncol(e)<=50000){
+  tryCatch({
       e <- normalizeCounts(e)
     }, error=function(er){
       warning("Error in calculating norm factors:", er)
@@ -287,7 +310,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   
   d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score, 
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
-                   max_depth=max_depth, iter=iter, verbose=verbose)
+                   max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
+                   verbose=verbose)
   if(returnType=="table") return(d)
   if(returnType=="full"){
       sce_out <- SingleCellExperiment(list(
@@ -297,13 +321,16 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
         metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
       return(sce_out)
   }
+  rowData(orig)$scDblFinder.selected <- row.names(orig) %in% sel_features
   .scDblAddCD(orig, d)
 }
 
+#' @importFrom BiocNeighbors AnnoyParam
 .evaluateKNN <- function(pca, ctype, origins, expected, k, 
                          BPPARAM=SerialParam(), verbose=TRUE){
   if(verbose) message("Finding KNN...")
-  knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM))
+  knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM,
+                                  BNPARAM=AnnoyParam()))
   
   if(verbose) message("Evaluating cell neighborhoods...")
   knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
@@ -380,7 +407,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 #' @importFrom S4Vectors DataFrame metadata
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
-                        threshold=TRUE, verbose=TRUE, dbr=NULL, ...){
+                        threshold=TRUE, verbose=TRUE, dbr=NULL, 
+                        BPPARAM=SerialParam(),...){
   gdbr <- dbr
   if(is.null(gdbr)){
     if(is.null(d$sample)){
@@ -414,7 +442,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                    d$score >= quantile(d$score[which(d$type=="real")], 1-gdbr))
       d$score <- tryCatch({
         fit <- .xgbtrain(d[-w,prds], d$type[-w], nrounds, 
-                         max_depth=ifelse(iter==1,max_depth,50))
+                         max_depth=ifelse(iter==1,max_depth,50),
+                         nthreads=BiocParallel::bpnworkers(BPPARAM))
         predict(fit, as.matrix(d[,prds]))
       }, error=function(e) d$score)
       iter <- iter-1
@@ -470,7 +499,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
 #' @import xgboost
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5, 
-                      subsample=0.6){
+                      subsample=0.6, nthreads=1){
   if(!is.integer(ctype)) ctype <- as.integer(ctype)-1
   d2 <- as.matrix(d2)
   if(is.null(nrounds)){
@@ -479,15 +508,15 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                     objective="binary:logistic", eval_metric="aucpr",
                     early_stopping_rounds=3, tree_method="hist", nfold=nfold,
                     metrics=list("aucpr","error"), subsample=subsample, 
-                    verbose=FALSE)
+                    nthread=nthreads, verbose=FALSE)
       ni = res$best_iteration
       ac = res$evaluation_log$test_error_mean[ni] + 
           1 * res$evaluation_log$test_error_std[ni]
       nrounds = min(which(res$evaluation_log$test_error_mean <= ac))
   }
-  xgboost( d2, ctype, nrounds=nrounds, eval_metric="aucpr",
-           objective="binary:logistic", max_depth=max_depth, 
-           early_stopping_rounds=5, verbose=FALSE )
+  xgboost( d2, ctype, nrounds=nrounds, eval_metric="aucpr", 
+           objective="binary:logistic", max_depth=max_depth,
+           early_stopping_rounds=5, verbose=FALSE, nthread=nthreads )
 }
 
 # add the relevant fields of the scDblFinder results table to the SCE
