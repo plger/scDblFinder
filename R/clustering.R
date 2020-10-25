@@ -86,7 +86,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
   x <- reducedDim(x, rdname)
   if(is.null(ndims)){
     ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
-    ndims <- min(c(50,ceiling(ndims),ncol(x)),na.rm=TRUE)
+    ndims <- min(c(15,ceiling(ndims),ncol(x)),na.rm=TRUE)
   }
   x[,seq_len(min(ncol(x),as.integer(ndims)))]
 }
