@@ -310,7 +310,6 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   wAd <- sample.int(nrow(dbl.idx), size=round(adjustSize*nrow(dbl.idx)))
   wNad <- setdiff(seq_len(nrow(dbl.idx)),wAd)
-  #message("wAd=",length(wAd)," wNad=",length(wNad))
   x1 <- x[,dbl.idx[wNad,1]]+x[,dbl.idx[wNad,2]]
   if(length(wAd)>0){
     if(is.null(clusters)) stop("If `adjustSize=TRUE`, clusters must be given.")
