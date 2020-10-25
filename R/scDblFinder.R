@@ -153,18 +153,19 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   }
   
   if(!is.null(samples)){
-    # splitting by samples
+    ## splitting by samples
     if(returnType=="full") 
         warning("`returnType='full'` ignored when splitting by samples")
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
+    ## run scDblFinder individually, without classification
     d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){ 
         x <- cs[[n]]
         if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
         tryCatch(scDblFinder(sce[sel_features,x], clusters=clusters, 
                     knownDoublets=knownDoublets, dims=dims, dbr=dbr, 
                     dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k, 
-                    nfeatures=nfeatures, propRandom=propRandom, 
+                    nfeatures=nfeatures, propRandom=propRandom, includePCs=c(),
                     propMarkers=propMarkers, trajectoryMode=trajectoryMode, 
                     returnType="table", threshold=FALSE, score="weighted", 
                     verbose=FALSE, ...),
@@ -172,6 +173,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                    stop("An error occured while processing sample '",n,"':\n",e)
                  })
     })
+    ## aggregate the property tables
     cn <- table(unlist(lapply(d, colnames)))
     cn <- names(cn)[cn==length(d)]
     ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))), 
@@ -181,26 +183,32 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       x[,cn]
     }))
     d$sample <- ss
+    ## score and thresholding
     d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr, 
                      dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds, 
                      iter=iter, BPPARAM=BPPARAM, verbose=verbose)
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
   }
+  
+  ## Handling a single sample
+  
   if(ncol(sce)<100)
     warning("scDblFinder might not work well with very low numbers of cells.")
-  if(ncol(sce)>25000)
+  if(verbose && ncol(sce)>25000)
     warning("You are trying to run scDblFinder on a very large number of ",
             "cells. If these are from different captures, please specify this",
             " using the `samples` argument.", immediate=TRUE)
 
-  if(is.null(k)){
+  if(is.null(k)){ ## reasonble sets of ks (for KNN)
       k <- c(3,5,10,20)
       if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=30) k <- c(k,kmax)
   }
   
   orig <- sce
   wDbl <- c()
+  
+  ## if known doublets are given, we need to treat them separately
   if(!is.null(knownDoublets) && length(wDbl <- which(knownDoublets))>0){
     sce$knownDoublet <- knownDoublets
     sce.dbl <- sce[,wDbl,drop=FALSE]
@@ -211,6 +219,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       if(is.factor(clusters)) clusters <- droplevels(clusters)
     }
   }
+  
+  ## clustering (if not already provided)
   if(is.null(clusters) || length(clusters)==1){
     if(verbose) message("Clustering cells...")
     if(!is.null(clusters)){
@@ -236,12 +246,13 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                  "(e.g. `cluster=10`)")
   if(verbose) message(nc, " clusters")
   
+  ## feature selection
   if(length(sel_features)>nfeatures)
     sel_features <- selFeatures(sce[sel_features,], cl, nfeatures=nfeatures, 
                                 propMarkers=propMarkers)
   sce <- sce[sel_features,]
   
-  # get the artificial doublets
+  ## get the artificial doublets
   if(is.null(artificialDoublets))
     artificialDoublets <- min( 25000, max(5000,
                                           ceiling(ncol(sce)*0.6),
@@ -286,7 +297,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     })
   }
   
-  if(is.null(dims)) dims <- 30
+  if(is.null(dims)) dims <- 20
   pca <- tryCatch({
             scater::calculatePCA(e, dims, subset_row=seq_len(nrow(e)),
                                  BSPARAM=BiocSingular::IrlbaParam())
@@ -308,6 +319,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   d$src <- src
   if(use.cxds) d$cxds_score <- cxds_score
   
+  ## classify
   d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score, 
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
@@ -407,7 +419,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 #' @importFrom S4Vectors DataFrame metadata
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
-                        threshold=TRUE, verbose=TRUE, dbr=NULL, 
+                        threshold=TRUE, verbose=TRUE, dbr=NULL, features=NULL,
                         BPPARAM=SerialParam(),...){
   gdbr <- dbr
   if(is.null(gdbr)){
@@ -423,10 +435,18 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   if(scoreType %in% c("xgb.local.optim","xgb")){
     if(verbose) message("Training model...")
     d$score <- NULL
-    prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
-                                   "type","src","distanceToNearest","class",
-                                   "nearestClass","cluster","sample",
-                                   "include.in.training"))
+    if(is.null(features)){
+      prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
+                                     "distanceToNearestDoublet", "type",
+                                     "src","distanceToNearest","class",
+                                     "nearestClass","cluster","sample",
+                                     "include.in.training"))
+    }else{
+      if(length(mis <- setdiff(features, colnames(d)))>0)
+        warning("The following features were not found: ", 
+                paste(mis,collapse=", "))
+      prds <- setdiff(intersect(features, colnames(d)),c("type","src","class"))
+    }
     w <- which(d$type=="real")
     d$score <- 0
     d$score[w] <- ecdf(d$ratio[w])(d$ratio[w])
@@ -516,16 +536,16 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   }
   xgboost( d2, ctype, nrounds=nrounds, eval_metric="aucpr", 
            objective="binary:logistic", max_depth=max_depth,
-           early_stopping_rounds=5, verbose=FALSE, nthread=nthreads )
+           early_stopping_rounds=3, verbose=FALSE, nthread=nthreads )
 }
 
 # add the relevant fields of the scDblFinder results table to the SCE
 #' @importFrom stats relevel
 .scDblAddCD <- function(sce, d){
   d <- d[colnames(sce),]
-  for(f in c("sample","cluster","distanceToNearest","nearestClass","difficulty",
-             "ratio","cxds_score","weighted","score.global","score",
-             "class","mostLikelyOrigin","originAmbiguous")){
+  for(f in c("sample","cluster","class","score","score.global","ratio",
+             "weighted","nearestClass","difficulty","cxds_score",
+             "mostLikelyOrigin","originAmbiguous")){
     if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
   if(!is.null(sce$scDblFinder.class)) sce$scDblFinder.class <- 
