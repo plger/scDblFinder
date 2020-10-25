@@ -238,6 +238,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   if( is.null(x) && acceptNull ) return(NULL)
   if(is.null(x) || length(x)!=1 || !is.numeric(x) || x>1 || x<0)
     stop("`",arg,"` should be a positive value between 0 and 1.")
+  x
 }
 
 #' cxds2
