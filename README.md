@@ -46,11 +46,7 @@ The expected proportion of doublets has no impact on the score, but a very stron
 
 ### Providing your own clustering
 
-Contrarily to other methods also based on the generation of artificial doublets, `scDblFinder` does not generate them in an entirely random fashion, but specifically generates inter-cluster doublets. This also means that, for putative doublets among the real cells, `scDblFinder` can guess from what clusters their originate. To make this information easier to interpret, you may provide your own clusters (though the `clusters` argument) rather than use the fast internal procedure to determine them. It is important that subpopulations are not misrepresented as belonging to the same cluster, and for this reason, we favor over-clustering for this purpose.
-
-#### Trajectories
-
-If the dataset is not expected to contain distinct subpopulations but rather continuous gradients, e.g. trajectories, then it might be advisable to employ a different approach using `trajectoryMode=TRUE` and (unless you already have your clusters) setting `clusters` to a positive integer (chosen depending on the complexity of the trajectories, e.g. `k=12` for smaller datasets), which will split the cells into the given number of clusters using k-means clustering. See [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html) for more detail.
+Contrarily to other methods also based on the generation of artificial doublets, `scDblFinder` does not generate them in an entirely random fashion, but specifically generates inter-cluster doublets. This also means that, for putative doublets among the real cells, `scDblFinder` can guess from what clusters their originate. To make this information easier to interpret, you may provide your own clusters (though the `clusters` argument) rather than use the fast internal procedure to determine them. It is important that subpopulations are not misrepresented as belonging to the same cluster, and for this reason, we favor over-clustering for this purpose. For more detail, or for application to datsets containing continuous gradients (e.g. trajectories) rather than distinct subpopulations, see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html).
 
 ### Including known doublets
 

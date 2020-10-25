@@ -90,7 +90,7 @@ Doublets can only arise within a given sample or capture, and for this reason ar
 
 ### Reducing and clustering the data
 
-The analysis can be considerably sped up, at little if any cost in accuracy, by reducing the dataset to only the top expressed genes (controlled by the `nfeatures` argument). Then, if the `clusters` argument isn't provided, the cells will be clustered using a fast clustering procedure on the PCA space (taken from the 'PCA' dimRed if present, otherwise generated internally). The aim, here, is to favour over-clustering so as to avoid collapsing pairs of celltypes whose doublets could be distinguishable. The internally-generated clusters are included in the output.
+The analysis can be considerably sped up, at little if any cost in accuracy, by reducing the dataset to only the top expressed genes (controlled by the `nfeatures` argument). Then, if the `clusters` argument isn't provided, the cells will be clustered using a fast clustering procedure on the PCA space (taken from the 'PCA' dimRed if present, otherwise generated internally). The aim, here, is to favour over-clustering so as to avoid collapsing pairs of celltypes whose doublets could be distinguishable. The internal clustering procedure can be accessed via the `fastcluster` function, and the cluster assignments are included in the output.
 
 If the dataset is not expected to contain distinct subpopulations but rather continuous gradients, e.g. trajectories, then it might be advisable to employ a different approach and setting `clusters` to a positive integer (see below).
 
