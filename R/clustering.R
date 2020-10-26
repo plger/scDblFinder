@@ -34,6 +34,7 @@
 #' @export
 #' @importFrom bluster makeKNNGraph
 #' @importFrom igraph membership cluster_louvain
+#' @importFrom DelayedArray rowsum
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20, 
                          ndims=NULL, nfeatures=1000, 
                          returnType=c("clusters","preclusters","metacells",
