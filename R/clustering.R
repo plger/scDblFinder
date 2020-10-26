@@ -15,6 +15,7 @@
 #' @param nfeatures Number of features to use (ignored if `rdname` is given and
 #' the corresponding dimensional reduction exists in `sce`)
 #' @param returnType See return.
+#' @param BPPARAM `BiocParallel` BPPARAM for multithreading.
 #'
 #' @return By default, a vector of cluster labels. If 
 #' `returnType='preclusters'`, returns the k-means pre-clusters. If

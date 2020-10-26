@@ -35,6 +35,8 @@ the number of cells with a maximum of 3000.}
 the corresponding dimensional reduction exists in `sce`)}
 
 \item{returnType}{See return.}
+
+\item{BPPARAM}{`BiocParallel` BPPARAM for multithreading.}
 }
 \value{
 By default, a vector of cluster labels. If 
