@@ -127,7 +127,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          dbr.sd=0.015, k=NULL, includePCs=1:5, propRandom=0.1,
                          propMarkers=0, returnType=c("sce","table","full"),
                          score=c("xgb","xgb.local.optim","weighted","ratio"),
-                         metric="merror", nrounds=50, max_depth=5, iter=1, 
+                         metric="aucpr", nrounds=50, max_depth=5, iter=1, 
                          threshold=TRUE, verbose=is.null(samples), 
                          BPPARAM=SerialParam(), ...
                         ){
@@ -193,7 +193,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     return(.scDblAddCD(sce, d))
   }
   
-  ## Handling a single sample
+  ## Handling a single sample 
   
   if(ncol(sce)<100)
     warning("scDblFinder might not work well with very low numbers of cells.")
@@ -424,7 +424,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
                         threshold=TRUE, verbose=TRUE, dbr=NULL, features=NULL,
-                        metric="aucpr", BPPARAM=SerialParam(), ...){
+                        metric="logloss", BPPARAM=SerialParam(), ...){
   gdbr <- dbr
   if(is.null(gdbr)){
     if(is.null(d$sample)){
@@ -526,7 +526,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
 #' @import xgboost
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5, 
-                      subsample=0.6, nthreads=1, metric="aucpr", ...){
+                      subsample=0.6, nthreads=1, metric="logloss", ...){
   if(!is.integer(ctype)) ctype <- as.integer(ctype)-1
   d2 <- as.matrix(d2)
   if(is.null(nrounds)){

@@ -22,7 +22,7 @@ scDblFinder(
   propMarkers = 0,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
-  metric = "merror",
+  metric = "aucpr",
   nrounds = 50,
   max_depth = 5,
   iter = 1,
