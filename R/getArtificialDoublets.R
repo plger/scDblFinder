@@ -198,7 +198,7 @@ getCellPairs <- function(x, n=1000, ...){
 }
 
 # get pairs of cells based on distances on the meta-cell graph
-#' @importFrom igraph distances
+#' @importFrom igraph distances V
 .getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000, 
                                    weightFun=NULL, ...){
   cli <- split(seq_along(k), k)
@@ -245,20 +245,25 @@ getCellPairs <- function(x, n=1000, ...){
 #'
 #' Adds artificial doublets to an existing dataset
 #'
-#' @param x A count matrix of singlets, or a `SingleCellExperiment`
+#' @param x A count matrix of singlets, or a 
+#'  \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
 #' @param clusters A vector of cluster labels for each column of `x`
 #' @param dbr The doublet rate
 #' @param only.heterotypic Whether to add only heterotypic doublets.
 #' @param adjustSize Whether to adjust the library sizes of the doublets.
 #' @param prefix Prefix for the colnames generated.
+#' @param ... Any further arguments to \code{\link{createDoublets}}.
 #'
 #' @return A `SingleCellExperiment` with the colData columns `cluster` and 
 #' `type` (indicating whether the cell is a singlet or doublet).
 #' 
 #' @export
+#' @examples
+#' sce <- mockDoubletSCE(dbl.rate=0)
+#' sce <- addDoublets(sce, clusters=sce$cluster)
 addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000), 
                         only.heterotypic=TRUE, adjustSize=FALSE, 
-                        prefix="doublet."){
+                        prefix="doublet.", ...){
   if(is(x, "SingleCellExperiment")) x <- counts(x)
   ed <- round(getExpectedDoublets(clusters, dbr=dbr, 
                                   only.heterotypic=only.heterotypic))
@@ -266,12 +271,13 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
   ca <- getCellPairs(clusters, n=length(ed)*(30+max(ed)), ls=Matrix::colSums(x))
   ca <- split(ca, ca$orig.clusters)
   ca <- do.call(rbind, lapply(names(ed), FUN=function(i){
-    ca2 <- ca[[i]][,1:2]
+    ca2 <- ca[[i]]
     ca2[sample.int(nrow(ca2), ed[[i]]),,drop=FALSE]
   }))
+  cl <- as.factor(c(as.character(clusters), as.character(ca[,3])))
   m2 <- createDoublets(x, ca, clusters, adjustSize=adjustSize, prefix=prefix)
   cd <- data.frame(type=rep(c("singlet","doublet"),c(ncol(x),ncol(m2))),
-                   cluster=c(clusters,rep(NA, ncol(m2))))
+                   cluster=cl)
   SingleCellExperiment(list(counts=cbind(x, m2)), colData=cd)
 }
 
@@ -299,19 +305,24 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
 #'
 #' @return A matrix of artificial doublets.
 #' @export
+#' @examples
+#' sce <- mockDoubletSCE()
+#' idx <- getCellPairs(sce$cluster, n=200)
+#' art.dbls <- createDoublets(sce, idx)
 createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5, 
                            halfSize=0.5, adjustSize=FALSE, prefix="dbl."){
   adjustSize <- .checkPropArg(as.numeric(adjustSize),FALSE)
   halfSize <- .checkPropArg(as.numeric(halfSize),FALSE)
   resamp <- .checkPropArg(as.numeric(resamp),FALSE)
+  if(is(x,"SingleCellExperiment")) x <- counts(x)
   if(adjustSize>1 || adjustSize<0)
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   if(halfSize>1 || halfSize<0)
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   wAd <- sample.int(nrow(dbl.idx), size=round(adjustSize*nrow(dbl.idx)))
   wNad <- setdiff(seq_len(nrow(dbl.idx)),wAd)
-  x1 <- x[,dbl.idx[wNad,1]]+x[,dbl.idx[wNad,2]]
-  if(length(wAd)>0){
+  x1 <- x[,dbl.idx[wNad,1],drop=FALSE]+x[,dbl.idx[wNad,2],drop=FALSE]
+  if(length(wAd)>1){
     if(is.null(clusters)) stop("If `adjustSize=TRUE`, clusters must be given.")
     dbl.idx <- as.data.frame(dbl.idx[wAd,,drop=FALSE])
     ls <- Matrix::colSums(x)
@@ -333,11 +344,12 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
   rm(x1)
   if(halfSize>0){
     wAd <- sample.int(nrow(dbl.idx), size=ceiling(halfSize*nrow(dbl.idx)))
-    x[,wAd] <- x[,wAd]/2
+    if(length(wAd)>0)    x[,wAd] <- x[,wAd]/2
   }
   if(resamp>0){
     if(resamp!=halfSize) wAd <- sample.int(ncol(x), ceiling(resamp*ncol(x)))
-    x[,wAd] <- matrix(as.integer(rpois(nrow(x)*length(wAd), 
+    if(length(wAd)>0)
+      x[,wAd] <- matrix(as.integer(rpois(nrow(x)*length(wAd), 
                                        as.numeric(as.matrix(x[,wAd])))), 
                          nrow=nrow(x))
   }else{

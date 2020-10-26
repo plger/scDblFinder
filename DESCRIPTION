@@ -28,11 +28,11 @@ Imports:
     scran,
     scater, 
     scuttle,
+    bluster,
     methods, 
     DelayedArray,
     xgboost,
     stats,
-    scds,
     intrinsicDimension,
     utils
 Suggests: 

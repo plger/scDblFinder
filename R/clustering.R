@@ -45,8 +45,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
   if((returnType != "clusters" || nrow(x)>1000) && nrow(x)>k){
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
     if(returnType=="preclusters") return(k)
-    x <- t(vapply(split(seq_along(k),k), FUN.VALUE=numeric(ncol(x)), 
-               FUN=function(i) colMeans(x[i,,drop=FALSE])))
+    x <- rowsum(x, k)
+    x <- x/as.integer(table(k)[rownames(x)])
     if(returnType=="metacells") return(list(meta=x,idx=k))
   }else{
     k <- seq_len(nrow(x))
@@ -92,8 +92,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
 }
 
 .getMetaGraph <- function(x, clusters, BPPARAM=SerialParam()){
-  x <- t(vapply(split(seq_along(clusters),clusters), FUN.VALUE=numeric(ncol(x)), 
-               FUN=function(i) colMeans(x[i,,drop=FALSE])))
+  x <- rowsum(x, clusters)
+  x <- x/as.integer(table(clusters)[rownames(x)])
   makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(clusters))))-1),10),
                BPPARAM=BPPARAM)
 }

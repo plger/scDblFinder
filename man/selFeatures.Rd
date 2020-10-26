@@ -8,7 +8,7 @@ selFeatures(
   sce,
   clusters = NULL,
   nfeatures = 1000,
-  propMarkers = 0.5,
+  propMarkers = 0,
   FDR.max = 0.05
 )
 }
@@ -34,4 +34,8 @@ A vector of feature (i.e. row) names.
 \description{
 Selects features based on cluster-wise expression or marker detection, or a
 combination.
+}
+\examples{
+sce <- mockDoubletSCE()
+selFeatures(sce, clusters=sce$cluster, nfeatures=5)
 }

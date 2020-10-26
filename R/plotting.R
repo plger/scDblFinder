@@ -21,6 +21,7 @@
 #' @return a Heatmap object
 #' 
 #' @export
+#' @importFrom stats aggregate
 plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed", 
                            addSizes=TRUE, col=NULL, column_title="Clusters", 
                            row_title="Clusters", column_title_side="bottom", 

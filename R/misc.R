@@ -58,7 +58,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   }else{
     clusters <- x
   }
-  clusters <- factor(clusters)
+  clusters <- droplevels(as.factor(clusters))
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
 
@@ -112,10 +112,12 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 #' @return A vector of feature (i.e. row) names.
 #' @export
 #'
-#' @examples
 #' @importFrom scuttle sumCountsAcrossCells
 #' @importFrom scran findMarkers
-selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0.5, FDR.max=0.05){
+#' @examples
+#' sce <- mockDoubletSCE()
+#' selFeatures(sce, clusters=sce$cluster, nfeatures=5)
+selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0, FDR.max=0.05){
   if(nrow(sce)<=nfeatures) return(row.names(sce))
   if(is.null(clusters)) propMarkers <- 0
   g <- c()
@@ -193,22 +195,25 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   expected <- getExpectedDoublets(sce$origin, dbl.rate, 
                                   only.heterotypic=only.heterotypic)
   simdbl <- rpois(length(expected), expected)
-  mus <- lapply(strsplit(names(expected),"+",fixed=TRUE), FUN=function(x){
-    mus[[x[[1]]]]+mus[[x[[2]]]]
-  })
-  doublets <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
-    matrix(rpois(simdbl[[i]]*ngenes, mus[[i]]), nrow=ngenes)
-  }))
-  sce2 <- SingleCellExperiment( list(counts=doublets), 
-                                colData=data.frame(type="doublet", 
-                                        origin=rep(names(expected), simdbl)))
-  sce <- cbind(sce, sce2)
+  if(sum(simdbl)>0){
+    mus <- lapply(strsplit(names(expected),"+",fixed=TRUE), FUN=function(x){
+      mus[[x[[1]]]]+mus[[x[[2]]]]
+    })
+    doublets <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
+      matrix(rpois(simdbl[[i]]*ngenes, mus[[i]]), nrow=ngenes)
+    }))
+    sce2 <- SingleCellExperiment( list(counts=doublets), 
+                                  colData=data.frame(type="doublet", 
+                                          origin=rep(names(expected), simdbl)))
+    sce <- cbind(sce, sce2)
+  }
   
   # set original cluster for homotypic doublets
   sce$cluster <- factor(sce$origin, c(names(ncells),names(expected)))
   names(n) <- n <- levels(sce$cluster)
   n[paste(names(ncells),names(ncells),sep="+")] <- names(ncells)
   levels(sce$cluster) <- as.character(n)
+  sce$cluster <- droplevels(sce$cluster)
   
   colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   row.names(sce) <- paste0("gene",seq_len(ngenes))
@@ -257,6 +262,9 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' @return A cxds score.
 #' @export
 #' @importFrom stats pbinom
+#' @examples
+#' sce <- mockDoubletSCE()
+#' scores <- cxds2(counts(sce))
 cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   Bp <- x <- x > binThresh
   ps <- Matrix::rowMeans(x)

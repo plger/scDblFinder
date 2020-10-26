@@ -25,3 +25,7 @@ This is the original implementation from the `scds` package, but enabling
 scores to be calculated for all cells while the gene coexpression is based
  only on a subset (i.e. excluding known/artificial doublets).
 }
+\examples{
+sce <- mockDoubletSCE()
+scores <- cxds2(counts(sce))
+}

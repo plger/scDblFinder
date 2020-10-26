@@ -10,11 +10,13 @@ addDoublets(
   dbr = (0.01 * ncol(x)/1000),
   only.heterotypic = TRUE,
   adjustSize = FALSE,
-  prefix = "doublet."
+  prefix = "doublet.",
+  ...
 )
 }
 \arguments{
-\item{x}{A count matrix of singlets, or a `SingleCellExperiment`}
+\item{x}{A count matrix of singlets, or a 
+\code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
 
 \item{clusters}{A vector of cluster labels for each column of `x`}
 
@@ -25,6 +27,8 @@ addDoublets(
 \item{adjustSize}{Whether to adjust the library sizes of the doublets.}
 
 \item{prefix}{Prefix for the colnames generated.}
+
+\item{...}{Any further arguments to \code{\link{createDoublets}}.}
 }
 \value{
 A `SingleCellExperiment` with the colData columns `cluster` and 
@@ -32,4 +36,8 @@ A `SingleCellExperiment` with the colData columns `cluster` and
 }
 \description{
 Adds artificial doublets to an existing dataset
+}
+\examples{
+sce <- mockDoubletSCE(dbl.rate=0)
+sce <- addDoublets(sce, clusters=sce$cluster)
 }

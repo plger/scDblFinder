@@ -45,3 +45,8 @@ A matrix of artificial doublets.
 \description{
 Creates artificial doublet cells by combining given pairs of cells
 }
+\examples{
+sce <- mockDoubletSCE()
+idx <- getCellPairs(sce$cluster, n=200)
+art.dbls <- createDoublets(sce, idx)
+}
