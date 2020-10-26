@@ -200,6 +200,7 @@ getCellPairs <- function(x, n=1000, ...){
     ed <- ceiling(ed*n/sum(ed))
     ca$n <- ed[as.character(ca$orig)]
   }
+  lvls <- levels(ca$orig)
   ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
     cbind( cell1=sample(cli[[ca[i,1]]], size=ca[i,4],
                         replace=ca[i,4]>length(cli[[ca[i,1]]])),
@@ -208,6 +209,7 @@ getCellPairs <- function(x, n=1000, ...){
            orig.clusters=rep(ca[i,3],ca[i,4]) )
   }))
   ca <- as.data.frame(ca)
+  ca$orig.clusters <- factor(ca$orig.clusters, levels=seq_along(lvls), labels=lvls)
   ca[!duplicated(ca),]
 }
 
@@ -278,10 +280,11 @@ getCellPairs <- function(x, n=1000, ...){
 addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000), 
                         only.heterotypic=TRUE, adjustSize=FALSE, 
                         prefix="doublet.", ...){
-  if(is(x, "SingleCellExperiment")) x <- counts(x)
   ed <- round(getExpectedDoublets(clusters, dbr=dbr, 
                                   only.heterotypic=only.heterotypic))
   ed <- ed[ed>0]
+  if(length(ed)==0) return(x)
+  if(is(x, "SingleCellExperiment")) x <- counts(x)
   ca <- getCellPairs(clusters, n=length(ed)*(30+max(ed)), ls=Matrix::colSums(x))
   ca <- split(ca, ca$orig.clusters)
   ca <- do.call(rbind, lapply(names(ed), FUN=function(i){
