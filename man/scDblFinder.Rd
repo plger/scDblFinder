@@ -13,7 +13,7 @@ scDblFinder(
   knownDoublets = NULL,
   use.cxds = TRUE,
   nfeatures = 1000,
-  dims = NULL,
+  dims = 20,
   dbr = NULL,
   dbr.sd = 0.015,
   k = NULL,
@@ -22,6 +22,7 @@ scDblFinder(
   propMarkers = 0,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
+  metric = "merror",
   nrounds = 50,
   max_depth = 5,
   iter = 1,
@@ -71,8 +72,7 @@ information from artificial/known doublets as part of the predictors.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
-\item{dims}{The number of dimensions used to build the network. If omitted,
-will be estimated using \code{\link[intrinsicDimension]{maxLikGlobalDimEst}}.}
+\item{dims}{The number of dimensions used.}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
 per thousand cells captured (so 4\% among 4000 thousand cells), which is 
@@ -103,6 +103,9 @@ cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
+
+\item{metric}{Error metric to optimize during training (e.g. 'merror', 
+'logloss', 'auc', 'aucpr').}
 
 \item{nrounds}{Maximum rounds of boosting. If NULL, will be determined
 through cross-validation. When the training is based only on simulated 

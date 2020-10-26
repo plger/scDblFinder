@@ -127,7 +127,7 @@ Thresholding then tries to simultaneously minimize: 1) the classification error 
 
 If `score` is either to 'xgb' (default), 'weighted' or 'ratio', then thresholding is performed directly on the said score. If `score='xgb.local.optim'`, then a local calibration of the score is performed.
 
-#### Local calibration (optional and experimental!)
+#### Local calibration (experimental - use with caution!)
 
 Doublets that are located in an otherwise sparse region of the space are easier to identify (and hence will have a higher score) that those located in a dense region. In other words, the aforementioned doublet scores are biased against rarer cell states. To correct for this, it is possible to perform threshold optimization separately for different groups of cells, depending on the type of artificial doublets (i.e. their originating clusters) closest to them. In this context, the expected number of doublets is calculated for each combination of clusters.
 
@@ -141,9 +141,9 @@ Because we generate artificial doublets from clusters, it is most often possible
 
 <br/><br/>
 
-## Important parameters
+## Some important parameters
 
-The important sets of parameters in `scDblFinder` refer respectively to the expected proportion of doublets, to the clustering, and to the number of artificial doublets used.
+`scDblFinder` has a fair number of parameters governing the preprocessing, generation of doublets, classification, etc. (see `?scDblFinder`). Here we describe just a few of the most important ones.
 
 ### Expected proportion of doublets
 
@@ -151,11 +151,8 @@ The expected proportion of doublets has no impact on the density of artificial d
 
 ### Clustering
 
-Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we favor over-clustering at this stage, and if you provide your own clusters, the resolution should not be too coarse -- although an overly fine-grained resolution tends to reduce accuracy. scDblFinder's default clustering method is implemented in the `fastcluster` function.
+Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we favor over-clustering at this stage, and if you provide your own clusters, the resolution should not be too coarse -- although an overly fine-grained resolution tends to reduce accuracy. `scDblFinder`'s default clustering method is implemented in the `fastcluster` function.
 
-### Number of artificial doublets
-
-`scDblFinder` itself determines a reasonable number of artificial doublets to create on the basis of the size of the population and the number of clusters. Increasing this number can only be neutral or increase the accuracy, but will obviously also increase running time.
 
 <br/><br/>
 
