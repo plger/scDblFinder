@@ -1,0 +1,6 @@
+Changes in version 1.3.25 (2020-10-26)
++ scDblFinder has important improvements on speed, robustness and accuracy
++ in additional to doublet calls, scDblFinder reports the putative origin (combination of clusters) of doublets
+
+Changes in version 1.3.19 (2020-08-06)
++ scDblFinder now hosts the doublet detection methods formerly part of `scran`
