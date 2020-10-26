@@ -33,7 +33,6 @@ Imports:
     DelayedArray,
     xgboost,
     stats,
-    intrinsicDimension,
     utils
 Suggests: 
     BiocStyle, 

@@ -23,7 +23,6 @@
 #' graph of (meta-)cells and the corresponding cell indexes.
 #' 
 #' @importFrom igraph cluster_louvain membership
-#' @importFrom intrinsicDimension maxLikGlobalDimEst
 #' @importFrom scran buildKNNGraph
 #' @importFrom stats kmeans
 #' 
@@ -85,10 +84,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
   if(!(rdname %in% reducedDimNames(x)))
     x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
   x <- reducedDim(x, rdname)
-  if(is.null(ndims)){
-    ndims <- maxLikGlobalDimEst(x,k=20)$dim.est
-    ndims <- min(c(15,ceiling(ndims),ncol(x)),na.rm=TRUE)
-  }
+  if(is.null(ndims)) dims <- 20
   x[,seq_len(min(ncol(x),as.integer(ndims)))]
 }
 
