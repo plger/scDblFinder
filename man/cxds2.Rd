@@ -7,7 +7,8 @@
 cxds2(x, whichDbls = c(), ntop = 500, binThresh = 0)
 }
 \arguments{
-\item{x}{A matrix of counts.}
+\item{x}{A matrix of counts, or a `SingleCellExperiment` containing a 
+'counts'}
 
 \item{whichDbls}{The columns of `x` which are known doublets.}
 
@@ -16,7 +17,8 @@ cxds2(x, whichDbls = c(), ntop = 500, binThresh = 0)
 \item{binThresh}{The count threshold to be considered expressed.}
 }
 \value{
-A cxds score.
+A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an 
+added `cxds_score` colData column.
 }
 \description{
 Calculates a coexpression-based doublet score using the method developed
@@ -27,5 +29,5 @@ scores to be calculated for all cells while the gene coexpression is based
 }
 \examples{
 sce <- mockDoubletSCE()
-scores <- cxds2(counts(sce))
+sce <- cxds2(sce)
 }

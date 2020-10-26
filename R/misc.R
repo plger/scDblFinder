@@ -254,18 +254,25 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' scores to be calculated for all cells while the gene coexpression is based
 #'  only on a subset (i.e. excluding known/artificial doublets).
 #'
-#' @param x A matrix of counts.
+#' @param x A matrix of counts, or a `SingleCellExperiment` containing a 
+#' 'counts'
 #' @param whichDbls The columns of `x` which are known doublets.
 #' @param ntop The number of top features to keep.
 #' @param binThresh The count threshold to be considered expressed.
 #'
-#' @return A cxds score.
+#' @return A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an 
+#' added `cxds_score` colData column.
 #' @export
 #' @importFrom stats pbinom
 #' @examples
 #' sce <- mockDoubletSCE()
-#' scores <- cxds2(counts(sce))
+#' sce <- cxds2(sce)
 cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
+  if(is(x,"SingleCellExperiment")){
+    x$cxds_score <- cxds2(counts(x), whichDbls=whichDbls, ntop=ntop, 
+                          binThresh=binThresh)
+    return(x)
+  }
   Bp <- x <- x > binThresh
   ps <- Matrix::rowMeans(x)
   if(nrow(x)>ntop){
