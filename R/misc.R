@@ -285,8 +285,14 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   prb <- prb + t(prb)
   obs <- Bp %*% (1 - Matrix::t(Bp))
   obs <- obs + Matrix::t(obs)
-  S <- stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp), 
-        lower.tail = FALSE, log = TRUE)
+  S <- suppressWarnings({
+    stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp), 
+        lower.tail=FALSE, log.p=TRUE)
+  })
+  if(any(w <- is.infinite(S))){
+    smin <- min(S[!is.infinite(S)])
+    S[S<smin] <- smin
+  }
   s <- -Matrix::colSums(x * (S %*% x))
   s <- s - min(s)
   s/max(s)
