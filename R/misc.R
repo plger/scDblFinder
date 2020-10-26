@@ -258,11 +258,13 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' @export
 #' @importFrom stats pbinom
 cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
-  x <- x > binThresh
+  Bp <- x <- x > binThresh
   ps <- Matrix::rowMeans(x)
-  hvg = order(ps * (1 - ps), decreasing=TRUE)[seq_len(ntop)]
-  Bp <- x <- x[hvg, ]
-  ps <- ps[hvg]
+  if(nrow(x)>ntop){
+    hvg <- order(ps * (1 - ps), decreasing=TRUE)[seq_len(ntop)]
+    Bp <- x <- x[hvg, ]
+    ps <- ps[hvg]
+  }
   if(length(whichDbls)>0) Bp <- Bp[,-whichDbls]
   prb <- outer(ps, 1 - ps)
   prb <- prb + t(prb)
