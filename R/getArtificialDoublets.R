@@ -6,6 +6,9 @@
 #' @param n The approximate number of doublet to generate (default 3000).
 #' @param clusters The optional clusters labels to use to build cross-cluster 
 #' doublets.
+#' @param resamp Logical; whether to resample the doublets using the poisson
+#' distribution. Alternatively, if a proportion between 0 and 1, the proportion
+#' of doublets to resample.
 #' @param halfSize Logical; whether to half the library size of doublets 
 #' (instead of just summing up the cells). Alternatively, a number between 0 
 #' and 1 can be given, determining the proportion of the doublets for which
@@ -14,19 +17,18 @@
 #' the ratio between each cluster's median library size. Alternatively, a number
 #' between 0 and 1 can be given, determining the proportion of the doublets for
 #' which to perform the size adjustment.
-#' @param resamp Logical; whether to resample the doublets using the poisson
-#' distribution. Alternatively, if a proportion between 0 and 1, the proportion
-#' of doublets to resample.
 #' @param propRandom The proportion of the created doublets that are fully
 #'  random (default 0.1); the rest will be doublets created across clusters. 
 #'  Ignored if `clusters` is NULL.
+#' @param selMode The cell pair selection mode for inter-cluster doublet 
+#' generation, either 'uniform' (same number of doublets for each combination),
+#' 'proportional' (proportion expected from the clusters' prevalences), or
+#' 'sqrt' (roughly the square root of the expected proportion).
 #' @param n.meta.cells The number of meta-cell per cluster to create. If given,
 #' additional doublets will be created from cluster meta-cells. Ignored if 
 #' `clusters` is missing.
 #' @param meta.triplets Logical; whether to create triplets from meta cells. 
 #' Ignored if `clusters` is missing.
-#' @param traj.weightFun The function by which to weigh distances (steps) in 
-#' trajectory-based doublet generation.
 #'
 #' @return A list with two elements: `counts` (the count matrix of
 #' the artificial doublets) and `origins` the clusters from which each 
@@ -38,10 +40,11 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #' 
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL, 
-                                   halfSize=0.5, adjustSize=0.2, resamp=0.5,
-                                   propRandom=0.1, n.meta.cells=2,
-                                   meta.triplets=TRUE, traj.weightFun=NULL ){
+getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
+                                   halfSize=0.5, adjustSize=0.2, propRandom=0.1, 
+                                   selMode=c("proportional","uniform","sqrt"),
+                                   n.meta.cells=2, meta.triplets=TRUE ){
+  selMode <- match.arg(selMode)
   ls <- Matrix::colSums(x)
   w <- which(ls>0 & ls>=quantile(ls,0.01) & ls<=quantile(ls,0.99))
   x <- x[,w,drop=FALSE]
@@ -100,7 +103,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,
   # create doublets across clusters:
   n <- ceiling(n)
   ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n), 
-                     weightFun=traj.weightFun)
+                     selMode=selMode)
   m2 <- createDoublets(x, ca, clusters=clusters, adjustSize=adjustSize,
                        halfSize=halfSize, resamp=resamp)
   oc <- c(oc, as.character(ca$orig.clusters))
@@ -175,7 +178,7 @@ getCellPairs <- function(x, n=1000, ...){
 
 # get cross-cluster pairs of cells
 .getCellPairsFromClusters <- function(clusters, n=1000, ls=NULL, q=c(0.1,0.9),
-                                      ...){
+                                      selMode="uniform", soft.min=5, ...){
   cli <- split(seq_along(clusters), clusters)
   if(!is.null(ls)){
     ls <- split(ls, clusters)
@@ -185,15 +188,26 @@ getCellPairs <- function(x, n=1000, ...){
     }
   }
   ca <- expand.grid(seq_along(cli), seq_along(cli))
-  ca <- ca[ca[,1]<ca[,2],]
-  n <- ceiling(n/nrow(ca))
-  oc <- paste( names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")
+  ca <- as.data.frame(ca[ca[,1]<ca[,2],])
+  ca$orig <- factor(paste( names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+"))
+  if(selMode=="uniform"){
+    ca$n <- ceiling(n/nrow(ca))
+  }else{
+    ed <- getExpectedDoublets(clusters, only.heterotypic=TRUE)
+    ed <- ed*n/sum(ed)
+    if(selMode=="sqrt") ed <- sqrt(ed)
+    ed <- soft.min + ed
+    ed <- ceiling(ed*n/sum(ed))
+    ca$n <- ed[as.character(ca$orig)]
+  }
   ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
-    cbind( sample(cli[[ca[i,1]]],size=n,replace=TRUE),
-           sample(cli[[ca[i,2]]],size=n,replace=TRUE) )
+    cbind( cell1=sample(cli[[ca[i,1]]], size=ca[i,4],
+                        replace=ca[i,4]>length(cli[[ca[i,1]]])),
+           cell2=sample(cli[[ca[i,2]]], size=ca[i,4],
+                        replace=ca[i,4]>length(cli[[ca[i,2]]])),
+           orig.clusters=rep(ca[i,3],ca[i,4]) )
   }))
-  ca <- data.frame(ca, orig.clusters=rep(as.factor(oc), each=n))
-  colnames(ca) <- c("cell1","cell2","orig.clusters")
+  ca <- as.data.frame(ca)
   ca[!duplicated(ca),]
 }
 

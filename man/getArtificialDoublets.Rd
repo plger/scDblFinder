@@ -8,13 +8,13 @@ getArtificialDoublets(
   x,
   n = 3000,
   clusters = NULL,
+  resamp = 0.5,
   halfSize = 0.5,
   adjustSize = 0.2,
-  resamp = 0.5,
   propRandom = 0.1,
+  selMode = c("proportional", "uniform", "sqrt"),
   n.meta.cells = 2,
-  meta.triplets = TRUE,
-  traj.weightFun = NULL
+  meta.triplets = TRUE
 )
 }
 \arguments{
@@ -24,6 +24,10 @@ getArtificialDoublets(
 
 \item{clusters}{The optional clusters labels to use to build cross-cluster 
 doublets.}
+
+\item{resamp}{Logical; whether to resample the doublets using the poisson
+distribution. Alternatively, if a proportion between 0 and 1, the proportion
+of doublets to resample.}
 
 \item{halfSize}{Logical; whether to half the library size of doublets 
 (instead of just summing up the cells). Alternatively, a number between 0 
@@ -35,13 +39,14 @@ the ratio between each cluster's median library size. Alternatively, a number
 between 0 and 1 can be given, determining the proportion of the doublets for
 which to perform the size adjustment.}
 
-\item{resamp}{Logical; whether to resample the doublets using the poisson
-distribution. Alternatively, if a proportion between 0 and 1, the proportion
-of doublets to resample.}
-
 \item{propRandom}{The proportion of the created doublets that are fully
 random (default 0.1); the rest will be doublets created across clusters. 
 Ignored if `clusters` is NULL.}
+
+\item{selMode}{The cell pair selection mode for inter-cluster doublet 
+generation, either 'uniform' (same number of doublets for each combination),
+'proportional' (proportion expected from the clusters' prevalences), or
+'sqrt' (roughly the square root of the expected proportion).}
 
 \item{n.meta.cells}{The number of meta-cell per cluster to create. If given,
 additional doublets will be created from cluster meta-cells. Ignored if 
@@ -49,9 +54,6 @@ additional doublets will be created from cluster meta-cells. Ignored if
 
 \item{meta.triplets}{Logical; whether to create triplets from meta cells. 
 Ignored if `clusters` is missing.}
-
-\item{traj.weightFun}{The function by which to weigh distances (steps) in 
-trajectory-based doublet generation.}
 }
 \value{
 A list with two elements: `counts` (the count matrix of
