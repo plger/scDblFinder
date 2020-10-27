@@ -14,8 +14,10 @@
 #' @param ndims Number of dimensions to use
 #' @param nfeatures Number of features to use (ignored if `rdname` is given and
 #' the corresponding dimensional reduction exists in `sce`)
+#' @param verbose Logical; whether to output progress messages
 #' @param returnType See return.
-#' @param BPPARAM `BiocParallel` BPPARAM for multithreading.
+#' @param ... Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if 
+#' `x` does not have `rdname`.
 #'
 #' @return By default, a vector of cluster labels. If 
 #' `returnType='preclusters'`, returns the k-means pre-clusters. If
@@ -36,14 +38,15 @@
 #' @importFrom igraph membership cluster_louvain
 #' @importFrom DelayedArray rowsum
 fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20, 
-                         ndims=NULL, nfeatures=1000, 
+                         ndims=NULL, nfeatures=1000, verbose=TRUE,
                          returnType=c("clusters","preclusters","metacells",
-                                      "graph"),
-                         BPPARAM=SerialParam() ){
+                                      "graph"), ...){
   returnType <- match.arg(returnType)
-  x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname)
+  x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname, 
+              verbose=verbose, ...)
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
   if((returnType != "clusters" || nrow(x)>1000) && nrow(x)>k){
+    if(verbose) message("Building meta-cells")
     k <- kmeans(x, k, iter.max=iter.max, nstart=nstart)$cluster
     if(returnType=="preclusters") return(k)
     x <- rowsum(x, k)
@@ -52,8 +55,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
   }else{
     k <- seq_len(nrow(x))
   }
-  x <- makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(k))))-1),10),
-                    BPPARAM=BPPARAM)
+  if(verbose) message("Building KNN graph and clustering")
+  x <- makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(k))))-1),10))
   if(returnType=="graph") return(list(k=k, graph=x))
   cl <- membership(cluster_louvain(x))
   cl[k]
@@ -63,7 +66,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
 #' @importFrom scuttle logNormCounts librarySizeFactors computeLibraryFactors 
 #' @importFrom BiocSingular IrlbaParam
 #' @import SingleCellExperiment
-.prepSCE <- function(sce, ndims=30, nfeatures=1000){
+.prepSCE <- function(sce, ndims=30, nfeatures=1000, ...){
     if(!("logcounts" %in% assayNames(sce))){
         if(is.null(librarySizeFactors(sce)))
             sce <- computeLibraryFactors(sce)
@@ -76,14 +79,16 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
     }
     if(!("PCA" %in% reducedDimNames(sce))){
         sce <- runPCA(sce, ncomponents=ifelse(is.null(ndims),30,ndims), 
-                      ntop=min(nfeatures,nrow(sce)), BSPARAM=IrlbaParam())
+                      ntop=min(nfeatures,nrow(sce)), ...)
     }
     sce
 }
 
-.getDR <- function(x, ndims=30, nfeatures=1000, rdname="PCA"){
-  if(!(rdname %in% reducedDimNames(x)))
-    x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures)
+.getDR <- function(x, ndims=30, nfeatures=1000, rdname="PCA", verbose=TRUE, ...){
+  if(!(rdname %in% reducedDimNames(x))){
+    if(verbose) message("Reduced dimension not found - running PCA...")
+    x <- .prepSCE(x, ndims=ndims, nfeatures=nfeatures, ...)
+  }
   x <- reducedDim(x, rdname)
   if(is.null(ndims)) dims <- 20
   x[,seq_len(min(ncol(x),as.integer(ndims)))]

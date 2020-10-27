@@ -12,8 +12,9 @@ fastcluster(
   iter.max = 20,
   ndims = NULL,
   nfeatures = 1000,
+  verbose = TRUE,
   returnType = c("clusters", "preclusters", "metacells", "graph"),
-  BPPARAM = SerialParam()
+  ...
 )
 }
 \arguments{
@@ -34,9 +35,12 @@ the number of cells with a maximum of 3000.}
 \item{nfeatures}{Number of features to use (ignored if `rdname` is given and
 the corresponding dimensional reduction exists in `sce`)}
 
+\item{verbose}{Logical; whether to output progress messages}
+
 \item{returnType}{See return.}
 
-\item{BPPARAM}{`BiocParallel` BPPARAM for multithreading.}
+\item{...}{Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if 
+`x` does not have `rdname`.}
 }
 \value{
 By default, a vector of cluster labels. If 
