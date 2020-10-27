@@ -54,9 +54,15 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
       clo <- clusters
       clusters <- clusters$k
     }else{
-      clo <- clusters <- clusters[w] 
+      clusters <- clusters[w]
+      if(any(is.na(clusters))){
+        w <- which(!is.na(clusters))
+        clusters <- clusters[w]
+        x <- x[,w]
+      }
+      clo <- clusters
     }
-    clusters <- as.factor(clusters)
+    clusters <- droplevels(as.factor(clusters))
   }
   
   if(is.null(clusters) || propRandom==1){
@@ -75,12 +81,11 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
                              halfSize=halfSize, prefix="rDbl.")
       oc <- NULL
     }else{
+      oc1 <- matrix(clusters[as.numeric(ad)],ncol=2)
       ad.m <- createDoublets(x, ad, clusters=clusters, adjustSize=adjustSize, 
                              halfSize=halfSize, resamp=resamp, prefix="rDbl.")
-      oc <- matrix(clusters[as.numeric(ad)],ncol=2)
-      w <- which(oc[,1]>oc[,2])
-      oc[w,1:2] <- oc[w,2:1]
-      oc <- paste(oc[,1],oc[,2],sep="+")
+      oc <- paste(oc1[,2],oc1[,1],sep="+")
+      oc[which(oc1[,2]==oc1[,1])] <- NA
     }
     row.names(ad.m) <- row.names(x)
     return(list( counts=ad.m, origins=as.factor(oc) ))
@@ -97,7 +102,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     ad.m <- x[,c(),drop=FALSE]
     oc <- character()
   }
-  
+
   if(length(unique(clusters))<3) n.meta.cells <- 0
   
   # create doublets across clusters:
@@ -116,7 +121,8 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     # create doublets from meta cells:
     meta <- .getMetaCells(x, clusters, n.meta.cells=n.meta.cells, 
                           meta.cell.size=30)
-    cl2 <- rep(unique(clusters),each=n.meta.cells)
+    cl2 <- meta$clusters
+    meta <- meta$mu
     ca <- getCellPairs(cl2, n=ceiling(n*0.1))
     m2 <- createDoublets(meta, ca, clusters=cl2, adjustSize=FALSE, 
                          halfSize=FALSE, resamp=TRUE, prefix="artMetaDbl.")
@@ -125,10 +131,9 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc,as.character(oc2))
   }
-  
   pc10 <- length(clusters)/10
   tt <- table(clusters)
-  if(meta.triplets && length(tt)>2){
+  if(meta.triplets && sum(tt>=pc10)>2){
     # get clusters that have more than 10% of the cells
     cl2 <- names(tt)[tt>=pc10]
     # otherwise get the 3 largest clusters
@@ -136,7 +141,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     w <- which(clusters %in% cl2)
     # create triplets from meta cells:
     meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, 
-                          meta.cell.size=100)
+                          meta.cell.size=100)$mu
     i <- seq_len(ncol(meta))
     ca <- expand.grid(i, i, i)
     ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
@@ -148,7 +153,6 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc, oc2)
   }
-  
   list( counts=ad.m, origins=as.factor(oc) )
 }
 
@@ -200,6 +204,7 @@ getCellPairs <- function(x, n=1000, ...){
     ed <- ceiling(ed*n/sum(ed))
     ca$n <- ed[as.character(ca$orig)]
   }
+  ca <- ca[ca$n>0,]
   lvls <- levels(ca$orig)
   ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
     cbind( cell1=sample(cli[[ca[i,1]]], size=ca[i,4],
@@ -245,15 +250,16 @@ getCellPairs <- function(x, n=1000, ...){
 .getMetaCells <- function(x, clusters, n.meta.cells=20, meta.cell.size=20){
   if(is.factor(clusters)) clusters <- droplevels(clusters)
   cli <- split(seq_along(clusters), clusters)
-  meta <- unlist(lapply(cli, FUN=function(x){
+  meta <- lapply(cli, FUN=function(x){
     lapply(seq_len(n.meta.cells), FUN=function(y){
       sample(x,min(ceiling(0.6*length(x)),meta.cell.size),replace=FALSE)
     })
-  }), recursive=FALSE)
-  meta <- vapply(meta, FUN.VALUE=double(nrow(x)), 
+  })
+  cl2 <- rep(names(cli), lengths(meta))
+  meta <- vapply(unlist(meta, recursive=FALSE), FUN.VALUE=double(nrow(x)), 
                  FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
   colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
-  meta
+  list(mu=meta, clusters=cl2)
 }
 
 
