@@ -228,10 +228,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     if(!is.null(clusters)){
       clusters <- fastcluster(sce, ndims=dims, k=clusters, nfeatures=nfeatures,
                     returnType=ifelse(trajectoryMode,"graph","preclusters"),
-                    BPPARAM=BPPARAM)
+                    BPPARAM=BPPARAM, verbose=FALSE)
     }else{
       clusters <- fastcluster(sce, ndims=dims, nfeatures=nfeatures,
-                              BPPARAM=BPPARAM)
+                              BPPARAM=BPPARAM, verbose=FALSE)
     }
   }else if(trajectoryMode && length(unique(clusters))>1){
     clusters <- list( k=clusters,
