@@ -78,6 +78,8 @@ sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
 table(sce$scDblFinder.class)
 ```
 
+Note that if you are running multiple samples, clustering will be performed sample-wise. While this is not an issue for doublet identification, it means that the cluster labels (and putative origins of doublets) won't match between samples. If you are interested in these, it is preferable to first cluster (for example using `sce$cluster <- fastcluster(sce)`) and then provide the clusters to `scDblFinder`, which will ensure concordant labels across samples.
+
 <br/><br/>
 
 ## Description of the method
@@ -147,16 +149,33 @@ Because we generate artificial doublets from clusters, it is most often possible
 
 ### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
+The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly. If you have unsure about the doublet rate, you might consider increasing `dbr.sd`, so that it is estimated mostl/purely from the misclassification error.
 
 ### Clustering
 
 Since doublets are created across clusters, it is important that subpopulations are not misrepresented as belonging to the same cluster. For this reason, we favor over-clustering at this stage, and if you provide your own clusters, the resolution should not be too coarse -- although an overly fine-grained resolution tends to reduce accuracy. `scDblFinder`'s default clustering method is implemented in the `fastcluster` function.
 
-
 <br/><br/>
 
-## Combination with other tools
+## Frequently-asked questions
+
+### I'm getting way too many doublets called - what's going on?
+
+Then you most likely have a wrong doublet rate. If you did not provide it (`dbr` argument), the doublet rate will be calculated automatically using expected doublet rates from 10x, meaning that the more cells captured, the higher the doublet rates. If you have reasons to think that this is not applicable to your data, set the `dbr` manually.
+
+The most common cause for an unexpectedly large proportion of doublets is if you have a multi-sample dataset and did not split by samples. `scDblFinder` will think that the data is a single capture with loads of cells, and hence with a very high doublet rate. Splitting by sample should solve the issue.
+
+The tresholding tries to minimize both the deviance from the expected number of doublets and the misclassification (i.e. of artificial doublets), meaning that the effective (i.e. final) doublet rate will differ from the given one. `scDblFinder` also considers false positive doublets to be less problematic than false negative. You can reduce to some degree the deviation from the input doublet rate by setting `dbr.sd=0`.
+
+### The clusters don't make any sense!
+
+If you ran `scDblFinder` on a multi-sample dataset and did not provide the cluster labels, then the labels are sample-specific (meaning that label '1' in one sample might have nothing to do with label '1' in another), and plotting them on a tSNE will look like they do not make sense. For this reason, when running multiple samples we recommend to first cluster all samples together (for example using `sce$cluster <- fastcluster(sce)`) and then provide the clusters to `scDblFinder`.
+
+### Can I use this in combination with Seurat or other tools?
 
 If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`.
 In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest not to use a too low `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+
+### Can this be used with scATACseq data?
+
+We have not yet thoroughly tested the paremeters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there. However, since scATACseq data normally have more peaks with fewer reads, we suggest increasing the `nfeatures` used.

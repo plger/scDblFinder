@@ -44,3 +44,16 @@ The `scDblFinder` method combines both known doublets (if available) and cluster
 ## findDoubletClusters
 
 The `findDoubletClusters` method identifies clusters that are likely to be composed of doublets by estimating whether their expression profile lies between two other clusters. See [findDoubletClusters](3_findDoubletClusters.html) for more information.
+
+<br/>
+
+# Installation
+
+```{r, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("scDblFinder")
+
+# or, to get that latest developments:
+BiocManager::install("plger/scDblFinder")
+```
