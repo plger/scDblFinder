@@ -4,6 +4,8 @@ The `scDblFinder` package gathers various methods for the detection and handling
 
 For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/1_introduction.html) (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
+**scDblFinder has improved considerably since earlier versions, so please make sure you're using an up-to-date version!**
+
 <br/><br/>
 
 ## Getting started
