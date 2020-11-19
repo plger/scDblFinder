@@ -18,7 +18,6 @@
 #' @param niters An integer scalar specifying how many simulated doublets should be generated.
 #' @param block An integer scalar controlling the rate of doublet generation, to keep memory usage low.
 #' @param dims An integer scalar specifying the number of components to retain after the PCA.
-#' @param adjust Logical scalar indicating whether to adjust for differences in local density, see the vignette.
 #' @param BNPARAM A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
 #' This should be an algorithm supported by \code{\link{findNeighbors}}.
 #' @param BSPARAM A \linkS4class{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.

@@ -21,7 +21,7 @@ test_that("computeDoubletDensity PC spawning works correctly", {
     SVD <- svd(t(y - centers), nv=20)
 
     set.seed(12345)
-    sim.pcs <- scran:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
+    sim.pcs <- scDblFinder:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
 
     set.seed(12345)
     L <- sample(ncol(counts), 10000L, replace=TRUE)
@@ -34,12 +34,12 @@ test_that("computeDoubletDensity PC spawning works correctly", {
 
     # Works with multiple iterations.
     set.seed(23456)
-    sim.pcs <- scran:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=25000L, block=10000L)
+    sim.pcs <- scDblFinder:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=25000L, block=10000L)
 
     set.seed(23456)
-    ref1 <- scran:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
-    ref2 <- scran:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
-    ref3 <- scran:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=5000L, block=10000L)
+    ref1 <- scDblFinder:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
+    ref2 <- scDblFinder:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=10000L, block=10000L)
+    ref3 <- scDblFinder:::.spawn_doublet_pcs(counts, sf, SVD$v, centers, niters=5000L, block=10000L)
 
     expect_equal(sim.pcs, rbind(ref1, ref2, ref3))
     expect_identical(dim(sim.pcs), c(25000L, ncol(SVD$v)))

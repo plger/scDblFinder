@@ -63,8 +63,6 @@ This should be an algorithm supported by \code{\link{findNeighbors}}.}
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether the neighbour searches should be parallelized.}
 
 \item{assay.type}{A string specifying which assay values contain the count matrix.}
-
-\item{adjust}{Logical scalar indicating whether to adjust for differences in local density, see the vignette.}
 }
 \value{
 A numeric vector of doublet scores for each cell in \code{x}.
