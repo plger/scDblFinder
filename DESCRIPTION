@@ -40,7 +40,12 @@ Suggests:
     rmarkdown,
     testthat,
     scRNAseq,
-    bluster
+    bluster,
+    circlize,
+    ComplexHeatmap,
+    dplyr,
+    MASS,
+    viridisLite
 VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.1.1
