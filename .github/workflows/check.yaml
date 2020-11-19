@@ -15,8 +15,8 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
 
-      - name: Install latest BiocCheck
-        run: BiocManager::install("BiocCheck")
+      - name: Install latest BiocCheck and extras
+        run: BiocManager::install(c("BiocCheck","circlize","ComplexHeatmap","dplyr","MASS","viridisLite"))
         shell: Rscript {0}
 
       - name: Check
