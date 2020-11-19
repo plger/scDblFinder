@@ -9,37 +9,14 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
-    container: bioconductor/bioconductor_docker:devel
+    container: ltla/biocneighbors:latest
 
     steps:
       - name: Check out repo
         uses: actions/checkout@v2
 
-      - name: Query dependencies
-        run: |
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE, repos = c(getOption('repos'), BiocManager::repositories())), 'depends.Rds', version = 2)
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        uses: actions/cache@v1
-        with:
-          path: r-pkg-cache
-          key: ${{ runner.os }}-${{ hashFiles('depends.Rds') }}
-          restore-keys: ${{ runner.os }}-
-
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories(), Ncpu = 2L)
-          BiocManager::install('ensembldb')
-          BiocManager::install('Rtsne')
-          remotes::install_cran('rcmdcheck', Ncpu = 2L)
-        shell: Rscript {0}
-
-      - name: Session info
-        run: |
-          options(width = 100)
-          pkgs <- installed.packages()[, "Package"]
-          sessioninfo::session_info(pkgs, include_base = TRUE)
+      - name: Install latest BiocCheck
+        run: BiocManager::install("BiocCheck")
         shell: Rscript {0}
 
       - name: Check
@@ -49,9 +26,7 @@ jobs:
         shell: Rscript {0}
 
       - name: BiocCheck
-        run: |
-          BiocManager::install("BiocCheck")
-          BiocCheck::BiocCheck(".")
+        run: BiocCheck::BiocCheck(".")
         shell: Rscript {0}
 
       - name: Upload check results
