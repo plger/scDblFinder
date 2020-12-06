@@ -11,19 +11,20 @@ scDblFinder(
   trajectoryMode = FALSE,
   artificialDoublets = NULL,
   knownDoublets = NULL,
+  clustCor = NULL,
   use.cxds = TRUE,
   nfeatures = 1000,
   dims = 20,
   dbr = NULL,
-  dbr.sd = 0.015,
+  dbr.sd = NULL,
   k = NULL,
   includePCs = 1:5,
   propRandom = 0.1,
   propMarkers = 0,
   returnType = c("sce", "table", "full"),
-  score = c("xgb", "xgb.local.optim", "weighted", "ratio"),
-  metric = "aucpr",
-  nrounds = 50,
+  score = c("xgb", "weighted", "ratio"),
+  metric = "logloss",
+  nrounds = NULL,
   max_depth = 5,
   iter = 1,
   threshold = TRUE,
@@ -37,127 +38,134 @@ scDblFinder(
 \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
 counts.}
 
-\item{clusters}{The optional cluster assignments (if omitted, will run 
-clustering). This is used to make doublets more efficiently. \code{clusters} 
-should either be a vector of labels for each cell, or the name of a colData 
-column of \code{sce}. Alternatively, if it is a single integer, will 
-determine how many clusters to create (using k-means clustering). This 
-options should be used when distinct subpopulations are not expected in the 
+\item{clusters}{The optional cluster assignments (if omitted, will run
+clustering). This is used to make doublets more efficiently. \code{clusters}
+should either be a vector of labels for each cell, or the name of a colData
+column of \code{sce}. Alternatively, if it is a single integer, will
+determine how many clusters to create (using k-means clustering). This
+options should be used when distinct subpopulations are not expected in the
 data (e.g. trajectories).}
 
-\item{samples}{A vector of the same length as cells (or the name of a column 
-of \code{colData(x)}), indicating to which sample each cell belongs. Here, a 
-sample is understood as being processed independently. If omitted, doublets 
-will be searched for with all cells together. If given, doublets will be 
-searched for independently for each sample, which is preferable if they 
+\item{samples}{A vector of the same length as cells (or the name of a column
+of \code{colData(x)}), indicating to which sample each cell belongs. Here, a
+sample is understood as being processed independently. If omitted, doublets
+will be searched for with all cells together. If given, doublets will be
+searched for independently for each sample, which is preferable if they
 represent different captures. If your samples were multiplexed using cell
-hashes, want you want to give here are the different batches/wells (i.e. 
+hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 
-\item{trajectoryMode}{Logical; whether to generate doublets in trajectory 
+\item{trajectoryMode}{Logical; whether to generate doublets in trajectory
 mode (i.e. for datasets with gradients rather than separated subpopulations).
 See \code{vignette("scDblFinder")} for more details.}
 
-\item{artificialDoublets}{The approximate number of artificial doublets to 
-create. If \code{NULL}, will be the maximum of the number of cells or 
+\item{artificialDoublets}{The approximate number of artificial doublets to
+create. If \code{NULL}, will be the maximum of the number of cells or
 \code{5*nbClusters^2}.}
 
-\item{knownDoublets}{An optional logical vector of known doublets (e.g. 
+\item{knownDoublets}{An optional logical vector of known doublets (e.g.
 through cell barcodes), or the name of a colData column of `sce` containing
-that information.}
+that information. Including known doublets tends to increase the sensitivity of doublet
+identification, but decrease the specificity (since some of the known doublets are
+homotypic).}
 
-\item{use.cxds}{Logical; whether to use the `cxds` scores in addition to 
+\item{clustCor}{Include Spearman correlations to cell type averages in the predictors.
+If `clustCor` is a matrix of cell type marker expressions (with features as rows and
+cell types as columns), the subset of these which are present in the selected features
+will be correlated to each cell to produce additional predictors (i.e. one per cell
+type). Alternatively, if `clustCor` is a positive integer, this number of inter-cluster
+markers will be selected and used for correlation (se `clustCor=Inf` to use all
+available genes).}
+
+\item{use.cxds}{Logical; whether to use the `cxds` scores in addition to
 information from artificial/known doublets as part of the predictors.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
 \item{dims}{The number of dimensions used.}
 
-\item{dbr}{The expected doublet rate. By default this is assumed to be 1\% 
-per thousand cells captured (so 4\% among 4000 thousand cells), which is 
+\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
+per thousand cells captured (so 4\% among 4000 thousand cells), which is
 appropriate for 10x datasets. Corrections for homeotypic doublets will be
 performed on the given rate.}
 
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
-rate will be calculated from these boundaries, and will be considered null 
-within these boundaries.}
+rate will be calculated from these boundaries, and will be considered null
+within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to disable.}
 
 \item{k}{Number of nearest neighbors (for KNN graph). If more than one value
 is given, the doublet density will be calculated at each k (and other values
 at the highest k), and all the information will be used by the classifier.
 If omitted, a reasonable set of values is used.}
 
-\item{includePCs}{The index of principal components to include in the 
+\item{includePCs}{The index of principal components to include in the
 predictors (e.g. `includePCs=1:2`).}
 
-\item{propRandom}{The proportion of the artificial doublets which 
+\item{propRandom}{The proportion of the artificial doublets which
 should be made of random cells (as opposed to inter-cluster combinations).}
 
-\item{propMarkers}{The proportion of features to select based on marker 
+\item{propMarkers}{The proportion of features to select based on marker
 identification.}
 
-\item{returnType}{Either "sce" (default), "table" (to return the table of 
+\item{returnType}{Either "sce" (default), "table" (to return the table of
 cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
 
-\item{metric}{Error metric to optimize during training (e.g. 'merror', 
+\item{metric}{Error metric to optimize during training (e.g. 'merror',
 'logloss', 'auc', 'aucpr').}
 
 \item{nrounds}{Maximum rounds of boosting. If NULL, will be determined
-through cross-validation. When the training is based only on simulated 
-doublets, we generally find lower limits to outperform cross-validation.}
-
-\item{max_depth}{Maximum depth of decision trees}
+through cross-validation.}
 
 \item{iter}{A positive integer indicating the number of scoring iterations
-(ignored if `score` isn't based on classifiers). At each iteration, real 
+(ignored if `score` isn't based on classifiers). At each iteration, real
 cells that would be called as doublets are excluding from the training, and
 new scores are calculated. Recommended values are 1 or 2.}
 
-\item{threshold}{Logical; whether to threshold scores into binary doublet 
+\item{threshold}{Logical; whether to threshold scores into binary doublet
 calls}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
-\item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when 
+\item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
 
 \item{...}{further arguments passed to \code{\link{getArtificialDoublets}}.}
 }
 \value{
-The \code{sce} object with several additional colData columns, in 
-particular `scDblFinder.score` (the final score used) and `scDblFinder.class` 
-(whether the cell is called as 'doublet' or 'singlet'). See 
-\code{vignette("scDblFinder")} for more details; for alternative return 
+The \code{sce} object with several additional colData columns, in
+particular `scDblFinder.score` (the final score used) and `scDblFinder.class`
+(whether the cell is called as 'doublet' or 'singlet'). See
+\code{vignette("scDblFinder")} for more details; for alternative return
 values, see the `returnType` argument.
 }
 \description{
-Identification of heterotypic (or neotypic) doublets in single-cell RNAseq 
+Identification of heterotypic (or neotypic) doublets in single-cell RNAseq
 using cluster-based generation of artifical doublets.
 }
 \details{
-This function generates artificial doublets from clusters of real cells, 
-evaluates their prevalence in the neighborhood of each cells, and uses this 
-along with additional features to classify doublets. The approach is 
+This function generates artificial doublets from clusters of real cells,
+evaluates their prevalence in the neighborhood of each cells, and uses this
+along with additional features to classify doublets. The approach is
 complementary to doublets identified via cell hashes and SNPs in multiplexed
 samples: the latter can identify doublets formed by cells of the same type
-from two samples, which are nearly undistinguishable from real cells 
-transcriptionally, but cannot identify doublets made by cells of the 
-same sample. See \code{vignette("scDblFinder")} for more details on the 
+from two samples, which are nearly undistinguishable from real cells
+transcriptionally, but cannot identify doublets made by cells of the
+same sample. See \code{vignette("scDblFinder")} for more details on the
 method.
 
-When multiple samples/captures are present, they should be specified using 
-the \code{samples} argument. Although the classifier will be trained 
-globally, thresholding and the more computationally-intensive steps will be 
-performed separately for each sample (in parallel if \code{BPPARAM} is 
+When multiple samples/captures are present, they should be specified using
+the \code{samples} argument. Although the classifier will be trained
+globally, thresholding and the more computationally-intensive steps will be
+performed separately for each sample (in parallel if \code{BPPARAM} is
 given).
 
-When inter-sample doublets are available, they can be provided to 
-`scDblFinder` through the \code{knownDoublets} argument to improve the 
+When inter-sample doublets are available, they can be provided to
+`scDblFinder` through the \code{knownDoublets} argument to improve the
 identification of further doublets.
 }
 \examples{
