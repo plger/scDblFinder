@@ -134,7 +134,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          dbr.sd=NULL, k=NULL, includePCs=1:5, propRandom=0.1,
                          propMarkers=0, returnType=c("sce","table","full"),
                          score=c("xgb","weighted","ratio"),
-                         metric="logloss", nrounds=NULL, max_depth=5, iter=1,
+                         metric="logloss", nrounds=0.25, max_depth=5, iter=1,
                          threshold=TRUE, verbose=is.null(samples),
                          BPPARAM=SerialParam(), ...
                         ){
@@ -554,7 +554,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
         nrounds * e[[grep("test.+std",colnames(e))]][best]
       nrounds <- min(which(e[[grep("test.+mean",colnames(e))]] <= ac))
     }
-    message("Best iteration: ", best, "; selected nrounds: ", nrounds)
+    #message("Best iteration: ", best, "; selected nrounds: ", nrounds)
   }
   xgboost( d2, ctype, nrounds=nrounds, eval_metric=metric,
            objective="binary:logistic", tree_method=tree_method, max_depth=max_depth,
