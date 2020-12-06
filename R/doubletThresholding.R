@@ -34,7 +34,7 @@
 #' sce <- mockDoubletSCE()
 #' d <- scDblFinder(sce, verbose=FALSE, returnType="table")
 #' th <- doubletThresholding(d, dbr=0.05)
-#' th$th
+#' th
 #'
 #' @export
 doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nmads=3,
