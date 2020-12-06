@@ -31,8 +31,3 @@ A ggplot, or a data.frame if `do.plot==FALSE`.
 \description{
 Plots scores used for thresholding.
 }
-\examples{
-sce <- mockDoubletSCE()
-d <- scDblFinder(sce, verbose=FALSE, returnType="table")
-plotThresholds(d)
-}

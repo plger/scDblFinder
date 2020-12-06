@@ -84,11 +84,6 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #'
 #' @return A ggplot, or a data.frame if `do.plot==FALSE`.
 #' @export
-#'
-#' @examples
-#' sce <- mockDoubletSCE()
-#' d <- scDblFinder(sce, verbose=FALSE, returnType="table")
-#' plotThresholds(d)
 plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015, do.plot=TRUE){
   dbr <- .gdbr(d,dbr)
   o <- .optimThreshold(d, dbr, dbr.sd, ths=ths)
