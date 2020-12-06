@@ -20,11 +20,11 @@ plotDoubletMap(
 \arguments{
 \item{sce}{A SingleCellExperiment object on which `scDblFinder` has been run.}
 
-\item{colorBy}{Determines the color mapping. Either "enrichment" (for 
-log2-enrichment over expectation) or any column of 
+\item{colorBy}{Determines the color mapping. Either "enrichment" (for
+log2-enrichment over expectation) or any column of
 `metadata(sce)$scDblFinder.stats`}
 
-\item{labelBy}{Determines the cell labels. Either "enrichment" (for 
+\item{labelBy}{Determines the cell labels. Either "enrichment" (for
 log2-enrichment over expectation) or any column of
  `metadata(sce)$scDblFinder.stats`}
 
@@ -46,6 +46,6 @@ log2-enrichment over expectation) or any column of
 a Heatmap object
 }
 \description{
-Plots a heatmap of observed versus expected doublets. 
+Plots a heatmap of observed versus expected doublets.
 Requires the `ComplexHeatmap` package.
 }

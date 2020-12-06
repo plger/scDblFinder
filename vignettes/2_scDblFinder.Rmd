@@ -24,7 +24,7 @@ library(BiocStyle)
 `scDblFinder` identifies doublets in single-cell RNAseq by creating artificial doublets and looking at their
 prevalence (as well as that of any known doublets) in the neighborhood of each cell, along with a few other covariates.
 The rough logic is very similar to other methods (e.g. `r Githubpkg("chris-mcginnis-ucsf/DoubletFinder")`, `r Biocpkg("scds")`), 
-with a few twists that make it more efficient and provide extra features.
+with a few twists that make it more efficient, more accurate, and provide extra features.
 
 ## Installation
 
@@ -119,24 +119,14 @@ If the `use.cxds=TRUE`, the `cxds` score from the `r Biocpkg("scds","scds")` pac
 One problem of using a classifier for this task is that some of the real cells (the actual doublets) are mislabeled as singlet, so to speak. 
 `scDblFinder` therefore iteratively retrains the classifier, each time excluding from the training the (real) cells called as doublets in the previous step (the number of steps being controlled by the `iter` parameter).
 
-This score is available in the output as either `scDblFinder.score` or `scDblFinder.score.global` (when local calibration is used - see below). If the data is multi-sample, a single model is trained for all samples.
+This score is available in the output, in the `scDblFinder.score` colData column, and can be interpreted as a probability. If the data is multi-sample, a single model is trained for all samples.
 
-### Thresholding and local calibration
+### Thresholding
 
 Rather than thresholding on some arbitrary cutoff of the score, `scDblFinder` uses the expected number of doublets to establish a threshold. Unless it is manually given through the `dbr` argument, the expected doublet rate is first estimated using the empirical rule of thumb applicable to 10X data, namely roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets, and the more cells you capture the higher the chance of creating a doublet). If samples were specified, and if the `dbr` is automatically calculated, thresholding is performed separately across samples.
 
-Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets real cells below the threshold) and 2) the deviation from the expected number of doublets (as a ratio of the total number of expected doublets within the range determined by `dbr.sd`, and adjusted for homotypic doublets), giving an equal weight to each.
+Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets real cells below the threshold) and 2) the deviation from the expected number of doublets (as a ratio of the total number of expected doublets within the range determined by `dbr.sd`, and adjusted for homotypic doublets), giving an equal weight to each. This means that, if you have no idea about the doublet rate, setting `dbr.sd=1` will make the threshold depend entirely on the misclassification rate.
 
-If `score` is either to 'xgb' (default), 'weighted' or 'ratio', then thresholding is performed directly on the said score. If `score='xgb.local.optim'`, then a local calibration of the score is performed.
-
-#### Local calibration (experimental - use with caution!)
-
-Doublets that are located in an otherwise sparse region of the space are easier to identify (and hence will have a higher score) that those located in a dense region. In other words, the aforementioned doublet scores are biased against rarer cell states. To correct for this, it is possible to perform threshold optimization separately for different groups of cells, depending on the type of artificial doublets (i.e. their originating clusters) closest to them. In this context, the expected number of doublets is calculated for each combination of clusters.
-
-This procedure can be problematic whenever the doublets are not random (e.g. when two cell types preferentially stick together). For this reason, instead of using the local threshold directly, `scDblFinder` moderates it by establishing a relationship between the local threshold and the difficultly in indentifying doublets, and pulling the threshold towards this expectation. The cells' scores are then transformed so that the different local thresholds are equalized, by substracting the logit-threshold to the logit-score and transforming back to a probability. Finally, the global threshold is calculated as described above. When the local calibration is enabled, the calibrated score is available in `scDblFinder.score`, and the original one in `scDblFinder.score.global`.
-
-This procedure should be considered experimental and used with care, and only in contexts that demand this (see doublet enrichment, below). In our experience, local calibration often increases FDR in normal circumstances.
-    
 ### Doublet origins and enrichments
 
 Because we generate artificial doublets from clusters, it is most often possible to call the most likely origin (in terms of the combination of clusters) of a given putative real doublet. This information is provided through the `scDblFinder.mostLikelyOrigin` column of the output (and the `scDblFinder.originAmbiguous` column indicates whether this origin is ambiguous or rather clear). This, in turn, allows us to identify enrichment over expectation for specific kinds of doublets. Some statistics on each combination of clusters are saved in `metadata(sce)$scDblFinder.stats`, and the `plotDoubletMap` function can be used to visualize enrichments. Most enrichment or depletion is explained by the difficulty of identifying doublets of certain kinds, but departures from expectation might also point to technical or biological effects.
@@ -174,7 +164,7 @@ If you ran `scDblFinder` on a multi-sample dataset and did not provide the clust
 ### Can I use this in combination with Seurat or other tools?
 
 If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`.
-In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used (in which case we suggest not to use a too low `resolution` parameter) to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used to create the artifical doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
 
 ### Can this be used with scATACseq data?
 

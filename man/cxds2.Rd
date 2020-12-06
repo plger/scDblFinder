@@ -7,7 +7,7 @@
 cxds2(x, whichDbls = c(), ntop = 500, binThresh = 0)
 }
 \arguments{
-\item{x}{A matrix of counts, or a `SingleCellExperiment` containing a 
+\item{x}{A matrix of counts, or a `SingleCellExperiment` containing a
 'counts'}
 
 \item{whichDbls}{The columns of `x` which are known doublets.}
@@ -17,17 +17,21 @@ cxds2(x, whichDbls = c(), ntop = 500, binThresh = 0)
 \item{binThresh}{The count threshold to be considered expressed.}
 }
 \value{
-A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an 
+A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an
 added `cxds_score` colData column.
 }
 \description{
-Calculates a coexpression-based doublet score using the method developed
-by \href{https://academic.oup.com/bioinformatics/article/36/4/1150/5566507}{Bais and Kostka 2020}.
-This is the original implementation from the `scds` package, but enabling
-scores to be calculated for all cells while the gene coexpression is based
- only on a subset (i.e. excluding known/artificial doublets).
+Calculates a coexpression-based doublet score using the method developed by
+\href{https://doi.org/10.1093/bioinformatics/btz698}{Bais and Kostka 2020}.
+This is the original implementation from the
+\code{\hred{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}}
+package, but enabling scores to be calculated for all cells while the gene
+coexpression is based only on a subset (i.e. excluding known/artificial doublets).
 }
 \examples{
 sce <- mockDoubletSCE()
 sce <- cxds2(sce)
+}
+\references{
+\url{https://doi.org/10.1093/bioinformatics/btz698}
 }

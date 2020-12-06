@@ -11,7 +11,7 @@ getExpectedDoublets(x, dbr = NULL, only.heterotypic = TRUE)
 
 \item{dbr}{The expected doublet rate.}
 
-\item{only.heterotypic}{Logical; whether to return expectations only for 
+\item{only.heterotypic}{Logical; whether to return expectations only for
 heterotypic doublets}
 }
 \value{

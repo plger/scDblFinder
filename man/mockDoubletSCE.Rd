@@ -25,8 +25,8 @@ cluster (min 2 clusters)}
 \item{only.heterotypic}{Whether to create only heterotypic doublets}
 }
 \value{
-A SingleCellExperiment object, with the colData columns `type` 
-indicating whether the cell is a singlet or doublet, and `cluster` 
+A SingleCellExperiment object, with the colData columns `type`
+indicating whether the cell is a singlet or doublet, and `cluster`
 indicating from which cluster (or cluster combination) it was simulated.
 }
 \description{

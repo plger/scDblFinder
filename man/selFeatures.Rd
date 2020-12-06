@@ -14,10 +14,10 @@ selFeatures(
 }
 \arguments{
 \item{sce}{A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
-\code{\link[SingleCellExperiment]{SingleCellExperiment-class}} with a 
+\code{\link[SingleCellExperiment]{SingleCellExperiment-class}} with a
 'counts' assay.}
 
-\item{clusters}{Optional cluster assignments. Should either be a vector of 
+\item{clusters}{Optional cluster assignments. Should either be a vector of
 labels for each cell.}
 
 \item{nfeatures}{The number of features to select.}
