@@ -40,7 +40,7 @@
 #'
 #' @param x A vector of cluster labels for each cell
 #' @param dbr The expected doublet rate.
-#' @param only.heterotypic Logical; whether to return expectations only for 
+#' @param only.heterotypic Logical; whether to return expectations only for
 #' heterotypic doublets
 #'
 #' @return The expected number of doublets of each combination of clusters
@@ -76,6 +76,12 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   expected
 }
 
+.getPropHomotypic <- function(clusters){
+  clusters <- as.numeric(table(clusters))/length(clusters)
+  e <- clusters %*% t(clusters)
+  sum(diag(e))/sum(e)
+}
+
 .castorigins <- function(e, val=NULL){
   if(is.table(e) || is.null(dim(e))){
     e <- cbind(do.call(rbind, strsplit(names(e),"+",fixed=TRUE)),
@@ -94,14 +100,14 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
 }
 
 #' selFeatures
-#' 
+#'
 #' Selects features based on cluster-wise expression or marker detection, or a
 #' combination.
 #'
 #' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
-#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}} with a 
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}} with a
 #' 'counts' assay.
-#' @param clusters Optional cluster assignments. Should either be a vector of 
+#' @param clusters Optional cluster assignments. Should either be a vector of
 #' labels for each cell.
 #' @param nfeatures The number of features to select.
 #' @param propMarkers The proportion of features to select from markers (rather
@@ -148,7 +154,7 @@ selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0, FDR.m
 
 
 #' mockDoubletSCE
-#' 
+#'
 #' Creates a mock random single-cell experiment object with doublets
 #'
 #' @param ncells A positive integer vector indicating the number of cells per
@@ -158,16 +164,16 @@ selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0, FDR.m
 #' @param dbl.rate The doublet rate
 #' @param only.heterotypic Whether to create only heterotypic doublets
 #'
-#' @return A SingleCellExperiment object, with the colData columns `type` 
-#' indicating whether the cell is a singlet or doublet, and `cluster` 
+#' @return A SingleCellExperiment object, with the colData columns `type`
+#' indicating whether the cell is a singlet or doublet, and `cluster`
 #' indicating from which cluster (or cluster combination) it was simulated.
-#' 
+#'
 #' @export
 #' @import SingleCellExperiment
 #' @importFrom stats rnorm rpois
 #' @examples
 #' sce <- mockDoubletSCE()
-mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL, 
+mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
                            dbl.rate=0.1, only.heterotypic=TRUE){
   if(length(ncells)<2)
     stop("ncells should be a positive integer vector of length >=2")
@@ -175,7 +181,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   if(is.null(mus)){
     mus <- lapply(ncells, FUN=function(x) 2^rnorm(ngenes))
   }else{
-    if(!is.list(mus) || length(mus)!=length(ncells) || 
+    if(!is.list(mus) || length(mus)!=length(ncells) ||
        length(unique(lengths(mus)))!=1)
       stop("If provided, `mus` should be a list of length equal to that of ",
            "`ncells`, with each slot containing a numeric vector of averages ",
@@ -187,12 +193,12 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   counts <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
     matrix(rpois(ncells[[i]]*ngenes, mus[[i]]), nrow=ngenes)
   }))
-  sce <- SingleCellExperiment(list(counts=counts), 
-                              colData=data.frame(type="singlet", 
+  sce <- SingleCellExperiment(list(counts=counts),
+                              colData=data.frame(type="singlet",
                                            origin=rep(names(ncells), ncells)))
-  
+
   # doublets
-  expected <- getExpectedDoublets(sce$origin, dbl.rate, 
+  expected <- getExpectedDoublets(sce$origin, dbl.rate,
                                   only.heterotypic=only.heterotypic)
   simdbl <- rpois(length(expected), expected)
   if(sum(simdbl)>0){
@@ -202,19 +208,19 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
     doublets <- do.call(cbind, lapply(seq_along(mus), FUN=function(i){
       matrix(rpois(simdbl[[i]]*ngenes, mus[[i]]), nrow=ngenes)
     }))
-    sce2 <- SingleCellExperiment( list(counts=doublets), 
-                                  colData=data.frame(type="doublet", 
+    sce2 <- SingleCellExperiment( list(counts=doublets),
+                                  colData=data.frame(type="doublet",
                                           origin=rep(names(expected), simdbl)))
     sce <- cbind(sce, sce2)
   }
-  
+
   # set original cluster for homotypic doublets
   sce$cluster <- factor(sce$origin, c(names(ncells),names(expected)))
   names(n) <- n <- levels(sce$cluster)
   n[paste(names(ncells),names(ncells),sep="+")] <- names(ncells)
   levels(sce$cluster) <- as.character(n)
   sce$cluster <- droplevels(sce$cluster)
-  
+
   colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   row.names(sce) <- paste0("gene",seq_len(ngenes))
   sce$type <- factor(sce$type, c("singlet","doublet"))
@@ -229,7 +235,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
     return(NULL)
   }
   if(is.character(x) && length(x)==1){
-    if(!(x %in% colnames(colData(sce)))) 
+    if(!(x %in% colnames(colData(sce))))
       stop("Could not find `", arg, "` column in colData!")
     x <- colData(sce)[[x]]
   }else if(length(x)!=ncol(sce)){
@@ -247,20 +253,21 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 }
 
 #' cxds2
-#' 
-#' Calculates a coexpression-based doublet score using the method developed
-#' by \href{https://academic.oup.com/bioinformatics/article/36/4/1150/5566507}{Bais and Kostka 2020}.
-#' This is the original implementation from the `scds` package, but enabling
-#' scores to be calculated for all cells while the gene coexpression is based
-#'  only on a subset (i.e. excluding known/artificial doublets).
 #'
-#' @param x A matrix of counts, or a `SingleCellExperiment` containing a 
+#' Calculates a coexpression-based doublet score using the method developed by
+#' \href{https://doi.org/10.1093/bioinformatics/btz698}{Bais and Kostka 2020}.
+#' This is the original implementation from the
+#' \code{\hred{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}}
+#' package, but enabling scores to be calculated for all cells while the gene
+#' coexpression is based only on a subset (i.e. excluding known/artificial doublets).
+#'
+#' @param x A matrix of counts, or a `SingleCellExperiment` containing a
 #' 'counts'
 #' @param whichDbls The columns of `x` which are known doublets.
 #' @param ntop The number of top features to keep.
 #' @param binThresh The count threshold to be considered expressed.
-#'
-#' @return A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an 
+#' @references \url{https://doi.org/10.1093/bioinformatics/btz698}
+#' @return A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an
 #' added `cxds_score` colData column.
 #' @export
 #' @importFrom stats pbinom
@@ -269,7 +276,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' sce <- cxds2(sce)
 cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   if(is(x,"SingleCellExperiment")){
-    x$cxds_score <- cxds2(counts(x), whichDbls=whichDbls, ntop=ntop, 
+    x$cxds_score <- cxds2(counts(x), whichDbls=whichDbls, ntop=ntop,
                           binThresh=binThresh)
     return(x)
   }
@@ -286,7 +293,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   obs <- Bp %*% (1 - Matrix::t(Bp))
   obs <- obs + Matrix::t(obs)
   S <- suppressWarnings({
-    stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp), 
+    stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp),
         lower.tail=FALSE, log.p=TRUE)
   })
   if(any(w <- is.infinite(S))){
@@ -296,4 +303,42 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   s <- -Matrix::colSums(x * (S %*% x))
   s <- s - min(s)
   s/max(s)
+}
+
+.clustSpearman <- function(e, clusters, nMarkers=30){
+  if(is.null(dim(clusters))){
+    e2 <- e[,seq_along(clusters)]
+    g <- seq_len(nrow(e2))
+    if(nMarkers>0 & nMarkers<nrow(e)){
+      suppressWarnings(mm <- scran::findMarkers(e2, groups=clusters, test.type="binom"))
+      g <- unique(unlist(lapply(mm, FUN=function(x) row.names(x)[seq_len(nMarkers)])))
+    }
+    e2 <- scuttle::sumCountsAcrossCells(e2[g,], ids=clusters)
+    clusters <- as.matrix(assay(e2))
+  }else{
+    if(ncol(clusters)>500)
+      warning("You're using a very large `clustCor` matrix, are you sure that the",
+              "columns are cell types, and not individual cells?")
+    g <- intersect(row.names(e), row.names(clusters))
+    if(length(g)<5){
+      warning("Too few marker genes in common between `clustCor` and the data.",
+        "No correlation will be used. Consider checking that the gene identifiers match.")
+      return(NULL)
+    }
+    clusters <- clusters[g,]
+  }
+  cor(as.matrix(e[g,]), clusters, method="spearman")
+}
+
+.gdbr <- function(d, dbr=NULL){
+  if(!is.null(dbr)) return(dbr)
+  if(is.null(d$sample)){
+    sl <- sum(d$src=="real")
+  }else{
+    ## estimate a global doublet rate
+    sl <- as.numeric(table(d$sample, d$src=="real")[,2])
+  }
+  dbr <- (0.01*sl/1000)
+  dbr <- sum(dbr*sl)/sum(sl)
+  dbr
 }
