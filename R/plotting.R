@@ -1,13 +1,13 @@
 #' plotDoubletMap
-#' 
-#' Plots a heatmap of observed versus expected doublets. 
+#'
+#' Plots a heatmap of observed versus expected doublets.
 #' Requires the `ComplexHeatmap` package.
-#' 
+#'
 #' @param sce A SingleCellExperiment object on which `scDblFinder` has been run.
-#' @param colorBy Determines the color mapping. Either "enrichment" (for 
-#' log2-enrichment over expectation) or any column of 
+#' @param colorBy Determines the color mapping. Either "enrichment" (for
+#' log2-enrichment over expectation) or any column of
 #' `metadata(sce)$scDblFinder.stats`
-#' @param labelBy Determines the cell labels. Either "enrichment" (for 
+#' @param labelBy Determines the cell labels. Either "enrichment" (for
 #' log2-enrichment over expectation) or any column of
 #'  `metadata(sce)$scDblFinder.stats`
 #' @param addSizes Logical; whether to add the sizes of clusters to labels
@@ -19,12 +19,12 @@
 #' @param ... passed to `ComplexHeatmap::Heatmap`
 #'
 #' @return a Heatmap object
-#' 
+#'
 #' @export
 #' @importFrom stats aggregate
-plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed", 
-                           addSizes=TRUE, col=NULL, column_title="Clusters", 
-                           row_title="Clusters", column_title_side="bottom", 
+plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
+                           addSizes=TRUE, col=NULL, column_title="Clusters",
+                           row_title="Clusters", column_title_side="bottom",
                            na_col="white", ...){
   if(is.data.frame(sce)){
     s <- sce
@@ -60,12 +60,46 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
     n <- paste0(colnames(ob), " (", as.numeric(sizes[colnames(ob)]),")")
     colnames(ob) <- row.names(ob) <- colnames(en) <- row.names(en) <- n
   }
-  ComplexHeatmap::Heatmap(en, name=colorBy, column_title=column_title, 
-          row_title=row_title, column_title_side=column_title_side, 
+  ComplexHeatmap::Heatmap(en, name=colorBy, column_title=column_title,
+          row_title=row_title, column_title_side=column_title_side,
           col=col, na_col=na_col,
           cell_fun = function(j, i, x, y, width, height, fill){
             if(is.na(ob[i, j])) return(NULL)
-            grid::grid.text(as.character(ob[i, j]), x, y, 
+            grid::grid.text(as.character(ob[i, j]), x, y,
                             gp=grid::gpar(fontsize=10))
           }, ...)
+}
+
+#' plotThresholds
+#'
+#' Plots scores used for thresholding.
+#'
+#' @param d A data.frame of cell properties, with each row representing a cell, as
+#' produced by `scDblFinder(..., returnType="table")`.
+#' @param ths A vector of thresholds between 0 and 1 at which to plot values.
+#' @param dbr The expected (mean) doublet rate.
+#' @param dbr.sd The standard deviation of the doublet rate, representing the
+#' uncertainty in the estimate.
+#' @param do.plot Logical; whether to plot the data.
+#'
+#' @return A ggplot, or a data.frame if `do.plot==FALSE`.
+#' @export
+#'
+#' @examples
+#' sce <- mockDoubletSCE()
+#' d <- scDblFinder(sce, verbose=FALSE, returnType="table")
+#' plotThresholds(d)
+plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015, do.plot=TRUE){
+  dbr <- .gdbr(d,dbr)
+  o <- .optimThreshold(d, dbr, dbr.sd, ths=ths)
+  if(isFALSE(do.plot)) return(o)
+  th <- .optimThreshold(d, dbr, dbr.sd)
+  ggplot2::ggplot(o, aes(threshold, FNR)) +
+    ggplot2::geom_line(size=1.2, colour="red", alpha=0.8) +
+    ggplot2::geom_line(aes(y=FDR), size=1.2, colour="blue", alpha=0.8) +
+    ggplot2::geom_line(aes(y=FDR), size=1.2, colour="blue", alpha=0.8) +
+    ggplot2::geom_line(aes(y=dev), size=1.2, colour="gray", alpha=0.8) +
+    ggplot2::geom_line(aes(y=cost), size=1.2, colour="black") +
+    ggplot2::geom_vline(xintercept=th, linetype="dashed") + ggplot2::ylim(c(0,1)) +
+    ggplot2::annotate("text", x=th, y=1, hjust = -0.1, label=round(th,3))
 }
