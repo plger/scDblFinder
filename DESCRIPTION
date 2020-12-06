@@ -43,7 +43,7 @@ Suggests:
     bluster,
     circlize,
     ComplexHeatmap,
-    ggplot2
+    ggplot2,
     dplyr,
     MASS,
     viridisLite
