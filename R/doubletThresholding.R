@@ -42,11 +42,11 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nma
                                  returnType=c("threshold","call")){
   method <- match.arg(method)
   returnType <- match.arg(returnType)
-  if(!is.data.frame(d))
+  if(!is.data.frame(d) && !is(d,"DFrame"))
     stop("`d` should be a data.frame with minimally the 'score' column.")
-  conds <- c("optim"=c("cluster","type","score"),
-             "dbr"=c("score"),
-             "griffiths"=c("cluster","score"))
+  conds <- list("optim"=c("cluster","type","score"),
+                "dbr"=c("score"),
+                "griffiths"=c("cluster","score"))
   w <- vapply(conds, FUN.VALUE=logical(1), FUN=function(x) all(x %in% colnames(d)))
   if(method=="auto"){
     if(length(w)==0) stop("`d` misses the necessary columns.")
@@ -81,6 +81,8 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nma
       if(returnType=="threshold") return(meds+nmads*mad)
       d$mads <- d$dev/mad[d$cluster]
       ret <- as.factor(d$mads > nmads)
+    }else{
+      stop("Unknown method '",method,"'")
     }
   }
   levels(ret) <- c("singlet","doublet")
