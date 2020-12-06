@@ -55,6 +55,6 @@ Sets the doublet scores threshold; typically called by
 sce <- mockDoubletSCE()
 d <- scDblFinder(sce, verbose=FALSE, returnType="table")
 th <- doubletThresholding(d, dbr=0.05)
-th$th
+th
 
 }

@@ -257,7 +257,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' Calculates a coexpression-based doublet score using the method developed by
 #' \href{https://doi.org/10.1093/bioinformatics/btz698}{Bais and Kostka 2020}.
 #' This is the original implementation from the
-#' \code{\hred{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}}
+#' \code{\href{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}}
 #' package, but enabling scores to be calculated for all cells while the gene
 #' coexpression is based only on a subset (i.e. excluding known/artificial doublets).
 #'

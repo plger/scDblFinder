@@ -70,6 +70,7 @@
 #' 'logloss', 'auc', 'aucpr').
 #' @param nrounds Maximum rounds of boosting. If NULL, will be determined
 #' through cross-validation.
+#' @param max_depth Maximum depths of each tree.
 #' @param iter A positive integer indicating the number of scoring iterations
 #' (ignored if `score` isn't based on classifiers). At each iteration, real
 #' cells that would be called as doublets are excluding from the training, and

@@ -24,7 +24,7 @@ scDblFinder(
   returnType = c("sce", "table", "full"),
   score = c("xgb", "weighted", "ratio"),
   metric = "logloss",
-  nrounds = NULL,
+  nrounds = 0.25,
   max_depth = 5,
   iter = 1,
   threshold = TRUE,
@@ -120,6 +120,8 @@ object containing both the real and artificial cells.}
 
 \item{nrounds}{Maximum rounds of boosting. If NULL, will be determined
 through cross-validation.}
+
+\item{max_depth}{Maximum depths of each tree.}
 
 \item{iter}{A positive integer indicating the number of scoring iterations
 (ignored if `score` isn't based on classifiers). At each iteration, real
