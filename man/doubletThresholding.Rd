@@ -4,25 +4,51 @@
 \alias{doubletThresholding}
 \title{doubletThresholding}
 \usage{
-doubletThresholding(d, dbr = 0.025, dbr.sd = 0.015, local = FALSE)
+doubletThresholding(
+  d,
+  dbr = 0.025,
+  dbr.sd = 0.015,
+  stringency = 0.5,
+  nmads = 3,
+  method = c("auto", "optim", "dbr", "griffiths"),
+  returnType = c("threshold", "call")
+)
 }
 \arguments{
-\item{d}{A data.frame of properties of real and artificial cells, as produced
-by `scDblFinder(returnType="table")`.}
+\item{d}{A data.frame of cell properties, with each row representing a cell, as
+produced by `scDblFinder(..., returnType="table")`, or minimally containing a `score`
+column.}
 
-\item{dbr}{The expected (mean) doublet rate.}
+\item{dbr}{The expected (mean) doublet rate. If `d` contains a `cluster` column, the
+doublet rate will be adjusted for homotypic doublets.}
 
-\item{dbr.sd}{The standard deviation of the doublet rate, representing the 
-uncertainty in the estimate.}
+\item{dbr.sd}{The standard deviation of the doublet rate, representing the
+uncertainty in the estimate. Ignored if `method!="optim"`.}
 
-\item{local}{Logical; whether to use local calibration (experimental 
-feature!)}
+\item{stringency}{A numeric value >0 and <1 which controls the relative weight of false
+positives (i.e. real cells) and false negatives (artificial doublets) in setting the
+threshold. A value of 0.5 gives equal weight to both; a higher value (e.g. 0.7) gives
+higher weight to the false positives, and a lower to artificial doublets.  Ignored if
+`method!="optim"`.}
+
+\item{nmads}{Number of median absolute deviations to use as threshold. Ignored if
+`method!="optim"`.}
+
+\item{method}{The thresholding method to use, either 'auto' (default, automatic
+selection depending on the available fields), 'optim' (optimization of
+misclassification rate and deviation from expected doublet rate), 'dbr' (strictly
+based on the expected doublet rate), or 'griffiths' (cluster-wise number of
+median absolute deviation in doublet score).}
+
+\item{returnType}{The type of value to return, either doublet calls (`call`) or
+thresholds (`threshold`).}
 }
 \value{
-A scaler indicating the decided threshold.
+A vector of doublet calls if `returnType=="call"`, or a threshold (or vector
+of thresholds) if `returnType=="threshold"`.
 }
 \description{
-Sets the doublet scores threshold; typically called by 
+Sets the doublet scores threshold; typically called by
 \code{\link[scDblFinder]{scDblFinder}}.
 }
 \examples{

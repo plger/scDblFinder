@@ -1,113 +1,138 @@
 #' doubletThresholding
 #'
-#' Sets the doublet scores threshold; typically called by 
+#' Sets the doublet scores threshold; typically called by
 #' \code{\link[scDblFinder]{scDblFinder}}.
 #'
-#' @param d A data.frame of properties of real and artificial cells, as produced
-#' by `scDblFinder(returnType="table")`.
-#' @param dbr The expected (mean) doublet rate.
-#' @param dbr.sd The standard deviation of the doublet rate, representing the 
-#' uncertainty in the estimate.
-#' @param local Logical; whether to use local calibration (experimental 
-#' feature!)
+#' @param d A data.frame of cell properties, with each row representing a cell, as
+#' produced by `scDblFinder(..., returnType="table")`, or minimally containing a `score`
+#' column.
+#' @param dbr The expected (mean) doublet rate. If `d` contains a `cluster` column, the
+#' doublet rate will be adjusted for homotypic doublets.
+#' @param dbr.sd The standard deviation of the doublet rate, representing the
+#' uncertainty in the estimate. Ignored if `method!="optim"`.
+#' @param stringency A numeric value >0 and <1 which controls the relative weight of false
+#'  positives (i.e. real cells) and false negatives (artificial doublets) in setting the
+#'  threshold. A value of 0.5 gives equal weight to both; a higher value (e.g. 0.7) gives
+#'  higher weight to the false positives, and a lower to artificial doublets.  Ignored if
+#'  `method!="optim"`.
+#' @param method The thresholding method to use, either 'auto' (default, automatic
+#' selection depending on the available fields), 'optim' (optimization of
+#' misclassification rate and deviation from expected doublet rate), 'dbr' (strictly
+#' based on the expected doublet rate), or 'griffiths' (cluster-wise number of
+#' median absolute deviation in doublet score).
+#' @param nmads Number of median absolute deviations to use as threshold. Ignored if
+#' `method!="optim"`.
+#' @param returnType The type of value to return, either doublet calls (`call`) or
+#' thresholds (`threshold`).
 #'
-#' @return A scaler indicating the decided threshold.
-#' 
-#' @importFrom stats pcauchy optimize ecdf lm predict dnbinom
-#' 
+#' @return A vector of doublet calls if `returnType=="call"`, or a threshold (or vector
+#' of thresholds) if `returnType=="threshold"`.
+#'
+#' @importFrom stats pcauchy optimize ecdf lm predict dnbinom quantile
+#'
 #' @examples
 #' sce <- mockDoubletSCE()
 #' d <- scDblFinder(sce, verbose=FALSE, returnType="table")
 #' th <- doubletThresholding(d, dbr=0.05)
 #' th$th
-#' 
+#'
 #' @export
-doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=FALSE ){
-  # check that we have all necessary fields:
-  if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous") 
-          %in% colnames(d))) stop("Input misses some columns.")
-  
-  if(!all(sort(as.character(unique(d$type)))==c("doublet","real"))){
-    stop("`type` should be either 'real' or 'doublet'.")
+doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nmads=3,
+                                 method=c("auto","optim","dbr","griffiths"),
+                                 returnType=c("threshold","call")){
+  method <- match.arg(method)
+  returnType <- match.arg(returnType)
+  if(!is.data.frame(d))
+    stop("`d` should be a data.frame with minimally the 'score' column.")
+  conds <- c("optim"=c("cluster","type","score"),
+             "dbr"=c("score"),
+             "griffiths"=c("cluster","score"))
+  w <- vapply(conds, FUN.VALUE=logical(1), FUN=function(x) all(x %in% colnames(d)))
+  if(method=="auto"){
+    if(length(w)==0) stop("`d` misses the necessary columns.")
+    method <- names(conds)[which(w)[1]]
+  }else{
+    if(!w[[method]]) stop("`d` misses the necessary columns.")
   }
-  expected <- getExpectedDoublets(d$cluster[!is.na(d$cluster)], dbr=dbr)
-  if(local){
-    ths <- .optimThresholds(d$score, d$type, d$mostLikelyOrigin, d$difficulty, 
-                          expected)
-    d$score.global <- d$score
-    logit <- function(p) log(p/(1-p))
-    adjp <- ths[d$mostLikelyOrigin,1]
-    adjp[is.na(adjp)] <- median(ths)
-    d$score <- 1/(1+exp(-(logit(d$score)-logit(sqrt(adjp)))))
-  }
-  w <- NULL
-  if(!is.null(d$include.in.training)) w <- which(!d$include.in.training)
-  ee <- sum(expected,na.rm=TRUE)
-  ee <- c(ee*(1-dbr.sd), ee*(1+dbr.sd))
-  th <- .optimThreshold(d$score, d$type, ee, fdr.include=w)
-  o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
-  stats <- .compareToExpectedDoublets(o, expected, dbr)
-  stats$combination <- as.character(stats$combination)
-  stats$FNR <- vapply(split(as.data.frame(d), d$mostLikelyOrigin), 
-                      FUN.VALUE=numeric(1L), 
-                  FUN=function(x) .FNR(x$type, x$score, th) )[stats$combination]
-  stats$difficulty <- vapply(split(d$difficulty, d$mostLikelyOrigin), 
-                             FUN.VALUE=numeric(1L), na.rm=TRUE, 
-                             FUN=median)[stats$combination]
-  if(local){
-    stats$local.threshold <- ths[stats$combination,2]
-    stats$local.moderated <- ths[stats$combination,1]
-  }
-  list(th=th, stats=stats, finalScores=d$score)
-}
 
-.optimThreshold <- function(score, type, expected, fdr.include=NULL){
-  type <- type=="real"
-  if(!is.null(fdr.include)) fdr.include <- seq_along(score)
-  totfn <- function(x){
-    .FNR(type, score, x)*2 + .FDR(type[fdr.include], score[fdr.include], x) +
-          .prop.dev(type,score,expected,x)^2
-  }
-  optimize(totfn, c(0,1), maximum=FALSE)$minimum
-}
-
-.optimThresholds <- function(score, type, origins, difficulty, expected, 
-                             moderate=TRUE){
-  ll <- split(seq_along(score), origins)
-  names(n) <- n <- names(ll)
-  ths <- vapply(n, FUN.VALUE=numeric(1L), FUN=function(comb){
-    i <- ll[[comb]]
-    type <- type=="real"
-    totfn <- function(x){
-      .FNR(type[i], score[i], x)*2 + .FDR(type[i], score[i], x) + 
-        .prop.dev(type[i],score[i],expected[comb],x)^2
+  if(method=="optim"){
+    if(!all(sort(as.character(unique(d$type)))==c("doublet","real")))
+      stop("`type` should be either 'real' or 'doublet'.")
+    if(is.null(d$include.in.training)) d$include.in.training <- TRUE
+    th <- .optimThreshold(d, dbr=dbr, dbr.sd=dbr.sd, stringency=stringency)
+    if(returnType=="threshold") return(th)
+    ret <- as.factor(d$score>th)
+  }else{
+    if(!is.null(d$src)) d <- d[d$src=="real",]
+    if(method=="dbr"){
+      if(!is.null(d$cluster))
+        dbr <- sum(getExpectedDoublets(d$cluster, dbr=dbr))/nrow(d)
+      th <- quantile(d$score, 1-dbr)
+      if(returnType=="threshold") return(th)
+      ret <- as.factor(d$score>th)
+    }else if(method=="griffiths"){
+      meds <- vapply(split(d$score, d$cluster), FUN.VALUE=numeric(1), FUN=function(x){
+        median(x,na.rm=TRUE)
+      })
+      d$dev <- d$score-meds[d$cluster]
+      mad <- vapply(split(d$dev, d$cluster), FUN.VALUE=numeric(1), FUN=function(x){
+        median(x[x>0],na.rm=TRUE)
+      })
+      if(returnType=="threshold") return(meds+nmads*mad)
+      d$mads <- d$dev/mad[d$cluster]
+      ret <- as.factor(d$mads > nmads)
     }
-    optimize(totfn, c(0,1), maximum=FALSE)$minimum
-  })
-  if(moderate){
-    diff <- vapply(split(difficulty,origins), na.rm=TRUE, FUN=median, 
-                   FUN.VALUE=numeric(1))
-    diff <- diff[names(ths)]
-    mod <- tryCatch({ MASS::rlm(ths~diff) }, error=function(e){
-        lm(ths~diff)
-    })
-    ths2 <- (ths+predict(mod))/2
-    if(length(w <- which(ths2<0.01))>0)
-      ths2[w] <- apply(cbind(ths[w],rep(0.01,length(w))),1,FUN=max)
-    ths2[ths2>1] <- 1
-    ths <- cbind(moderated=ths2, local=ths)
   }
-  cbind(ths)
+  levels(ret) <- c("singlet","doublet")
+  return(ret)
 }
 
-.FNR <- function(type, score, threshold){
-  if(!is.logical(type)) type <- type=="real"
-  sum(!type & score<threshold, na.rm=TRUE)/sum(!type)
+.optimThreshold <- function(d, dbr, dbr.sd=NULL, ths=NULL, stringency=0.5){
+  if(!(stringency > 0) || !(stringency<1)) stop("`stringency` should be >0 and <1.")
+  if(!is.null(dbr.sd)) dbr <- c(max(0,dbr-dbr.sd),min(1,dbr+dbr.sd))
+  expected <- vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
+    sum(getExpectedDoublets(d$cluster[which(d$src=="real")], dbr=x)))
+  if(!is.logical(d$type)) d$type <- d$type=="real"
+  fdr.include <- which(d$include.in.training)
+  eFN <- sum(grepl("^rDbl\\.",row.names(d)))*.getPropHomotypic(d$cluster[d$src=="real"])
+  totfn <- function(x){
+    y <- .prop.dev(d$type,d$score,expected,x)^2 +
+      2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
+    if(!is.null(fdr.include))
+      y <- y + .FPR(d$type[fdr.include], d$score[fdr.include], x)*2*stringency
+    y
+  }
+  if(is.null(ths)) return(optimize(totfn, c(0,1), maximum=FALSE)$minimum)
+  data.frame( threshold=ths,
+              FNR=vapply(ths, FUN.VALUE=numeric(1), FUN=function(x){
+                .FNR(d$type, d$score, x, expectedFN=eFN)
+              }),
+              FDR=vapply(ths, FUN.VALUE=numeric(1), FUN=function(x){
+                .FDR(d$type[fdr.include], d$score[fdr.include], x)
+              }),
+              FPR=vapply(ths, FUN.VALUE=numeric(1), FUN=function(x){
+                .FPR(d$type[fdr.include], d$score[fdr.include], x)
+              }),
+              dev=vapply(ths, FUN.VALUE=numeric(1), FUN=function(x){
+                .prop.dev(d$type,d$score,expected,x)^2
+              }),
+              cost=vapply(ths, FUN.VALUE=numeric(1), FUN=totfn)
+  )
 }
-.FDR <- function(type, score, threshold, include=FALSE){
-  if(sum(score>=threshold, na.rm=TRUE)==0) return(0)
+
+.FNR <- function(type, score, threshold, expectedFN=0){
+  if(!is.logical(type)) type <- type=="real"
+  max(c(0, (sum(!type & score<threshold, na.rm=TRUE)-expectedFN)))/sum(!type)
+}
+.FDR <- function(type, score, threshold){
+  if(length(type)==0 || sum(score>=threshold, na.rm=TRUE)==0) return(0)
   if(!is.logical(type)) type <- type=="real"
   sum(type & score>=threshold, na.rm=TRUE)/sum(score>=threshold, na.rm=TRUE)
+}
+.FPR <- function(type, score, threshold){
+  if(length(type)==0) return(0)
+  if(!is.logical(type)) type <- type=="real"
+  sum(type & score>=threshold, na.rm=TRUE)/sum(type)
 }
 
 .prop.dev <- function(type, score, expected, threshold){
@@ -120,13 +145,13 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=FALSE ){
 
 .compareToExpectedDoublets <- function(origins, expected, dbr=NULL, od=NULL){
   if(length(origins)==0){
-    d <- data.frame(combination=names(expected), 
+    d <- data.frame(combination=names(expected),
                     observed=rep(0,length(expected)))
     d$deviation <- d$expected <- as.numeric(expected)
   }else{
     n <- names(expected)
     o <- as.numeric(table(origins)[names(expected)])
-    o[is.na(o)] <- 0 
+    o[is.na(o)] <- 0
     expected <- as.numeric(expected)
     d <- data.frame( combination=n, observed=o, expected=expected,
                      deviation=abs(expected-o))
@@ -135,36 +160,20 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, local=FALSE ){
   if(!is.null(od)) d$p <- dnbinom(d$observed, mu=d$expected, size=1/od)
   d
 }
-  
-.getThresholdStats <- function(x, expected=NULL, thresholds=(0:100/100), 
-                               dbr=NULL, od=0.05){
-  if(is(x,"SingleCellExperiment")){
-    x <- as.data.frame(colData(x))
-    if(is.null(x$scDblFinder.type)) x$scDblFinder.type <- "real"
-    x <- x[,grep("^scDblFinder",colnames(x))]
-    colnames(x) <- gsub("^scDblFinder\\.","",colnames(x))
-  }
-  real <- which(x$type=="real")
-  if(is.null(expected)) expected <- getExpectedDoublets(x$clusters[w], dbr)
-  if(is.null(names(thresholds))) names(thresholds) <- thresholds
-  a <- lapply( thresholds, FUN=function(i){
-    .compareToExpectedDoublets(x$mostLikelyOrigin[which(x$score>=i & 
-                                                            x$type=="real")], 
-                               expected, dbr=dbr, od=od)
-  })
-  a <- cbind(threshold=rep(names(a),vapply(a,nrow,integer(1))),
-             do.call(rbind, a))
-  if(!all(x$type=="real")){
-    b <- lapply( thresholds, FUN=function(i){
-      y <- vapply(split(x, x$mostLikelyOrigin), FUN.VALUE=numeric(1L), 
-                  FUN=function(x) .FNR(x$type, x$score, i) )
-      data.frame(combination=names(y), FNR=y)
-    })
-    b <- cbind(threshold=rep(names(b),vapply(b,nrow,integer(1))),
-               do.call(rbind, b))
-    a <- merge(a,b,by=c("combination","threshold"),all.x=TRUE)
-  }
-  a$threshold <- as.numeric(a$threshold)
-  a
-}
 
+.getDoubletStats <- function( d, th, dbr=0.025, dbr.sd=0.015 ){
+  # check that we have all necessary fields:
+  if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous")
+          %in% colnames(d))) stop("Input misses some columns.")
+  o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
+  expected <- getExpectedDoublets(d$cluster[d$src=="real"], dbr=dbr)
+  stats <- .compareToExpectedDoublets(o, dbr=dbr, expected=expected)
+  stats$combination <- as.character(stats$combination)
+  stats$FNR <- vapply(split(as.data.frame(d), d$mostLikelyOrigin),
+                      FUN.VALUE=numeric(1L),
+                      FUN=function(x) .FNR(x$type, x$score, th) )[stats$combination]
+  stats$difficulty <- vapply(split(d$difficulty, d$mostLikelyOrigin),
+                             FUN.VALUE=numeric(1L), na.rm=TRUE,
+                             FUN=median)[stats$combination]
+  stats
+}
