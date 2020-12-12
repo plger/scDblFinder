@@ -54,13 +54,15 @@ Contrarily to other methods also based on the generation of artificial doublets,
 
 ### Including known doublets
 
-If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` argument will improve the `scDblFinder` scoring and calling of new doublets.
-
-For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html).
+If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` can enable `scDblFinder` to identify similar doublets. However, if many of those doublets are homotypic (e.g. made from the same cell type, although from different individuals), this can lead to a decrease in accuracy.
 
 ## Single-cell ATACseq
 
-We have not yet thoroughly tested the `scDblFinder` paremeters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there (consider increasing the `nfeatures`).
+We have not yet thoroughly tested the `scDblFinder` parameters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there if one increases the `nfeatures`.
+
+<br/><br/>
+
+For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html).
 
 <br/><br/>
 

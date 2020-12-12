@@ -104,7 +104,7 @@ If the dataset is not expected to contain distinct subpopulations, but rather tr
 
 ### Examining the k-nearest neighbors (KNN) of each cell
 
-A new PCA is performed on the combination of real and artificial cells, from which a KNN network is generated. Using this KNN, a number of parameters are gathered for each cell, such as the proportion of doublets (i.e. artificial doublets or known doublets provided through the `knownDoublets` argument, if given - these could be for instance inter-sample doublets flagged by SNPs) among the KNN, ratio of the distances to the nearest doublet and nearest non-doublet, etc. Several of this features are reported in the output with the 'scDblFinder.' prefix, e.g.:
+A new PCA is performed on the combination of real and artificial cells, from which a KNN network is generated. Using this KNN, a number of parameters are gathered for each cell, such as the proportion of doublets (i.e. artificial doublets or known doublets provided through the `knownDoublets` argument, if given) among the KNN, ratio of the distances to the nearest doublet and nearest non-doublet, etc. Several of this features are reported in the output with the 'scDblFinder.' prefix, e.g.:
 
 * `distanceToNearest` : distance to the nearest cell (real or artificial)
 * `nearestClass` : whether the nearest cell is a doublet or singlet
@@ -125,7 +125,7 @@ This score is available in the output, in the `scDblFinder.score` colData column
 
 Rather than thresholding on some arbitrary cutoff of the score, `scDblFinder` uses the expected number of doublets to establish a threshold. Unless it is manually given through the `dbr` argument, the expected doublet rate is first estimated using the empirical rule of thumb applicable to 10X data, namely roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets, and the more cells you capture the higher the chance of creating a doublet). If samples were specified, and if the `dbr` is automatically calculated, thresholding is performed separately across samples.
 
-Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets real cells below the threshold) and 2) the deviation from the expected number of doublets (as a ratio of the total number of expected doublets within the range determined by `dbr.sd`, and adjusted for homotypic doublets), giving an equal weight to each. This means that, if you have no idea about the doublet rate, setting `dbr.sd=1` will make the threshold depend entirely on the misclassification rate.
+Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets below the threshold) and 2) the deviation from the expected number of doublets among real cells (as a ratio of the total number of expected doublets within the range determined by `dbr.sd`, and adjusted for homotypic doublets), giving an equal weight to each. This means that, if you have no idea about the doublet rate, setting `dbr.sd=1` will make the threshold depend entirely on the misclassification rate.
 
 ### Doublet origins and enrichments
 
