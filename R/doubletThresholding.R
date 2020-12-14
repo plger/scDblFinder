@@ -20,8 +20,7 @@
 #' misclassification rate and deviation from expected doublet rate), 'dbr' (strictly
 #' based on the expected doublet rate), or 'griffiths' (cluster-wise number of
 #' median absolute deviation in doublet score).
-#' @param nmads Number of median absolute deviations to use as threshold. Ignored if
-#' `method!="optim"`.
+#' @param p The p-value threshold determining the deviation in doublet score.
 #' @param returnType The type of value to return, either doublet calls (`call`) or
 #' thresholds (`threshold`).
 #'
@@ -36,8 +35,9 @@
 #' th <- doubletThresholding(d, dbr=0.05)
 #' th
 #'
+#' @importFrom stats mad
 #' @export
-doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nmads=3,
+doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0.1,
                                  method=c("auto","optim","dbr","griffiths"),
                                  returnType=c("threshold","call")){
   method <- match.arg(method)
@@ -46,7 +46,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nma
     stop("`d` should be a data.frame with minimally the 'score' column.")
   conds <- list("optim"=c("cluster","type","score"),
                 "dbr"=c("score"),
-                "griffiths"=c("cluster","score"))
+                "griffiths"=c("score"))
   w <- vapply(conds, FUN.VALUE=logical(1), FUN=function(x) all(x %in% colnames(d)))
   if(method=="auto"){
     if(length(w)==0) stop("`d` misses the necessary columns.")
@@ -71,16 +71,22 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, nma
       if(returnType=="threshold") return(th)
       ret <- as.factor(d$score>th)
     }else if(method=="griffiths"){
-      meds <- vapply(split(d$score, d$cluster), FUN.VALUE=numeric(1), FUN=function(x){
-        median(x,na.rm=TRUE)
+      if(!("sample" %in% colnames(d))) d$sample <- "all"
+      i <- split(seq_len(nrow(d)), d$sample)
+      meds <- vapply(i, FUN.VALUE=numeric(1), FUN=function(x){
+        median(d$score[x],na.rm=TRUE)
       })
-      d$dev <- d$score-meds[d$cluster]
-      mad <- vapply(split(d$dev, d$cluster), FUN.VALUE=numeric(1), FUN=function(x){
+      d$dev <- d$score-meds[d$sample]
+      mad <- vapply(i, FUN.VALUE=numeric(1), FUN=function(x){
+        x <- d$dev[x]
         median(x[x>0],na.rm=TRUE)
-      })
-      if(returnType=="threshold") return(meds+nmads*mad)
-      d$mads <- d$dev/mad[d$cluster]
-      ret <- as.factor(d$mads > nmads)
+      }) * formals(mad)$constant
+      if(returnType=="threshold"){
+        return(qnorm(p, mean=meds, sd=mad, lower.tail=FALSE))
+      }else{
+        d$p <- pnorm(d$score, mean=meds[d$sample], sd=mad[d$sample], lower.tail=FALSE)
+        ret <- as.factor(d$p < p)
+      }
     }else{
       stop("Unknown method '",method,"'")
     }

@@ -9,7 +9,7 @@ doubletThresholding(
   dbr = 0.025,
   dbr.sd = 0.015,
   stringency = 0.5,
-  nmads = 3,
+  p = 0.1,
   method = c("auto", "optim", "dbr", "griffiths"),
   returnType = c("threshold", "call")
 )
@@ -31,8 +31,7 @@ threshold. A value of 0.5 gives equal weight to both; a higher value (e.g. 0.7) 
 higher weight to the false positives, and a lower to artificial doublets.  Ignored if
 `method!="optim"`.}
 
-\item{nmads}{Number of median absolute deviations to use as threshold. Ignored if
-`method!="optim"`.}
+\item{p}{The p-value threshold determining the deviation in doublet score.}
 
 \item{method}{The thresholding method to use, either 'auto' (default, automatic
 selection depending on the available fields), 'optim' (optimization of
