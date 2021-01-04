@@ -150,8 +150,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   returnType <- match.arg(returnType)
   if(!is.null(clusters)){
-    if(length(clusters)>1 || !is.numeric(clusters))
+    if(length(clusters)>1 || !is.numeric(clusters)){
       clusters <- .checkColArg(sce, clusters)
+      if(is.factor(clusters)) clusters <- droplevels(clusters)
+    }
   }
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
