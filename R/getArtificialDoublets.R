@@ -4,13 +4,13 @@
 #'
 #' @param x A count matrix, with features as rows and cells as columns.
 #' @param n The approximate number of doublet to generate (default 3000).
-#' @param clusters The optional clusters labels to use to build cross-cluster 
+#' @param clusters The optional clusters labels to use to build cross-cluster
 #' doublets.
 #' @param resamp Logical; whether to resample the doublets using the poisson
 #' distribution. Alternatively, if a proportion between 0 and 1, the proportion
 #' of doublets to resample.
-#' @param halfSize Logical; whether to half the library size of doublets 
-#' (instead of just summing up the cells). Alternatively, a number between 0 
+#' @param halfSize Logical; whether to half the library size of doublets
+#' (instead of just summing up the cells). Alternatively, a number between 0
 #' and 1 can be given, determining the proportion of the doublets for which
 #' to perform the size adjustment.
 #' @param adjustSize Logical; whether to adjust the size of the doublets using
@@ -18,53 +18,56 @@
 #' between 0 and 1 can be given, determining the proportion of the doublets for
 #' which to perform the size adjustment.
 #' @param propRandom The proportion of the created doublets that are fully
-#'  random (default 0.1); the rest will be doublets created across clusters. 
+#'  random (default 0.1); the rest will be doublets created across clusters.
 #'  Ignored if `clusters` is NULL.
-#' @param selMode The cell pair selection mode for inter-cluster doublet 
+#' @param selMode The cell pair selection mode for inter-cluster doublet
 #' generation, either 'uniform' (same number of doublets for each combination),
 #' 'proportional' (proportion expected from the clusters' prevalences), or
 #' 'sqrt' (roughly the square root of the expected proportion).
 #' @param n.meta.cells The number of meta-cell per cluster to create. If given,
-#' additional doublets will be created from cluster meta-cells. Ignored if 
+#' additional doublets will be created from cluster meta-cells. Ignored if
 #' `clusters` is missing.
-#' @param meta.triplets Logical; whether to create triplets from meta cells. 
+#' @param meta.triplets Logical; whether to create triplets from meta cells.
 #' Ignored if `clusters` is missing.
+#' @param trim.q A vector of two values between 0 and 1
 #'
 #' @return A list with two elements: `counts` (the count matrix of
-#' the artificial doublets) and `origins` the clusters from which each 
+#' the artificial doublets) and `origins` the clusters from which each
 #' artificial doublets originated (NULL if `clusters` is not given).
-#' 
+#'
 #' @examples
-#' m <- t(sapply( seq(from=0, to=5, length.out=50), 
+#' m <- t(sapply( seq(from=0, to=5, length.out=50),
 #'                FUN=function(x) rpois(30,x) ) )
 #' doublets <- getArtificialDoublets(m, 30)
-#' 
+#'
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
-                                   halfSize=0.5, adjustSize=0.2, propRandom=0.1, 
+getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
+                                   halfSize=0.25, adjustSize=0.25, propRandom=0.1,
                                    selMode=c("proportional","uniform","sqrt"),
-                                   n.meta.cells=2, meta.triplets=TRUE ){
+                                   n.meta.cells=2, meta.triplets=TRUE,
+                                   trim.q=c(0.05,0.95) ){
   selMode <- match.arg(selMode)
   ls <- Matrix::colSums(x)
-  w <- which(ls>0 & ls>=quantile(ls,0.01) & ls<=quantile(ls,0.99))
-  x <- x[,w,drop=FALSE]
-  if(!is.null(clusters)){
-    if(is.list(clusters)){
-      clusters$k <- clusters$k[w]
-      clo <- clusters
-      clusters <- clusters$k
+  stopifnot(is.numeric(trim.q), length(trim.q)==2)
+  if(is.null(clusters)){
+    w <- which(ls>0 & ls>=quantile(ls,min(trim.q)) & ls<=quantile(ls,max(trim.q)))
+  }else{
+    clo <- clusters
+    if(is.list(clusters)) clusters <- clusters$k
+    q <- sapply(split(ls, clusters), FUN=function(x){
+      if(length(x)<10) return(c(0,max(x)))
+      quantile(x, prob=sort(trim.q), na.rm=TRUE)
+    })
+    w <- which(ls>0 & ls>=q[1,clusters] & ls<=q[2,clusters] & !is.na(clusters))
+    clusters <- droplevels(as.factor(clusters[w]))
+    if(is.list(clo)){
+      clo$k <- clo$k[w]
     }else{
-      clusters <- clusters[w]
-      if(any(is.na(clusters))){
-        w <- which(!is.na(clusters))
-        clusters <- clusters[w]
-        x <- x[,w]
-      }
       clo <- clusters
     }
-    clusters <- droplevels(as.factor(clusters))
   }
-  
+  x <- x[,w,drop=FALSE]
+
   if(is.null(clusters) || propRandom==1){
     # create random combinations
     if(ncol(x)^2 <= n){
@@ -77,12 +80,12 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     ad <- ad[which(ad[,1]!=ad[,2]),]
     # create doublets
     if(is.null(clusters)){
-      ad.m <- createDoublets(x, ad, adjustSize=FALSE, resamp=resamp, 
+      ad.m <- createDoublets(x, ad, adjustSize=FALSE, resamp=resamp,
                              halfSize=halfSize, prefix="rDbl.")
       oc <- NULL
     }else{
       oc1 <- matrix(clusters[as.numeric(ad)],ncol=2)
-      ad.m <- createDoublets(x, ad, clusters=clusters, adjustSize=adjustSize, 
+      ad.m <- createDoublets(x, ad, clusters=clusters, adjustSize=adjustSize,
                              halfSize=halfSize, resamp=resamp, prefix="rDbl.")
       oc <- paste(oc1[,2],oc1[,1],sep="+")
       oc[which(oc1[,2]==oc1[,1])] <- NA
@@ -90,9 +93,9 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     row.names(ad.m) <- row.names(x)
     return(list( counts=ad.m, origins=as.factor(oc) ))
   }
-  
+
   if((nr <- ceiling(n*propRandom))>0){
-    ad.m <- getArtificialDoublets(x, n=nr, clusters=clusters, 
+    ad.m <- getArtificialDoublets(x, n=nr, clusters=clusters,
                                   halfSize=halfSize, resamp=resamp,
                                   propRandom=1, adjustSize=adjustSize)
     oc <- ad.m$origins
@@ -104,10 +107,10 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
   }
 
   if(length(unique(clusters))<3) n.meta.cells <- 0
-  
+
   # create doublets across clusters:
   n <- ceiling(n)
-  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n), 
+  ca <- getCellPairs(clo, n=ifelse(n.meta.cells>0,ceiling(n*0.9),n),
                      selMode=selMode)
   m2 <- createDoublets(x, ca, clusters=clusters, adjustSize=adjustSize,
                        halfSize=halfSize, resamp=resamp)
@@ -116,15 +119,15 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
   ad.m <- cbind(ad.m, m2)
   rm(m2)
   gc(verbose=FALSE)
-  
+
   if(n.meta.cells>0){
     # create doublets from meta cells:
-    meta <- .getMetaCells(x, clusters, n.meta.cells=n.meta.cells, 
+    meta <- .getMetaCells(x, clusters, n.meta.cells=n.meta.cells,
                           meta.cell.size=30)
     cl2 <- meta$clusters
     meta <- meta$mu
     ca <- getCellPairs(cl2, n=ceiling(n*0.1))
-    m2 <- createDoublets(meta, ca, clusters=cl2, adjustSize=FALSE, 
+    m2 <- createDoublets(meta, ca, clusters=cl2, adjustSize=FALSE,
                          halfSize=FALSE, resamp=TRUE, prefix="artMetaDbl.")
     oc2 <- ca$orig.clusters
     names(oc2) <- colnames(m2)
@@ -140,7 +143,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     if(length(cl2)<3) cl2 <- names(sort(tt, decreasing=TRUE))[1:3]
     w <- which(clusters %in% cl2)
     # create triplets from meta cells:
-    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1, 
+    meta <- .getMetaCells(x[,w], clusters[w], n.meta.cells=1,
                           meta.cell.size=100)$mu
     i <- seq_len(ncol(meta))
     ca <- expand.grid(i, i, i)
@@ -148,7 +151,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
     m2 <- round((meta[,ca[,1],drop=FALSE]+meta[,ca[,2]]+meta[,ca[,3]])/2)
     if(is(ad.m,"dgCMatrix")) m2 <- as(m2,"dgCMatrix")
     oc2 <- rep(NA_character_, ncol(m2))
-    names(oc2) <- colnames(m2) <- 
+    names(oc2) <- colnames(m2) <-
       paste0("artTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
     ad.m <- cbind(ad.m, m2)
     oc <- c(oc, oc2)
@@ -159,11 +162,11 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.5,
 #' getCellPairs
 #'
 #' Given a vector of cluster labels, returns pairs of cross-cluster cells
-#' 
-#' @param x A vector of cluster labels for each cell, or a list containing 
+#'
+#' @param x A vector of cluster labels for each cell, or a list containing
 #' metacells and graph
 #' @param n The number of cell pairs to obtain
-#' @param ... Further arguments, for instance the `k` vector of precluster 
+#' @param ... Further arguments, for instance the `k` vector of precluster
 #' labels if `x` is a metacell graph.
 #'
 #' @return A data.frame with the columns
@@ -206,7 +209,7 @@ getCellPairs <- function(x, n=1000, ...){
   }
   ca <- ca[ca$n>0,]
   lvls <- levels(ca$orig)
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){
     cbind( cell1=sample(cli[[ca[i,1]]], size=ca[i,4],
                         replace=ca[i,4]>length(cli[[ca[i,1]]])),
            cell2=sample(cli[[ca[i,2]]], size=ca[i,4],
@@ -220,7 +223,7 @@ getCellPairs <- function(x, n=1000, ...){
 
 # get pairs of cells based on distances on the meta-cell graph
 #' @importFrom igraph distances V
-.getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000, 
+.getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000,
                                    weightFun=NULL, ...){
   cli <- split(seq_along(k), k)
   ca <- expand.grid(seq_along(cli), seq_along(cli))
@@ -231,12 +234,12 @@ getCellPairs <- function(x, n=1000, ...){
   if(is.character(weightFun)) weightFun <- get(weightFun)
   d <- weightFun(d)
   d[is.nan(d) | d<0] <- 0
-  ca$dist <- vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1), 
+  ca$dist <- vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1),
                     FUN=function(i) d[ca[i,1],ca[i,2]])
   ca$n <- rpois(nrow(ca), n/sum(ca$dist)*ca$dist)
   ca <- ca[ca$n>0,]
   oc <- rep(factor(paste(names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")),ca$n)
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){ 
+  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){
     cbind( sample(cli[[ca[i,1]]],size=ca$n[i],replace=TRUE),
            sample(cli[[ca[i,2]]],size=ca$n[i],replace=TRUE) )
   }))
@@ -256,7 +259,7 @@ getCellPairs <- function(x, n=1000, ...){
     })
   })
   cl2 <- rep(names(cli), lengths(meta))
-  meta <- vapply(unlist(meta, recursive=FALSE), FUN.VALUE=double(nrow(x)), 
+  meta <- vapply(unlist(meta, recursive=FALSE), FUN.VALUE=double(nrow(x)),
                  FUN=function(y){ Matrix::rowMeans(x[,y,drop=FALSE]) })
   colnames(meta) <- paste0("metacell.",seq_len(ncol(meta)))
   list(mu=meta, clusters=cl2)
@@ -267,7 +270,7 @@ getCellPairs <- function(x, n=1000, ...){
 #'
 #' Adds artificial doublets to an existing dataset
 #'
-#' @param x A count matrix of singlets, or a 
+#' @param x A count matrix of singlets, or a
 #'  \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
 #' @param clusters A vector of cluster labels for each column of `x`
 #' @param dbr The doublet rate
@@ -276,17 +279,17 @@ getCellPairs <- function(x, n=1000, ...){
 #' @param prefix Prefix for the colnames generated.
 #' @param ... Any further arguments to \code{\link{createDoublets}}.
 #'
-#' @return A `SingleCellExperiment` with the colData columns `cluster` and 
+#' @return A `SingleCellExperiment` with the colData columns `cluster` and
 #' `type` (indicating whether the cell is a singlet or doublet).
-#' 
+#'
 #' @export
 #' @examples
 #' sce <- mockDoubletSCE(dbl.rate=0)
 #' sce <- addDoublets(sce, clusters=sce$cluster)
-addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000), 
-                        only.heterotypic=TRUE, adjustSize=FALSE, 
+addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
+                        only.heterotypic=TRUE, adjustSize=FALSE,
                         prefix="doublet.", ...){
-  ed <- round(getExpectedDoublets(clusters, dbr=dbr, 
+  ed <- round(getExpectedDoublets(clusters, dbr=dbr,
                                   only.heterotypic=only.heterotypic))
   ed <- ed[ed>0]
   if(length(ed)==0) return(x)
@@ -305,24 +308,24 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
 }
 
 #' createDoublets
-#' 
+#'
 #' Creates artificial doublet cells by combining given pairs of cells
-#' 
+#'
 #' @param x A count matrix of real cells
-#' @param dbl.idx A matrix or data.frame with pairs of cell indexes stored in 
+#' @param dbl.idx A matrix or data.frame with pairs of cell indexes stored in
 #' the first two columns.
 #' @param clusters An optional vector of cluster labels (for each column of `x`)
 #' @param resamp Logical; whether to resample the doublets using the poisson
 #' distribution. Alternatively, if a proportion between 0 and 1, the proportion
 #' of doublets to resample.
-#' @param halfSize Logical; whether to half the library size of doublets 
-#' (instead of just summing up the cells). Alternatively, a number between 0 
+#' @param halfSize Logical; whether to half the library size of doublets
+#' (instead of just summing up the cells). Alternatively, a number between 0
 #' and 1 can be given, determining the proportion of the doublets for which
 #' to perform the size adjustment. Ignored if not resampling.
 #' @param adjustSize Logical; whether to adjust the size of the doublets using
 #' the median sizes per cluster of the originating cells. Requires `clusters` to
-#' be given. Alternatively to a logical value, a number between 0 and 1 can be 
-#' given, determining the proportion of the doublets for which to perform the 
+#' be given. Alternatively to a logical value, a number between 0 and 1 can be
+#' given, determining the proportion of the doublets for which to perform the
 #' size adjustment.
 #' @param prefix Prefix for the colnames generated.
 #'
@@ -332,7 +335,7 @@ addDoublets <- function(x, clusters, dbr=(0.01*ncol(x)/1000),
 #' sce <- mockDoubletSCE()
 #' idx <- getCellPairs(sce$cluster, n=200)
 #' art.dbls <- createDoublets(sce, idx)
-createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5, 
+createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
                            halfSize=0.5, adjustSize=FALSE, prefix="dbl."){
   adjustSize <- .checkPropArg(as.numeric(adjustSize),FALSE)
   halfSize <- .checkPropArg(as.numeric(halfSize),FALSE)
@@ -372,8 +375,8 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
   if(resamp>0){
     if(resamp!=halfSize) wAd <- sample.int(ncol(x), ceiling(resamp*ncol(x)))
     if(length(wAd)>0)
-      x[,wAd] <- matrix(as.integer(rpois(nrow(x)*length(wAd), 
-                                       as.numeric(as.matrix(x[,wAd])))), 
+      x[,wAd] <- matrix(as.integer(rpois(nrow(x)*length(wAd),
+                                       as.numeric(as.matrix(x[,wAd])))),
                          nrow=nrow(x))
   }else{
     x <- round(x)
