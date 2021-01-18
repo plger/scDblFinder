@@ -41,6 +41,7 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","po
   x <- cbind(d,x)
   if(type %in% c("binomial","quasibinomial")){
     x$obs.p <- x$observed/sum(x$observed)
+    logit <- function(x) log(x/(1 - x))
     x$exp.p <- logit(x$expected/sum(x$expected))
     #x$difficulty <- logit(abs(x$difficulty)/max(x$difficulty))
     f <- paste( "obs.p~0+offset(exp.p)+", paste(colnames(d),collapse="+"))
