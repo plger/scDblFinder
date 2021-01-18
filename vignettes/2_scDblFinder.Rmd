@@ -161,6 +161,21 @@ The thresholding tries to minimize both the deviance from the expected number of
 
 If you ran `scDblFinder` on a multi-sample dataset and did not provide the cluster labels, then the labels are sample-specific (meaning that label '1' in one sample might have nothing to do with label '1' in another), and plotting them on a tSNE will look like they do not make sense. For this reason, when running multiple samples we recommend to first cluster all samples together (for example using `sce$cluster <- fastcluster(sce)`) and then provide the clusters to `scDblFinder`.
 
+### 'Size factors should be positive' error
+
+You will get this error if you have some cells that have zero (or very close to zero) reads. After filtering out these cells the error should go away. Note, however, that we recommend not having too stringent filtering before running scDblFinder.
+
+### How can I make this reproducible?
+
+Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results. You can ensure reproducibility using `set.seed()`, however this will not be sufficient when multithreading. In such case, using the following procedure:
+
+```
+bp <- MulticoreParam(3, RNGseed=1234)
+bpstart(bp)
+sce <- scDblFinder(sce, clusters="cluster", samples="sample", BPPARAM=bp)
+bpstop(bp)
+```
+
 ### Can I use this in combination with Seurat or other tools?
 
 If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`.

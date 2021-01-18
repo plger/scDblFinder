@@ -153,8 +153,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   returnType <- match.arg(returnType)
   if(!is.null(clusters)){
-    if(length(clusters)>1 || !is.numeric(clusters))
+    if(length(clusters)>1 || !is.numeric(clusters)){
       clusters <- .checkColArg(sce, clusters)
+      if(is.factor(clusters)) clusters <- droplevels(clusters)
+    }
   }
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
@@ -201,8 +203,10 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                  levels=seq_along(names(d)), labels=names(d))
     d <- do.call(rbind, lapply(d, FUN=function(x){
       x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
+      x$cluster <- as.character(x$cluster)
       x[,cn]
     }))
+    d$cluster <- as.factor(d$cluster)
     d$sample <- ss
     ## score and thresholding
     d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
