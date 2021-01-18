@@ -169,10 +169,15 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0
   d
 }
 
-.getDoubletStats <- function( d, th, dbr=0.025, dbr.sd=0.015 ){
+.getDoubletStats <- function( d, th, dbr=NULL, dbr.sd=0.015 ){
   # check that we have all necessary fields:
-  if(!all(c("cluster","type","score","mostLikelyOrigin", "originAmbiguous")
-          %in% colnames(d))) stop("Input misses some columns.")
+  fields <- c("cluster","src","type","score","mostLikelyOrigin", "originAmbiguous","difficulty")
+  if(!all(fields %in% colnames(d))) stop("Input misses some columns.")
+  if(!is.null(d$sample))
+    return(dplyr::bind_rows(lapply(split(seq_len(nrow(d)), d$sample), FUN=function(i){
+      .getDoubletStats(d[i,fields], th, dbr=dbr, dbr.sd=dbr.sd)
+    }), .id="sample"))
+  if(is.null(dbr)) dbr <- 0.01*sum(d$src=="real",na.rm=TRUE)/1000
   o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
   expected <- getExpectedDoublets(d$cluster[d$src=="real"], dbr=dbr)
   stats <- .compareToExpectedDoublets(o, dbr=dbr, expected=expected)
