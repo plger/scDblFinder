@@ -17,7 +17,7 @@ createDoublets(
 \arguments{
 \item{x}{A count matrix of real cells}
 
-\item{dbl.idx}{A matrix or data.frame with pairs of cell indexes stored in 
+\item{dbl.idx}{A matrix or data.frame with pairs of cell indexes stored in
 the first two columns.}
 
 \item{clusters}{An optional vector of cluster labels (for each column of `x`)}
@@ -26,15 +26,15 @@ the first two columns.}
 distribution. Alternatively, if a proportion between 0 and 1, the proportion
 of doublets to resample.}
 
-\item{halfSize}{Logical; whether to half the library size of doublets 
-(instead of just summing up the cells). Alternatively, a number between 0 
+\item{halfSize}{Logical; whether to half the library size of doublets
+(instead of just summing up the cells). Alternatively, a number between 0
 and 1 can be given, determining the proportion of the doublets for which
 to perform the size adjustment. Ignored if not resampling.}
 
 \item{adjustSize}{Logical; whether to adjust the size of the doublets using
 the median sizes per cluster of the originating cells. Requires `clusters` to
-be given. Alternatively to a logical value, a number between 0 and 1 can be 
-given, determining the proportion of the doublets for which to perform the 
+be given. Alternatively to a logical value, a number between 0 and 1 can be
+given, determining the proportion of the doublets for which to perform the
 size adjustment.}
 
 \item{prefix}{Prefix for the colnames generated.}

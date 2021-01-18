@@ -8,13 +8,14 @@ getArtificialDoublets(
   x,
   n = 3000,
   clusters = NULL,
-  resamp = 0.5,
-  halfSize = 0.5,
-  adjustSize = 0.2,
+  resamp = 0.25,
+  halfSize = 0.25,
+  adjustSize = 0.25,
   propRandom = 0.1,
   selMode = c("proportional", "uniform", "sqrt"),
   n.meta.cells = 2,
-  meta.triplets = TRUE
+  meta.triplets = TRUE,
+  trim.q = c(0.05, 0.95)
 )
 }
 \arguments{
@@ -22,15 +23,15 @@ getArtificialDoublets(
 
 \item{n}{The approximate number of doublet to generate (default 3000).}
 
-\item{clusters}{The optional clusters labels to use to build cross-cluster 
+\item{clusters}{The optional clusters labels to use to build cross-cluster
 doublets.}
 
 \item{resamp}{Logical; whether to resample the doublets using the poisson
 distribution. Alternatively, if a proportion between 0 and 1, the proportion
 of doublets to resample.}
 
-\item{halfSize}{Logical; whether to half the library size of doublets 
-(instead of just summing up the cells). Alternatively, a number between 0 
+\item{halfSize}{Logical; whether to half the library size of doublets
+(instead of just summing up the cells). Alternatively, a number between 0
 and 1 can be given, determining the proportion of the doublets for which
 to perform the size adjustment.}
 
@@ -40,31 +41,33 @@ between 0 and 1 can be given, determining the proportion of the doublets for
 which to perform the size adjustment.}
 
 \item{propRandom}{The proportion of the created doublets that are fully
-random (default 0.1); the rest will be doublets created across clusters. 
+random (default 0.1); the rest will be doublets created across clusters.
 Ignored if `clusters` is NULL.}
 
-\item{selMode}{The cell pair selection mode for inter-cluster doublet 
+\item{selMode}{The cell pair selection mode for inter-cluster doublet
 generation, either 'uniform' (same number of doublets for each combination),
 'proportional' (proportion expected from the clusters' prevalences), or
 'sqrt' (roughly the square root of the expected proportion).}
 
 \item{n.meta.cells}{The number of meta-cell per cluster to create. If given,
-additional doublets will be created from cluster meta-cells. Ignored if 
+additional doublets will be created from cluster meta-cells. Ignored if
 `clusters` is missing.}
 
-\item{meta.triplets}{Logical; whether to create triplets from meta cells. 
+\item{meta.triplets}{Logical; whether to create triplets from meta cells.
 Ignored if `clusters` is missing.}
+
+\item{trim.q}{A vector of two values between 0 and 1}
 }
 \value{
 A list with two elements: `counts` (the count matrix of
-the artificial doublets) and `origins` the clusters from which each 
+the artificial doublets) and `origins` the clusters from which each
 artificial doublets originated (NULL if `clusters` is not given).
 }
 \description{
 Create expression profiles of random artificial doublets.
 }
 \examples{
-m <- t(sapply( seq(from=0, to=5, length.out=50), 
+m <- t(sapply( seq(from=0, to=5, length.out=50),
                FUN=function(x) rpois(30,x) ) )
 doublets <- getArtificialDoublets(m, 30)
 

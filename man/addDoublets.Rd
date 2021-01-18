@@ -15,7 +15,7 @@ addDoublets(
 )
 }
 \arguments{
-\item{x}{A count matrix of singlets, or a 
+\item{x}{A count matrix of singlets, or a
 \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}}
 
 \item{clusters}{A vector of cluster labels for each column of `x`}
@@ -31,7 +31,7 @@ addDoublets(
 \item{...}{Any further arguments to \code{\link{createDoublets}}.}
 }
 \value{
-A `SingleCellExperiment` with the colData columns `cluster` and 
+A `SingleCellExperiment` with the colData columns `cluster` and
 `type` (indicating whether the cell is a singlet or doublet).
 }
 \description{

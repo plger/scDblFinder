@@ -11,13 +11,13 @@ scDblFinder(
   trajectoryMode = FALSE,
   artificialDoublets = NULL,
   knownDoublets = NULL,
+  dbr = NULL,
   clustCor = NULL,
-  use.cxds = TRUE,
+  dbr.sd = NULL,
   nfeatures = 1000,
   dims = 20,
-  dbr = NULL,
-  dbr.sd = NULL,
   k = NULL,
+  removeUnidentifiable = TRUE,
   includePCs = 1:5,
   propRandom = 0.1,
   propMarkers = 0,
@@ -56,9 +56,10 @@ hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 
-\item{trajectoryMode}{Logical; whether to generate doublets in trajectory
-mode (i.e. for datasets with gradients rather than separated subpopulations).
-See \code{vignette("scDblFinder")} for more details.}
+\item{trajectoryMode}{Logical; whether to generate fewer doublets from cells that are
+closer to each other, for datasets with gradients rather than separated
+subpopulations. This disrupts the proportionality and is not anymore the recommended
+way of handling such datasets. See \code{vignette("scDblFinder")} for more details.}
 
 \item{artificialDoublets}{The approximate number of artificial doublets to
 create. If \code{NULL}, will be the maximum of the number of cells or
@@ -70,6 +71,11 @@ that information. Including known doublets tends to increase the sensitivity of 
 identification, but decrease the specificity (since some of the known doublets are
 homotypic).}
 
+\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
+per thousand cells captured (so 4\% among 4000 thousand cells), which is
+appropriate for 10x datasets. Corrections for homeotypic doublets will be
+performed on the given rate.}
+
 \item{clustCor}{Include Spearman correlations to cell type averages in the predictors.
 If `clustCor` is a matrix of cell type marker expressions (with features as rows and
 cell types as columns), the subset of these which are present in the selected features
@@ -78,27 +84,22 @@ type). Alternatively, if `clustCor` is a positive integer, this number of inter-
 markers will be selected and used for correlation (se `clustCor=Inf` to use all
 available genes).}
 
-\item{use.cxds}{Logical; whether to use the `cxds` scores in addition to
-information from artificial/known doublets as part of the predictors.}
-
-\item{nfeatures}{The number of top features to use (default 1000)}
-
-\item{dims}{The number of dimensions used.}
-
-\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
-per thousand cells captured (so 4\% among 4000 thousand cells), which is
-appropriate for 10x datasets. Corrections for homeotypic doublets will be
-performed on the given rate.}
-
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
 rate will be calculated from these boundaries, and will be considered null
 within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to disable.}
 
+\item{nfeatures}{The number of top features to use (default 1000)}
+
+\item{dims}{The number of dimensions used.}
+
 \item{k}{Number of nearest neighbors (for KNN graph). If more than one value
 is given, the doublet density will be calculated at each k (and other values
 at the highest k), and all the information will be used by the classifier.
 If omitted, a reasonable set of values is used.}
+
+\item{removeUnidentifiable}{Logical; whether to remove artificial doublets of a
+combination that is generally found to be unidentifiable.}
 
 \item{includePCs}{The index of principal components to include in the
 predictors (e.g. `includePCs=1:2`).}
@@ -147,7 +148,7 @@ values, see the `returnType` argument.
 }
 \description{
 Identification of heterotypic (or neotypic) doublets in single-cell RNAseq
-using cluster-based generation of artifical doublets.
+using cluster-based generation of artificial doublets.
 }
 \details{
 This function generates artificial doublets from clusters of real cells,
@@ -168,7 +169,9 @@ given).
 
 When inter-sample doublets are available, they can be provided to
 `scDblFinder` through the \code{knownDoublets} argument to improve the
-identification of further doublets.
+identification of further doublets. However, because such 'true' doublets
+can include a lot of homotypic doublets, in practice this often lead to a
+slight decrease in the accuracy of detecting neotypic doublets.
 }
 \examples{
 library(SingleCellExperiment)
