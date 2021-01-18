@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-#' sce <- mockDoubletSCE()
+#' sce <- mockDoubletSCE(rep(200,5))
 #' sce <- scDblFinder(sce, artificialDoublets=500)
 #' clusterStickiness(sce)
 clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","poisson"),
@@ -32,7 +32,7 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","po
 
   ## build the model matrix of stickiness coefficients
   cls <- t(simplify2array(strsplit(x$combination,"+",fixed=TRUE)))
-  if(length(unique(as.character(cls))))
+  if(length(unique(as.character(cls)))<4)
     stop("`clusterStickiness` can only be used with at least 4 clusters.")
   d <- as.data.frame(sapply(unique(as.character(cls)), FUN=function(cl){
     as.integer(apply(cls,1,FUN=function(j) any(j==cl)))

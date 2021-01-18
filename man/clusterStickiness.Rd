@@ -27,7 +27,7 @@ Tests for enrichment of doublets created from each cluster (i.e. cluster's
 stickiness). Only applicable with >=4 clusters.
 }
 \examples{
-sce <- mockDoubletSCE()
+sce <- mockDoubletSCE(rep(200,5))
 sce <- scDblFinder(sce, artificialDoublets=500)
 clusterStickiness(sce)
 }
