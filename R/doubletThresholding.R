@@ -102,7 +102,7 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0
     sum(getExpectedDoublets(d$cluster[which(d$src=="real")], dbr=x)))
   if(!is.logical(d$type)) d$type <- d$type=="real"
   fdr.include <- which(d$include.in.training)
-  eFN <- sum(grepl("^rDbl\\.",row.names(d)))*.getPropHomotypic(d$cluster[d$src=="real"])
+  eFN <- sum(grepl("^rDbl\\.",row.names(d)))*propHomotypic(d$cluster[d$src=="real"])
   totfn <- function(x){
     y <- .prop.dev(d$type,d$score,expected,x)^2 +
       2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
@@ -184,4 +184,25 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0
                              FUN.VALUE=numeric(1L), na.rm=TRUE,
                              FUN=median)[stats$combination]
   stats
+}
+
+#' @importFrom stats quantile
+.filterUnrecognizableDoublets <- function( d, minSize=5, minMedDiff=0.1 ){
+  if(is.null(d$src)) d$src <- d$type
+  da <- d[d$src=="artificial" & grepl("+", d$mostLikelyOrigin, fixed=TRUE),]
+  dr <- d[d$src=="real",]
+  dr.med <- median(dr$score)
+  dr <- split(dr$score, dr$cluster)
+  rq <- t(vapply(dr, FUN.VALUE=numeric(2), na.rm=TRUE, probs=c(0.5, 0.9), FUN=quantile))
+  da <- split(da$score, droplevels(da$mostLikelyOrigin))
+  origs <- strsplit(names(da), "+", fixed=TRUE)
+  out <- vapply(names(da), FUN.VALUE=logical(1), FUN=function(x){
+    z <- da[[x]]
+    if(length(z)<minSize) return(FALSE)
+    z <- quantile(z, probs=c(0.1,0.5), na.rm=TRUE)
+    x <- origs[[x]]
+    any(z[1]<rq[x,2]) || (z[2]-max(dr.med, rq[x,1]))<minMedDiff
+  })
+  out <- names(out)[which(out)]
+  d[d$src!="artificial" | !(d$mostLikelyOrigin %in% out),]
 }

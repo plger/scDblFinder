@@ -1,7 +1,7 @@
 #' scDblFinder
 #'
 #' Identification of heterotypic (or neotypic) doublets in single-cell RNAseq
-#' using cluster-based generation of artifical doublets.
+#' using cluster-based generation of artificial doublets.
 #'
 #' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
 #' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
@@ -25,16 +25,15 @@
 #' hashes, want you want to give here are the different batches/wells (i.e.
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
-#' @param trajectoryMode Logical; whether to generate doublets in trajectory
-#' mode (i.e. for datasets with gradients rather than separated subpopulations).
-#' See \code{vignette("scDblFinder")} for more details.
+#' @param trajectoryMode Logical; whether to generate fewer doublets from cells that are
+#' closer to each other, for datasets with gradients rather than separated
+#' subpopulations. This disrupts the proportionality and is not anymore the recommended
+#' way of handling such datasets. See \code{vignette("scDblFinder")} for more details.
 #' @param knownDoublets An optional logical vector of known doublets (e.g.
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information. Including known doublets tends to increase the sensitivity of doublet
 #' identification, but decrease the specificity (since some of the known doublets are
 #' homotypic).
-#' @param use.cxds Logical; whether to use the `cxds` scores in addition to
-#' information from artificial/known doublets as part of the predictors.
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\%
@@ -56,6 +55,8 @@
 #' type). Alternatively, if `clustCor` is a positive integer, this number of inter-cluster
 #' markers will be selected and used for correlation (se `clustCor=Inf` to use all
 #' available genes).
+#' @param removeUnidentifiable Logical; whether to remove artificial doublets of a
+#' combination that is generally found to be unidentifiable.
 #' @param includePCs The index of principal components to include in the
 #' predictors (e.g. `includePCs=1:2`).
 #' @param propRandom The proportion of the artificial doublets which
@@ -107,7 +108,9 @@
 #'
 #' When inter-sample doublets are available, they can be provided to
 #' `scDblFinder` through the \code{knownDoublets} argument to improve the
-#' identification of further doublets.
+#' identification of further doublets. However, because such 'true' doublets
+#' can include a lot of homotypic doublets, in practice this often lead to a
+#' slight decrease in the accuracy of detecting neotypic doublets.
 #'
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
@@ -130,9 +133,9 @@
 #' @importFrom SummarizedExperiment rowData<-
 #' @importFrom BiocParallel SerialParam bpnworkers
 scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
-                         artificialDoublets=NULL, knownDoublets=NULL, clustCor=NULL,
-                         use.cxds=TRUE, nfeatures=1000, dims=20, dbr=NULL,
-                         dbr.sd=NULL, k=NULL, includePCs=1:5, propRandom=0.1,
+                         artificialDoublets=NULL, knownDoublets=NULL, dbr=NULL,
+                         clustCor=NULL, dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL,
+                         removeUnidentifiable=TRUE, includePCs=1:5, propRandom=0.1,
                          propMarkers=0, returnType=c("sce","table","full"),
                          score=c("xgb","weighted","ratio"),
                          metric="logloss", nrounds=0.25, max_depth=5, iter=1,
@@ -186,7 +189,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                   nfeatures=nfeatures, propRandom=propRandom, includePCs=c(),
                   propMarkers=propMarkers, trajectoryMode=trajectoryMode,
                   returnType="table", threshold=FALSE, score="weighted",
-                  verbose=FALSE, ...),
+                  removeUnidentifiable=removeUnidentifiable, verbose=FALSE, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
@@ -204,7 +207,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     ## score and thresholding
     d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
                      dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
-                     iter=iter, BPPARAM=BPPARAM, verbose=verbose, metric=metric)
+                     iter=iter, BPPARAM=BPPARAM, verbose=verbose, metric=metric,
+                     filterUnidentifiable=removeUnidentifiable)
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
   }
@@ -303,8 +307,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
-  cxds_score <- NULL
-  if(use.cxds) cxds_score <- cxds2(e, whichDbls=which(ctype==2))
+  cxds_score <- cxds2(e, whichDbls=which(ctype==2))
   nfeatures <- Matrix::colSums(e>0)
 
   if(!is.null(clustCor) && !is.null(dim(clustCor))){
@@ -329,14 +332,14 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   row.names(pca) <- colnames(e)
 
   ex <- getExpectedDoublets(clusters, dbr)
-  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM,
-                      verbose=verbose)$d
+  if(verbose) message("Evaluating kNN...")
+  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM)$d
   if(is.list(clusters)) clusters <- clusters$k
   d[colnames(sce),"cluster"] <- clusters
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
   d$src <- src
-  if(use.cxds) d$cxds_score <- cxds_score
+  d$cxds_score <- cxds_score
 
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
@@ -344,7 +347,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score,
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
-                   verbose=verbose, metric=metric)
+                   verbose=verbose, metric=metric,
+                   filterUnidentifiable=removeUnidentifiable)
 
   if(returnType=="table") return(d)
   if(returnType=="full"){
@@ -360,13 +364,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 }
 
 #' @importFrom BiocNeighbors AnnoyParam
-.evaluateKNN <- function(pca, ctype, origins, expected, k,
-                         BPPARAM=SerialParam(), verbose=TRUE){
-  if(verbose) message("Finding KNN...")
+.evaluateKNN <- function(pca, ctype, origins, expected, k, BPPARAM=SerialParam()){
   knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM,
                                   BNPARAM=AnnoyParam()))
-
-  if(verbose) message("Evaluating cell neighborhoods...")
   knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
   knn$orig <- matrix(origins[knn$index], nrow=nrow(knn[[1]]))
   if(any(w <- knn$distance==0))
@@ -441,7 +441,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 #' @importFrom S4Vectors DataFrame metadata
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
-                        threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL, features=NULL,
+                        threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
+                        features=NULL, filterUnidentifiable=FALSE,
                         metric="logloss", eta=0.3, BPPARAM=SerialParam(), ...){
   gdbr <- dbr <- .gdbr(d, dbr)
   if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
@@ -461,8 +462,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       prds <- setdiff(intersect(features, colnames(d)),c("type","src","class"))
     }
     w <- which(d$type=="real")
-    d$score <- d$ratio/max(d$ratio)
-    if(!is.null(d$cxds_score)) d$score <- (d$cxds_score + d$score)/2
+    d$score <- (d$cxds_score + d$ratio/max(d$ratio))/2
     d$include.in.training <- TRUE
     max.iter <-  iter
     while(iter>0){
@@ -483,6 +483,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       d$difficulty <- mean(class.diff)
       wO <- which(!is.na(d$mostLikelyOrigin))
       d$difficulty[wO] <- 1-class.diff[d$mostLikelyOrigin[wO]]
+      if(filterUnidentifiable && iter==max.iter)
+        d <- .filterUnrecognizableDoublets(d)
       iter <- iter-1
     }
     d$include.in.training[w] <- FALSE
