@@ -29,13 +29,6 @@
   origins
 }
 
-.adjust.dbr.homotypy <- function(clusters, dbr=NULL){
-  if(is.null(dbr)) dbr <- (0.01*length(clusters)/1000)
-  # adjust expected dbr for expected homotypic doublets
-  homotypic.prop <- sum((table(clusters)/length(clusters))^2)
-  dbr*(1-homotypic.prop)
-}
-
 #' getExpectedDoublets
 #'
 #' @param x A vector of cluster labels for each cell
@@ -74,12 +67,6 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   })
   if(only.heterotypic) expected <- expected[which(eg[,1]!=eg[,2])]
   expected
-}
-
-.getPropHomotypic <- function(clusters){
-  clusters <- as.numeric(table(clusters))/length(clusters)
-  e <- clusters %*% t(clusters)
-  sum(diag(e))/sum(e)
 }
 
 .castorigins <- function(e, val=NULL){
@@ -341,4 +328,23 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   dbr <- (0.01*sl/1000)
   dbr <- sum(dbr*sl)/sum(sl)
   dbr
+}
+
+
+#' propHomotypic
+#'
+#' Computes the proportion of pairs expected to be made of elements from the same cluster.
+#'
+#' @param clusters A vector of cluster labels
+#'
+#' @return A numeric value between 0 and 1.
+#' @export
+#'
+#' @examples
+#' clusters <- sample(LETTERS[1:5], 100, replace=TRUE)
+#' propHomotypic(clusters)
+propHomotypic <- function(clusters){
+  p <- as.numeric(table(clusters)/length(clusters))
+  p <- p %*% t(p)
+  sum(diag(p))/sum(p)
 }
