@@ -41,8 +41,8 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","po
   x <- cbind(d,x)
   if(type %in% c("binomial","quasibinomial")){
     x$obs.p <- x$observed/sum(x$observed)
-    x$exp.p <- gtools::logit(x$expected/sum(x$expected))
-    #x$difficulty <- gtools::logit(abs(x$difficulty)/max(x$difficulty))
+    x$exp.p <- logit(x$expected/sum(x$expected))
+    #x$difficulty <- logit(abs(x$difficulty)/max(x$difficulty))
     f <- paste( "obs.p~0+offset(exp.p)+", paste(colnames(d),collapse="+"))
     if(inclDiff) f <- paste0(f,"+difficulty")
     mod <- glm(as.formula(f), data=x, family=type, weights=(x$observed+x$expected)/2)
