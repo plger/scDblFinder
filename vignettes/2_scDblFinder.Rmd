@@ -129,7 +129,10 @@ Thresholding then tries to simultaneously minimize: 1) the classification error 
 
 ### Doublet origins and enrichments
 
-Because we generate artificial doublets from clusters, it is most often possible to call the most likely origin (in terms of the combination of clusters) of a given putative real doublet. This information is provided through the `scDblFinder.mostLikelyOrigin` column of the output (and the `scDblFinder.originAmbiguous` column indicates whether this origin is ambiguous or rather clear). This, in turn, allows us to identify enrichment over expectation for specific kinds of doublets. Some statistics on each combination of clusters are saved in `metadata(sce)$scDblFinder.stats`, and the `plotDoubletMap` function can be used to visualize enrichments. Most enrichment or depletion is explained by the difficulty of identifying doublets of certain kinds, but departures from expectation might also point to technical or biological effects.
+Because we generate artificial doublets from clusters, it is most often possible to call the most likely origin (in terms of the combination of clusters) of a given putative real doublet. This information is provided through the `scDblFinder.mostLikelyOrigin` column of the output (and the `scDblFinder.originAmbiguous` column indicates whether this origin is ambiguous or rather clear). This, in turn, allows us to identify enrichment over expectation for specific kinds of doublets. Some statistics on each combination of clusters are saved in `metadata(sce)$scDblFinder.stats`, and the `plotDoubletMap` function can be used to visualize enrichments. In addition, two frameworks are offered for testing the significance of enrichments:
+
+* The `clusterStickiness` function tests whether each cluster forms more doublet than would be expected given its abundance, by default using a single quasi-binomial model fitted across all doublet types.
+* The `doubletPairwiseEnrichment` function separately tests whether each specific doublet type (i.e. combination of clusters) is more abundant than expected, by default using a poisson model.
 
 <br/><br/>
 
