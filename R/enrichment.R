@@ -10,6 +10,7 @@
 #' will be used only if there is a significant trend with the enrichment.
 #'
 #' @return A table of test results for each cluster.
+#' @importFrom stats as.formula coef glm
 #' @export
 #'
 #' @examples
@@ -73,6 +74,8 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","po
 #'
 #' @return A table of significances for each combination.
 #'
+#' @export
+#' @importFrom stats chisq.test pnbinom pnorm ppois
 #' @examples
 #' sce <- mockDoubletSCE()
 #' sce <- scDblFinder(sce, artificialDoublets=500)
