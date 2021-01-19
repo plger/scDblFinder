@@ -292,6 +292,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   s/max(s)
 }
 
+#' @importFrom stats cor
 .clustSpearman <- function(e, clusters, nMarkers=30){
   if(is.null(dim(clusters))){
     e2 <- e[,seq_along(clusters)]

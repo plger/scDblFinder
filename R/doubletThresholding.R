@@ -35,7 +35,7 @@
 #' th <- doubletThresholding(d, dbr=0.05)
 #' th
 #'
-#' @importFrom stats mad
+#' @importFrom stats mad qnorm
 #' @export
 doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0.1,
                                  method=c("auto","optim","dbr","griffiths"),
