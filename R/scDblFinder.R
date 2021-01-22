@@ -491,11 +491,14 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       rm(addVals)
     }
     w <- which(d$type=="real")
-    ## for pre-classifier score, adjust the ratio variable to the real/artificial ratio
-    correctedRatio <- d[,rev(grep("^ratio\\.k",colnames(d)))[1]]
-    if(!is.null(d$sample) && !is.null(d$total.prop.real))
-      correctedRatio <- correctedRatio/(1-d$total.prop.real)
-    d$score <- (d$cxds_score + correctedRatio/max(correctedRatio))/2
+    ratio <- rev(grep("^ratio\\.k",colnames(d)))[1]
+    if(!is.null(d$sample) && !perSample){
+      d <- .rescaleSampleScores(d, TRUE, what=ratio, newName="adjusted.ratio")
+      d <- .rescaleSampleScores(d, TRUE, what="cxds_score", newName="adjusted.cxds")
+      d$score <- (d$adjusted.ratio + d$adjusted.cxds)/2
+    }else{
+      d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
+    }
     d$include.in.training <- TRUE
     max.iter <-  iter
     while(iter>0){
