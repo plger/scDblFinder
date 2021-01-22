@@ -133,7 +133,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   fdr.include <- which(d$include.in.training)
   eFN <- sum(grepl("^rDbl\\.",row.names(d)))*propHomotypic(d$cluster[d$src=="real"])
   totfn <- function(x){
-    if(devPerSample && is.null(d$sample)){
+    if(!devPerSample || is.null(d$sample)){
       edev <- .prop.dev(d$type,d$score,expected,x)^2
     }else{
       edev <- mean(sapply(names(expected), FUN=function(e){
