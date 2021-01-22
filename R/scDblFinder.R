@@ -25,6 +25,10 @@
 #' hashes, want you want to give here are the different batches/wells (i.e.
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
+#' @param multiSampleMode Either "split" (recommended if there is a lot of
+#' heterogeneity across samples), "singleModel" (recommended _only_ if the samples are
+#' very similar), or "singleModelSplitThres" (use a single classifier, but sample-specific
+#' thresholds).
 #' @param trajectoryMode Logical; whether to generate fewer doublets from cells that are
 #' closer to each other, for datasets with gradients rather than separated
 #' subpopulations. This disrupts the proportionality and is not anymore the recommended
@@ -63,6 +67,12 @@
 #' should be made of random cells (as opposed to inter-cluster combinations).
 #' @param propMarkers The proportion of features to select based on marker
 #' identification.
+#' @param processing Counts (real and artificial) processing before KNN. Either 'default'
+#' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA without
+#' normalization), "rawFeatures" (no normalization/dimensional reduction) or a custom
+#' function with (at least) arguments `e` (the matrix of counts) and `dims` (the desired
+#' nubmer of dimensions), returning a named matrix with cells as rows and components as
+#' columns.
 #' @param returnType Either "sce" (default), "table" (to return the table of
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
@@ -137,11 +147,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                          clustCor=NULL, dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL,
                          removeUnidentifiable=TRUE, includePCs=1:5, propRandom=0.1,
                          propMarkers=0, returnType=c("sce","table","full"),
-                         score=c("xgb","weighted","ratio"),
+                         score=c("xgb","weighted","ratio"), processing="default",
                          metric="logloss", nrounds=0.25, max_depth=5, iter=1,
                          threshold=TRUE, verbose=is.null(samples),
-                         BPPARAM=SerialParam(), ...
-                        ){
+                         multiSampleMode=c("split","singleModel","singleModelSplitThres"),
+                         BPPARAM=SerialParam(), ...){
   ## check arguments
   sce <- .checkSCE(sce)
   score <- match.arg(score)
@@ -150,7 +160,6 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
       stop("`clustCor` should be either a matrix of marker expression per cell types,",
            "or a positive integer indicating the number of markers to use.")
   }
-
   returnType <- match.arg(returnType)
   if(!is.null(clusters)){
     if(length(clusters)>1 || !is.numeric(clusters)){
@@ -163,6 +172,16 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   .checkPropArg(propMarkers)
   .checkPropArg(propRandom)
   .checkPropArg(dbr.sd)
+  if(is.factor(processing)) processing <- as.character(processing)
+  if(is.character(processing)){
+    stopifnot(length(processing)==1)
+    processing <- match.arg(processing, c("default","rawPCA","rawFeatures"))
+  }else if(!is.function(processing)){
+    stop("`processing` should either be a function")
+  }else if(!all(c("e", "dims") %in% names(formals(processing)))){
+    stop("If a function, `processing` should have at least the arguments `e` (count ",
+         "matrix) and `dims` (number of PCA dimensions required)")
+  }
 
   ## if clusters are given, it's more efficient to do feature selection before
   ## eventually splitting the dataset
@@ -175,46 +194,45 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   if(!is.null(samples)){
     ## splitting by samples
+    multiSampleMode <- match.arg(multiSampleMode)
+    if(!(isSplitMode <- multiSampleMode=="split")) includePCs <- c()
     if(returnType=="full")
-        warning("`returnType='full'` ignored when splitting by samples")
+      warning("`returnType='full'` ignored when splitting by samples")
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
-    ## run scDblFinder individually, without classification
+    ## run scDblFinder individually
     d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
       if(!is.null(knownDoublets) && length(knownDoublets)>1)
         knownDoublets <- knownDoublets[x]
-      tryCatch(scDblFinder(sce[sel_features,x], clusters=clusters,
-                  knownDoublets=knownDoublets, dims=dims, dbr=dbr, clustCor=clustCor,
-                  dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k,
-                  nfeatures=nfeatures, propRandom=propRandom, includePCs=c(),
-                  propMarkers=propMarkers, trajectoryMode=trajectoryMode,
-                  returnType="table", threshold=FALSE, score="weighted",
-                  removeUnidentifiable=removeUnidentifiable, verbose=FALSE, ...),
+      tryCatch(
+        scDblFinder(sce[sel_features,x], clusters=clusters,
+                    knownDoublets=knownDoublets, dims=dims, dbr=dbr, clustCor=clustCor,
+                    dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k,
+                    processing=processing, nfeatures=nfeatures, propRandom=propRandom,
+                    includePCs=includePCs, propMarkers=propMarkers,
+                    trajectoryMode=trajectoryMode, returnType="table",
+                    threshold=isSplitMode, score=ifelse(isSplitMode,score,"weighted"),
+                    removeUnidentifiable=removeUnidentifiable, verbose=FALSE, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
     })
     ## aggregate the property tables
-    cn <- table(unlist(lapply(d, colnames)))
-    cn <- names(cn)[cn==length(d)]
-    ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))),
-                 levels=seq_along(names(d)), labels=names(d))
-    d <- do.call(rbind, lapply(d, FUN=function(x){
-      x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
-      x$cluster <- as.character(x$cluster)
-      x[,cn]
-    }))
-    d$cluster <- as.factor(d$cluster)
-    d$sample <- ss
-    ## score and thresholding
-    d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
-                     dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
-                     iter=iter, BPPARAM=BPPARAM, verbose=verbose, metric=metric,
-                     filterUnidentifiable=removeUnidentifiable)
-    if(returnType=="table") return(d)
-    return(.scDblAddCD(sce, d))
+    if(multiSampleMode=="split"){
+      return(.scDblAddCD(sce, d))
+    }else{
+      d <- .aggResultsTable(d)
+      ## score and thresholding
+      d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
+                       dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
+                       iter=iter, BPPARAM=BPPARAM, verbose=verbose, metric=metric,
+                       filterUnidentifiable=removeUnidentifiable,
+                       perSample=multiSampleMode=="singleModelSplitThres")
+      if(returnType=="table") return(d)
+      return(.scDblAddCD(sce, d))
+    }
   }
 
   ## Handling a single sample
@@ -227,8 +245,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
             " using the `samples` argument.", immediate=TRUE)
 
   if(is.null(k)){ ## reasonble sets of ks (for KNN)
-      k <- c(3,10,20)
-      if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=30) k <- c(k,kmax)
+    k <- c(3,10,20)
+    if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=30) k <- c(k,kmax)
   }
 
   orig <- sce
@@ -251,16 +269,16 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     if(verbose) message("Clustering cells...")
     if(!is.null(clusters)){
       clusters <- fastcluster(sce, ndims=dims, k=clusters, nfeatures=nfeatures,
-                    returnType=ifelse(trajectoryMode,"graph","preclusters"),
-                    BPPARAM=BPPARAM, verbose=FALSE)
+                              returnType=ifelse(trajectoryMode,"graph","preclusters"),
+                              BPPARAM=BPPARAM, verbose=FALSE)
     }else{
       clusters <- fastcluster(sce, ndims=dims, nfeatures=nfeatures,
                               BPPARAM=BPPARAM, verbose=FALSE)
     }
   }else if(trajectoryMode && length(unique(clusters))>1){
     clusters <- list( k=clusters,
-      graph=.getMetaGraph(.getDR(sce,ndims=dims,nfeatures=nfeatures),
-                          clusters, BPPARAM=BPPARAM) )
+                      graph=.getMetaGraph(.getDR(sce,ndims=dims,nfeatures=nfeatures),
+                                          clusters, BPPARAM=BPPARAM) )
   }
   if(is.list(clusters)){
     cl <- clusters$k
@@ -285,7 +303,7 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                                           ceiling(ncol(sce)*0.6),
                                           10*length(unique(cl))^2 ) )
   if(artificialDoublets<2)
-      artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
+    artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
 
   if(verbose)
     message("Creating ~", artificialDoublets, " artifical doublets...")
@@ -320,20 +338,17 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     clustCor <- .clustSpearman(e, clusters, nMarkers=clustCor)
   }
 
-  # skip normalization if data is too large
-  if(ncol(e)<=50000){
-    tryCatch({
-      e <- normalizeCounts(e)
-    }, error=function(er){
-      warning("Error in calculating norm factors:", er)
-    })
+  if(is.character(processing)){
+    pca <- switch(processing,
+                  default=.defaultProcessing(e, dims=dims),
+                  rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
+                  rawFeatures=t(e),
+                  stop("Unknown processing function.")
+    )
+  }else{
+    pca <- processing(e, dims=dims)
+    stopifnot(identical(row.names(pca),colnames(e)))
   }
-
-  if(is.null(dims)) dims <- 20
-  pca <- scater::calculatePCA(e, ncomponents=dims, subset_row=seq_len(nrow(e)),
-                                 BSPARAM=BiocSingular::IrlbaParam())
-  if(is.list(pca)) pca <- pca$x
-  row.names(pca) <- colnames(e)
 
   ex <- getExpectedDoublets(clusters, dbr)
   if(verbose) message("Evaluating kNN...")
@@ -348,7 +363,8 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
   ## classify
-  d <- .scDblscore(cbind(d, pca[,includePCs,drop=FALSE]), scoreType=score,
+
+  d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
                    verbose=verbose, metric=metric,
@@ -356,12 +372,12 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   if(returnType=="table") return(d)
   if(returnType=="full"){
-      sce_out <- SingleCellExperiment(list(
-          counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
-      reducedDim(sce_out, "PCA") <- pca
-      if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
-        metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
-      return(sce_out)
+    sce_out <- SingleCellExperiment(list(
+      counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
+    reducedDim(sce_out, "PCA") <- pca
+    if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
+      metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+    return(sce_out)
   }
   rowData(orig)$scDblFinder.selected <- row.names(orig) %in% sel_features
   .scDblAddCD(orig, d)
@@ -378,14 +394,14 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
   md <- max(knn$distance[,1])
   dr <- t(vapply(seq_len(nrow(knn$distance)), FUN.VALUE=numeric(2L),
-               FUN=function(x){
-                 w <- knn$type[x,]==1
-                 dA <- ifelse(length(wA <- which(w))==0, 2*md,
-                              knn$distance[x,wA[1]])
-                 dB <- ifelse(length(wB <- which(!w))==0, 2*md,
-                              knn$distance[x,wB[1]])
-                 c(dA,dB)
-               }))
+                 FUN=function(x){
+                   w <- knn$type[x,]==1
+                   dA <- ifelse(length(wA <- which(w))==0, 2*md,
+                                knn$distance[x,wA[1]])
+                   dB <- ifelse(length(wB <- which(!w))==0, 2*md,
+                                knn$distance[x,wB[1]])
+                   c(dA,dB)
+                 }))
   dw <- sqrt(max(k)-seq_len(max(k))) * 1/knn$distance
   dw <- dw/rowSums(dw)
   d <- data.frame( row.names=row.names(pca), type=ctype, cluster=NA,
@@ -394,12 +410,9 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                    distanceToNearestDoublet=dr[,1],
                    distanceToNearestReal=dr[,2],
                    nearestClass=knn$type[,1],
-                   ratio=rowSums(knn$type)/max(k),
                    .getMostLikelyOrigins(knn, origins) )
-  if(length(k)>1){
-      for(ki in rev(k)[-1])
-          d[[paste0("ratio.k",ki)]] <- rowSums(knn$type[,seq_len(ki)])/ki
-  }
+  for(ki in k)
+    d[[paste0("ratio.k",ki)]] <- rowSums(knn$type[,seq_len(ki)])/ki
 
   w <- which(d$type=="doublet")
   class.weighted <- vapply( split(d$weighted[w], d$mostLikelyOrigin[w]),
@@ -444,11 +457,13 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
 
 #' @importFrom S4Vectors DataFrame metadata
 #' @importFrom stats predict quantile
-.scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=2,
+.scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=6, iter=1,
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
-                        features=NULL, filterUnidentifiable=FALSE,
-                        metric="logloss", eta=0.3, BPPARAM=SerialParam(), ...){
-  gdbr <- dbr <- .gdbr(d, dbr)
+                        features=NULL, filterUnidentifiable=FALSE, addVals=NULL,
+                        metric="logloss", eta=0.3, BPPARAM=SerialParam(),
+                        includeSamples=FALSE, perSample=TRUE, ...){
+  gdbr <- .gdbr(d, dbr)
+  if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
   if(scoreType=="xgb"){
     if(verbose) message("Training model...")
@@ -465,21 +480,36 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
                 paste(mis,collapse=", "))
       prds <- setdiff(intersect(features, colnames(d)),c("type","src","class"))
     }
+    preds <- as(as.matrix(d[,prds]), "dgCMatrix")
+
+    if(includeSamples)
+      preds <- cbind(preds, as(stats::model.matrix(~d$sample)[,-1], "dgCMatrix"))
+
+    if(!is.null(addVals)){
+      stopifnot(nrow(addVals)==nrow(preds))
+      preds <- cbind(preds, as(addVals, "dgCMatrix"))
+      rm(addVals)
+    }
     w <- which(d$type=="real")
-    d$score <- (d$cxds_score + d$ratio/max(d$ratio))/2
+    ## for pre-classifier score, adjust the ratio variable to the real/artificial ratio
+    correctedRatio <- d[,rev(grep("^ratio\\.k",colnames(d)))[1]]
+    if(!is.null(d$sample) && !is.null(d$total.prop.real))
+      correctedRatio <- correctedRatio/(1-d$total.prop.real)
+    d$score <- (d$cxds_score + correctedRatio/max(correctedRatio))/2
     d$include.in.training <- TRUE
     max.iter <-  iter
     while(iter>0){
       # remove cells with a high chance of being doublets from the training
-      th <- doubletThresholding(d, dbr=gdbr, dbr.sd=dbr.sd, stringency=0.7)
-      if(verbose) message("iter=",max.iter-iter,", th=",round(th,3),", ",
-                          sum(d$score>th & d$type=="real")," cells")
-      w <- which(d$type=="real" & d$score >= th)
+      w <- which(d$type=="real" &
+                 doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
+                                     perSample=perSample, returnType="call")=="doublet")
+      if(verbose) message("iter=",max.iter-iter,", ", length(w),
+                          " cells excluded from training.")
       d$score <- tryCatch({
-        fit <- .xgbtrain(d[-w,prds], d$type[-w], nrounds, metric=metric,
+        fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, metric=metric,
                          max_depth=max_depth, eta=eta,
                          nthreads=BiocParallel::bpnworkers(BPPARAM))
-        predict(fit, as.matrix(d[,prds]))
+        predict(fit, as.matrix(preds))
       }, error=function(e) d$score)
       wO <- which(d$type!="real" & !is.na(d$mostLikelyOrigin))
       class.diff <- vapply( split(d$score[wO], d$mostLikelyOrigin[wO]),
@@ -494,48 +524,34 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     d$include.in.training[w] <- FALSE
 
   }else{
-      if(scoreType=="ratio"){
-          d$score <- d$ratio
-      }else{
-          d$score <- d$weighted
-      }
+    if(scoreType=="ratio"){
+      d$score <- d$ratio
+    }else{
+      d$score <- d$weighted
+    }
   }
   d <- DataFrame(d)
   if(threshold){
-      if(!is.null(d$sample) && is.null(dbr)){
-          # per-sample thresholding
-          th <- lapply(split(seq_len(nrow(d)), d$sample),
-                       FUN=function(x){
-                           x <- d[x,c("cluster","src","type","mostLikelyOrigin",
-                                  "difficulty","originAmbiguous","score")]
-                           dbr <- 0.01*sum(x$src=="real",na.rm=TRUE)/1000
-                           th <- doubletThresholding(x, dbr=dbr, dbr.sd=dbr.sd, ...)
-                           list(th=th, stats=.getDoubletStats(d, th, dbr, dbr.sd))
-                       })
-          th.stats <- lapply(th, FUN=function(x) x$stats)
-          th <- vapply(th, FUN=function(x) x$th, FUN.VALUE=numeric(1))
-          d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
-          if(verbose) message("Thresholds found:\n",
-                              paste(paste(names(th),round(th,3),sep="="),
-                                    collapse=", "))
-      }else{
-          th <- doubletThresholding( d, dbr=gdbr, dbr.sd=dbr.sd, ... )
-          th.stats <- .getDoubletStats(d, th, dbr, dbr.sd)
-          d$class <- ifelse(d$score >= th, "doublet", "singlet")
-          if(verbose) message("Threshold found:", round(th,3))
-      }
-      ## set class of known (i.e. inputted) doublets:
-      d$class[d$src=="real" & d$type=="doublet"] <- "doublet"
-
-      metadata(d)$scDblFinder.stats <- th.stats
-      metadata(d)$scDblFinder.threshold <- th
-      d$nearestClass <- factor(d$nearestClass, levels = 0:1,
-                               labels=c("cell","artificialDoublet"))
-      dbr <- sum(d$class=="doublet" & d$src=="real")/sum(d$src=="real")
-      if(verbose) message(sum(d$class=="doublet" & d$src=="real"), " (",
-                          round(100*dbr,1),"%) doublets called")
+    th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, perSample=perSample, ... )
+    th.stats <- .getDoubletStats(d, th, dbr, dbr.sd)
+    if(length(th)>1){
+      d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
+    }else{
+      d$class <- ifelse(d$score >= th, "doublet", "singlet")
     }
-    d
+    if(verbose) message("Threshold found:", paste(round(th,3), collapse=" "))
+    ## set class of known (i.e. inputted) doublets:
+    d$class[d$src=="real" & d$type=="doublet"] <- "doublet"
+
+    metadata(d)$scDblFinder.stats <- th.stats
+    metadata(d)$scDblFinder.threshold <- th
+    d$nearestClass <- factor(d$nearestClass, levels = 0:1,
+                             labels=c("cell","artificialDoublet"))
+    dbr <- sum(d$class=="doublet" & d$src=="real")/sum(d$src=="real")
+    if(verbose) message(sum(d$class=="doublet" & d$src=="real"), " (",
+                        round(100*dbr,1),"%) doublets called")
+  }
+  d
 }
 
 #' @import xgboost
@@ -569,21 +585,56 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
            ... )
 }
 
+.aggResultsTable <- function(d, keep.col=NULL){
+  cn <- table(unlist(lapply(d, colnames)))
+  cn <- c(names(cn)[cn==length(d)], "total.prop.real")
+  if(!is.null(keep.col)) cn <- intersect(cn, keep.col)
+  ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))),
+               levels=seq_along(names(d)), labels=names(d))
+  d <- do.call(rbind, lapply(d, FUN=function(x){
+    x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
+    x$cluster <- as.character(x$cluster)
+    x[,cn]
+  }))
+  d$cluster <- as.factor(d$cluster)
+  d$sample <- ss
+  d
+}
+
 # add the relevant fields of the scDblFinder results table to the SCE
 #' @importFrom stats relevel
 .scDblAddCD <- function(sce, d){
+  fields <- c("sample","cluster","class","score","ratio","weighted","difficulty",
+              "cxds_score","mostLikelyOrigin","originAmbiguous")
+  if(!is.data.frame(d) && is.list(d)) d <- .aggResultsTable(d, fields)
   d <- d[colnames(sce),]
-  for(f in c("sample","cluster","class","score","ratio","weighted","difficulty",
-             "cxds_score","mostLikelyOrigin","originAmbiguous")){
+  for(f in fields){
     if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
   if(!is.null(sce$scDblFinder.class)) sce$scDblFinder.class <-
-    relevel(as.factor(sce$scDblFinder.class),"singlet")
+      relevel(as.factor(sce$scDblFinder.class),"singlet")
   if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
-      metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+    metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
   sce
 }
 
+.defaultProcessing <- function(e, dims=NULL, doNorm=NULL){
+  # skip normalization if data is too large
+  if(is.null(doNorm)) doNorm <- ncol(e)<=50000
+  if(doNorm){
+    tryCatch({
+      e <- normalizeCounts(e)
+    }, error=function(er){
+      warning("Error in calculating norm factors:", er)
+    })
+  }
+  if(is.null(dims)) dims <- 20
+  pca <- scater::calculatePCA(e, ncomponents=dims, subset_row=seq_len(nrow(e)),
+                              ntop=nrow(e), BSPARAM=BiocSingular::IrlbaParam())
+  if(is.list(pca)) pca <- pca$x
+  row.names(pca) <- colnames(e)
+  pca
+}
 
 .checkSCE <- function(sce){
   if(is(sce, "SummarizedExperiment")){
@@ -596,11 +647,11 @@ scDblFinder <- function( sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
     sce <- SingleCellExperiment(list(counts=sce))
   }
   if( !("counts" %in% assayNames(sce)) )
-      stop("`sce` should have an assay named 'counts'")
+    stop("`sce` should have an assay named 'counts'")
   counts(sce) <- as(counts(sce),"dgCMatrix")
   if(is.null(colnames(sce)))
-      colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+    colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   if(is.null(row.names(sce)))
-      row.names(sce) <- paste0("f",seq_len(nrow(sce)))
+    row.names(sce) <- paste0("f",seq_len(nrow(sce)))
   sce
 }

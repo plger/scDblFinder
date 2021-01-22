@@ -6,11 +6,12 @@
 \usage{
 doubletThresholding(
   d,
-  dbr = 0.025,
+  dbr = NULL,
   dbr.sd = 0.015,
   stringency = 0.5,
   p = 0.1,
   method = c("auto", "optim", "dbr", "griffiths"),
+  perSample = TRUE,
   returnType = c("threshold", "call")
 )
 }
@@ -39,8 +40,12 @@ misclassification rate and deviation from expected doublet rate), 'dbr' (strictl
 based on the expected doublet rate), or 'griffiths' (cluster-wise number of
 median absolute deviation in doublet score).}
 
+\item{perSample}{Logical; whether to perform thresholding individually for each sample.}
+
 \item{returnType}{The type of value to return, either doublet calls (`call`) or
 thresholds (`threshold`).}
+
+\item{verbose}{Logical; output extra information.}
 }
 \value{
 A vector of doublet calls if `returnType=="call"`, or a threshold (or vector
