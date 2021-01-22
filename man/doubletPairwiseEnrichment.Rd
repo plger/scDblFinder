@@ -26,7 +26,10 @@ datasets. If FALSE (default), will aggregate counts before testing.}
 A table of significances for each combination.
 }
 \description{
-doubletPairwiseEnrichment
+Calculates enrichment in any type of doublet (i.e. specific combination of clusters)
+over random expectation.
+Note that when applied to an multisample object, this functions assumes that the
+cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE()

@@ -2,6 +2,9 @@
 #'
 #' Tests for enrichment of doublets created from each cluster (i.e. cluster's
 #' stickiness). Only applicable with >=4 clusters.
+#' Note that when applied to an multisample object, this functions assumes that the
+#' cluster labels match across samples.
+#'
 #'
 #' @param x A table of double statistics, or a SingleCellExperiment on which
 #' \link{scDblFinder} was run.
@@ -64,6 +67,11 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom1","binomial","po
 }
 
 #' doubletPairwiseEnrichment
+#'
+#' Calculates enrichment in any type of doublet (i.e. specific combination of clusters)
+#' over random expectation.
+#' Note that when applied to an multisample object, this functions assumes that the
+#' cluster labels match across samples.
 #'
 #' @param x A table of double statistics, or a SingleCellExperiment on which scDblFinder
 #' was run.
