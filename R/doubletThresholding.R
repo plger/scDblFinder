@@ -116,11 +116,11 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   return(ret)
 }
 
-.optimThreshold <- function(d, dbr, dbr.sd=NULL, ths=NULL, stringency=0.5){
+.optimThreshold <- function(d, dbr, dbr.sd=NULL, ths=NULL, stringency=0.5,devPerSample=FALSE){
   if(!(stringency > 0) || !(stringency<1)) stop("`stringency` should be >0 and <1.")
   if(!is.null(dbr.sd)) dbr <- c(max(0,dbr-dbr.sd), min(1,dbr+dbr.sd))
   wR <- which(d$src=="real")
-  if(!is.null(d$sample)){
+  if(devPerSample && !is.null(d$sample)){
     si <- split(wR,d$sample[wR])
     expected <- lapply(si, FUN=function(i){
       vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
@@ -133,7 +133,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   fdr.include <- which(d$include.in.training)
   eFN <- sum(grepl("^rDbl\\.",row.names(d)))*propHomotypic(d$cluster[d$src=="real"])
   totfn <- function(x){
-    if(is.null(d$sample)){
+    if(devPerSample && is.null(d$sample)){
       edev <- .prop.dev(d$type,d$score,expected,x)^2
     }else{
       edev <- mean(sapply(names(expected), FUN=function(e){

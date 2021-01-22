@@ -318,6 +318,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   cor(as.matrix(e[g,]), clusters, method="spearman")
 }
 
+# gets a global doublet rate from samples' doublet rates
 .gdbr <- function(d, dbr=NULL){
   if(!is.null(dbr)){
     if(length(dbr)==1) return(dbr)
@@ -362,4 +363,70 @@ propHomotypic <- function(clusters){
   p <- (p %*% t(p)) * ncells*dbr
   diag(p) <- 0
   sum(p)
+}
+
+
+# procedure to 0-1 rescale scores across samples so that the mins, maxs, and trimmed mean
+# of real and artificial cells is the same across samples; then doing quantile
+# normalization between these fixed points
+.rescaleSampleScores <- function(d, byType=is.null(q), q=NULL, what="score", newName=NULL,
+                                 mode=c("quantile","linear")){
+  mode <- match.arg(mode)
+  if(what=="score" && is.null(newName)) d$perSampleScore <- d$score
+  if(is.null(newName)){
+    newName <- what
+  }else{
+    d[[newName]] <- NA_real_
+  }
+  if(is.null(q)){
+    if(byType){
+      wD <- which(d$type=="doublet")
+      q <- t(vapply(split(d[[what]], d$sample), FUN.VALUE=numeric(2L), FUN=function(x){
+        sort(c(mean(x[-wD], na.rm=TRUE, trim=0.5), mean(x[wD], na.rm=TRUE, trim=0.5))) }))
+      colnames(q) <- c("singlet","doublet")
+    }else{
+      q <- as.matrix(vapply(split(d[[what]], d$sample), FUN.VALUE=numeric(1L),
+                            FUN=mean, trim=0.5, na.rm=TRUE))
+    }
+  }else{
+    if(byType) stop("Cannot scale by type with given quantiles.")
+    if(is.null(dim(q))) q <- as.matrix(q)
+  }
+  if(mode=="quantile"){
+    .qscale <- function(x, by){
+      si <- split(seq_along(x),droplevels(by))
+      sf <- lapply(si, ecdf)
+      for(s in names(si)) x[si[[s]]] <- sf[[s]](x[si[[s]]])
+      x
+    }
+  }else{
+    .qscale <- function(x, by){
+      mins <- vapply(split(x,by),FUN.VALUE=numeric(1),FUN=function(x){
+        if(length(x)==0) return(0); min(x,na.rm=TRUE) })
+      maxs <- vapply(split(x,by),FUN.VALUE=numeric(1),FUN=function(x){
+        if(length(x)==0) return(1); max(x,na.rm=TRUE) })
+      (x-mins[by])/(maxs[by]-mins[by])
+    }
+  }
+  or.sc <- d[[what]]
+  if(ncol(q)>1){
+    qmeds <- apply(q,2,median)
+    w <- which(or.sc <= q[d$sample,1])
+    d[[newName]][w] <- .qscale(or.sc[w],by=d$sample[w])*qmeds[1]
+    w <- which(or.sc > q[d$sample,1] & or.sc <=q[d$sample,2])
+    d[[newName]][w] <- qmeds[1]+.qscale(or.sc[w],by=d$sample[w])*(qmeds[2]-qmeds[1])
+    w <- which(or.sc > q[d$sample,2])
+    d[[newName]][w] <- qmeds[2]+.qscale(or.sc[w],by=d$sample[w])*(1-qmeds[2])
+    maxs <- vapply(split(d[[newName]],d$sample),FUN.VALUE=numeric(1),na.rm=TRUE,FUN=max)
+    d[[newName]] <- d[[newName]]/maxs[d$sample]
+  }else{
+    thm <- median(q)
+    ll <- split(or.sc, d$sample)
+    ths <- q[d$sample,]
+    w <- which(or.sc<=ths)
+    d[[newName]][w] <- thm*d[[what]][w]/ths[w]
+    w <- which(or.sc>ths)
+    d[[newName]][w] <- thm + (d[[what]][w]-ths[w])*(1-thm)/(1-ths[w])
+  }
+  return(d)
 }

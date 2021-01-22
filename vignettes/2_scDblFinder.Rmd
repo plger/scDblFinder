@@ -181,8 +181,9 @@ bpstop(bp)
 
 ### Can I use this in combination with Seurat or other tools?
 
-If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`.
-In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used to create the artificial doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`. In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used to create the artificial doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+
+After artificial doublets generation, the counts of real and artificial cells must then be reprocessed (i.e. normalization and PCA) together, which is performed internally using `r Biocpkg("scater")`. If you wish this step to be performed differently, you may provide your own function for doing so (see the ``processing`` argument in `?scDblFinder`). We note, however, that the impact of variations of this step on doublet detection is far milder than it is for, say, clustering: indeed, not performing any normalization at all for instance decreases doublet identification accuracy, but by very little.
 
 ### Can this be used with scATACseq data?
 
