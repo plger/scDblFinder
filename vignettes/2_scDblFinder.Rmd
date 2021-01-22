@@ -80,6 +80,8 @@ table(sce$scDblFinder.class)
 
 Note that if you are running multiple samples, clustering will be performed sample-wise. While this is not an issue for doublet identification, it means that the cluster labels (and putative origins of doublets) won't match between samples. If you are interested in these, it is preferable to first cluster (for example using `sce$cluster <- fastcluster(sce)`) and then provide the clusters to `scDblFinder`, which will ensure concordant labels across samples.
 
+Of note, if you have very large differences in number of cells between samples the scores will not be directly comparable. We are working on improving this, but in the meantime it would be preferable to stratify similar samples and threshold the sets separately.
+
 <br/><br/>
 
 ## Description of the method
