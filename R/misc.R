@@ -319,7 +319,12 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
 }
 
 .gdbr <- function(d, dbr=NULL){
-  if(!is.null(dbr)) return(dbr)
+  if(!is.null(dbr)){
+    if(length(dbr)==1) return(dbr)
+    stopifnot(!is.null(d$sample))
+    sl <- as.numeric(table(d$sample, d$src=="real")[,2])
+    return(sum(dbr*sl)/sum(sl))
+  }
   if(is.null(d$sample)){
     sl <- sum(d$src=="real")
   }else{
@@ -327,8 +332,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
     sl <- as.numeric(table(d$sample, d$src=="real")[,2])
   }
   dbr <- (0.01*sl/1000)
-  dbr <- sum(dbr*sl)/sum(sl)
-  dbr
+  sum(dbr*sl)/sum(sl)
 }
 
 
@@ -348,4 +352,14 @@ propHomotypic <- function(clusters){
   p <- as.numeric(table(clusters)/length(clusters))
   p <- p %*% t(p)
   sum(diag(p))/sum(p)
+}
+
+.totExpectedHeteroDoublets <- function(clusters, dbr=NULL){
+  if(is.factor(clusters)) clusters <- droplevels(clusters)
+  ncells <- length(clusters)
+  if(is.null(dbr)) dbr <- (0.01*ncells/1000)
+  p <- as.numeric(table(clusters)/ncells)
+  p <- (p %*% t(p)) * ncells*dbr
+  diag(p) <- 0
+  sum(p)
 }

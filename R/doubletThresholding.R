@@ -20,9 +20,11 @@
 #' misclassification rate and deviation from expected doublet rate), 'dbr' (strictly
 #' based on the expected doublet rate), or 'griffiths' (cluster-wise number of
 #' median absolute deviation in doublet score).
+#' @param perSample Logical; whether to perform thresholding individually for each sample.
 #' @param p The p-value threshold determining the deviation in doublet score.
 #' @param returnType The type of value to return, either doublet calls (`call`) or
 #' thresholds (`threshold`).
+#' @param verbose Logical; output extra information.
 #'
 #' @return A vector of doublet calls if `returnType=="call"`, or a threshold (or vector
 #' of thresholds) if `returnType=="threshold"`.
@@ -37,9 +39,9 @@
 #'
 #' @importFrom stats mad qnorm
 #' @export
-doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0.1,
+doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.1,
                                  method=c("auto","optim","dbr","griffiths"),
-                                 returnType=c("threshold","call")){
+                                 perSample=TRUE, returnType=c("threshold","call")){
   method <- match.arg(method)
   returnType <- match.arg(returnType)
   if(!is.data.frame(d) && !is(d,"DFrame"))
@@ -54,14 +56,33 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0
   }else{
     if(!w[[method]]) stop("`d` misses the necessary columns.")
   }
-
   if(method=="optim"){
     if(!all(sort(as.character(unique(d$type)))==c("doublet","real")))
       stop("`type` should be either 'real' or 'doublet'.")
     if(is.null(d$include.in.training)) d$include.in.training <- TRUE
-    th <- .optimThreshold(d, dbr=dbr, dbr.sd=dbr.sd, stringency=stringency)
+    if(!is.null(d$sample) && perSample){
+      si <- split(seq_len(nrow(d)), d$sample)
+      if(!is.null(dbr)){
+        if(length(dbr)==1) dbr <- rep(dbr, length(si))
+        if(!all(names(si) %in% names(dbr)))
+          stop("The names of `dbr` do not correspond to samples of `d`")
+      }
+      th <- sapply(setNames(names(si),names(si)), FUN=function(s){
+        if(is.null(dbr)){
+          dbr <- 0.01*sum(d$type[si[[s]]]=="real",na.rm=TRUE)/1000
+        }else{
+          dbr <- dbr[[s]]
+        }
+        print(dbr)
+        .optimThreshold(d[si[[s]],c("type","src","score","cluster","include.in.training")],
+                        dbr=dbr, dbr.sd=dbr.sd, stringency=stringency)
+      })
+      ret <- as.factor(d$score > th[d$sample])
+    }else{
+      th <- .optimThreshold(d, dbr=.gdbr(d,dbr), dbr.sd=dbr.sd, stringency=stringency)
+      ret <- as.factor(d$score>th)
+    }
     if(returnType=="threshold") return(th)
-    ret <- as.factor(d$score>th)
   }else{
     if(!is.null(d$src)) d <- d[d$src=="real",]
     if(method=="dbr"){
@@ -97,15 +118,29 @@ doubletThresholding <- function( d, dbr=0.025, dbr.sd=0.015, stringency=0.5, p=0
 
 .optimThreshold <- function(d, dbr, dbr.sd=NULL, ths=NULL, stringency=0.5){
   if(!(stringency > 0) || !(stringency<1)) stop("`stringency` should be >0 and <1.")
-  if(!is.null(dbr.sd)) dbr <- c(max(0,dbr-dbr.sd),min(1,dbr+dbr.sd))
-  expected <- vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
-    sum(getExpectedDoublets(d$cluster[which(d$src=="real")], dbr=x)))
+  if(!is.null(dbr.sd)) dbr <- c(max(0,dbr-dbr.sd), min(1,dbr+dbr.sd))
+  wR <- which(d$src=="real")
+  if(!is.null(d$sample)){
+    si <- split(wR,d$sample[wR])
+    expected <- lapply(si, FUN=function(i){
+      vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
+      .totExpectedHeteroDoublets(d$cluster[i], dbr=x)) })
+  }else{
+    expected <- vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
+    .totExpectedHeteroDoublets(d$cluster[wR], dbr=x))
+  }
   if(!is.logical(d$type)) d$type <- d$type=="real"
   fdr.include <- which(d$include.in.training)
   eFN <- sum(grepl("^rDbl\\.",row.names(d)))*propHomotypic(d$cluster[d$src=="real"])
   totfn <- function(x){
-    y <- .prop.dev(d$type,d$score,expected,x)^2 +
-      2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
+    if(is.null(d$sample)){
+      edev <- .prop.dev(d$type,d$score,expected,x)^2
+    }else{
+      edev <- mean(sapply(names(expected), FUN=function(e){
+        .prop.dev(d$type[si[[e]]],d$score[si[[e]]],expected[[e]],x)^2
+      }))
+    }
+    y <- edev + 2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
     if(!is.null(fdr.include))
       y <- y + .FPR(d$type[fdr.include], d$score[fdr.include], x)*2*stringency
     y

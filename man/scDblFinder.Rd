@@ -23,12 +23,14 @@ scDblFinder(
   propMarkers = 0,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "weighted", "ratio"),
+  processing = "default",
   metric = "logloss",
   nrounds = 0.25,
   max_depth = 5,
   iter = 1,
   threshold = TRUE,
   verbose = is.null(samples),
+  multiSampleMode = c("split", "singleModel", "singleModelSplitThres"),
   BPPARAM = SerialParam(),
   ...
 )
@@ -116,6 +118,13 @@ object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
 
+\item{processing}{Counts (real and artificial) processing before KNN. Either 'default'
+(normal \code{scater}-based normalization and PCA), "rawPCA" (PCA without
+normalization), "rawFeatures" (no normalization/dimensional reduction) or a custom
+function with (at least) arguments `e` (the matrix of counts) and `dims` (the desired
+nubmer of dimensions), returning a named matrix with cells as rows and components as
+columns.}
+
 \item{metric}{Error metric to optimize during training (e.g. 'merror',
 'logloss', 'auc', 'aucpr').}
 
@@ -133,6 +142,11 @@ new scores are calculated. Recommended values are 1 or 2.}
 calls}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
+
+\item{multiSampleMode}{Either "split" (recommended if there is a lot of
+heterogeneity across samples), "singleModel" (recommended _only_ if the samples are
+very similar), or "singleModelSplitThres" (use a single classifier, but sample-specific
+thresholds).}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
