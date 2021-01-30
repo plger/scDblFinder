@@ -68,6 +68,6 @@ For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/p
 
 ## Comparison with other tools
 
-To benchmark `scDblFinder` against alternatives we used two datasets in which cells from multiple individuals were mixed and their identity deconvoluted using SNPs (via [demuxlet](https://github.com/statgen/demuxlet)), which also enables the identification of doublets from different individuals. `scDblFinder` is compared to two other excellent methods, [DoubletFinder](https://github.com/chris-mcginnis-ucsf/DoubletFinder) and [scds's hybrid method](http://bioconductor.org/packages/release/bioc/html/scds.html), in terms of accuracy and speed:
+`scDblFinder` was independently evaluated by Nan Miles Xi and Jingyi Jessica Li in the [addendum](https://arxiv.org/abs/2101.08860) to their excellent [benchmark](https://doi.org/10.1016/j.cels.2020.11.008), where they write that _"scDblFinder achieves the highest mean AUPRC and AUROC values, and it is also the top method in terms of the precision, recall, and TNR under the 10% identification rate."_ In addition, it is roughly 10x faster (and scales much better) than the best alternative.
 
-<img src="inst/docs/scDblFinder_comparison.png" alt="Comparison with other tools"/>
+<img src="inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods"/>
