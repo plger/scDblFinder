@@ -2,7 +2,7 @@ Package: scDblFinder
 Type: Package
 Title: scDblFinder
 Version: 1.5.15
-Depends: R (>= 4.0)
+Depends: R (>= 4.1)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
     person("Aaron", "Lun", email="infinite.monkeys.with.keyboards@gmail.com", role="ctb"))
