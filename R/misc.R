@@ -510,6 +510,7 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=2,
 #'
 #' @return An array of same dimensions as `x`
 #' @export
+#' @importFrom Matrix tcrossprod Diagonal rowSums colSums
 #'
 #' @examples
 #' m <- matrix(rpois(500,1),nrow=50)
