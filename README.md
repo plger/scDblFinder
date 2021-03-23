@@ -58,7 +58,7 @@ If you already know of some doublets in the data (e.g. identified via cell hashe
 
 ## Single-cell ATACseq
 
-We have not yet thoroughly tested the `scDblFinder` parameters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there if one increases the `nfeatures`.
+The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter.
 
 <br/><br/>
 

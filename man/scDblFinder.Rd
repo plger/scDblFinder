@@ -19,8 +19,9 @@ scDblFinder(
   k = NULL,
   removeUnidentifiable = TRUE,
   includePCs = 1:5,
-  propRandom = 0.1,
+  propRandom = 0,
   propMarkers = 0,
+  aggregateFeatures = FALSE,
   returnType = c("sce", "table", "full"),
   score = c("xgb", "weighted", "ratio"),
   processing = "default",
@@ -28,9 +29,9 @@ scDblFinder(
   nrounds = 0.25,
   max_depth = 5,
   iter = 1,
+  multiSampleMode = c("split", "singleModel", "singleModelSplitThres"),
   threshold = TRUE,
   verbose = is.null(samples),
-  multiSampleMode = c("split", "singleModel", "singleModelSplitThres"),
   BPPARAM = SerialParam(),
   ...
 )
@@ -58,10 +59,11 @@ hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 
-\item{trajectoryMode}{Logical; whether to generate fewer doublets from cells that are
-closer to each other, for datasets with gradients rather than separated
-subpopulations. This disrupts the proportionality and is not anymore the recommended
-way of handling such datasets. See \code{vignette("scDblFinder")} for more details.}
+\item{trajectoryMode}{Logical; whether to generate fewer doublets from cells
+that are closer to each other, for datasets with gradients rather than
+separated subpopulations. This disrupts the proportionality and is not
+anymore the recommended way of handling such datasets. See
+\code{vignette("scDblFinder")} for more details.}
 
 \item{artificialDoublets}{The approximate number of artificial doublets to
 create. If \code{NULL}, will be the maximum of the number of cells or
@@ -69,27 +71,28 @@ create. If \code{NULL}, will be the maximum of the number of cells or
 
 \item{knownDoublets}{An optional logical vector of known doublets (e.g.
 through cell barcodes), or the name of a colData column of `sce` containing
-that information. Including known doublets tends to increase the sensitivity of doublet
-identification, but decrease the specificity (since some of the known doublets are
-homotypic).}
+that information. Including known doublets tends to increase the sensitivity
+of doublet identification, but decrease the specificity (since some of the
+known doublets are homotypic).}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
 per thousand cells captured (so 4\% among 4000 thousand cells), which is
 appropriate for 10x datasets. Corrections for homeotypic doublets will be
 performed on the given rate.}
 
-\item{clustCor}{Include Spearman correlations to cell type averages in the predictors.
-If `clustCor` is a matrix of cell type marker expressions (with features as rows and
-cell types as columns), the subset of these which are present in the selected features
-will be correlated to each cell to produce additional predictors (i.e. one per cell
-type). Alternatively, if `clustCor` is a positive integer, this number of inter-cluster
-markers will be selected and used for correlation (se `clustCor=Inf` to use all
-available genes).}
+\item{clustCor}{Include Spearman correlations to cell type averages in the
+predictors. If `clustCor` is a matrix of cell type marker expressions (with
+features as rows and cell types as columns), the subset of these which are
+present in the selected features will be correlated to each cell to produce
+additional predictors (i.e. one per cell type). Alternatively, if `clustCor`
+is a positive integer, this number of inter-cluster markers will be selected
+and used for correlation (se `clustCor=Inf` to use all available genes).}
 
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
 rate will be calculated from these boundaries, and will be considered null
-within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to disable.}
+within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
+ disable.}
 
 \item{nfeatures}{The number of top features to use (default 1000)}
 
@@ -100,8 +103,8 @@ is given, the doublet density will be calculated at each k (and other values
 at the highest k), and all the information will be used by the classifier.
 If omitted, a reasonable set of values is used.}
 
-\item{removeUnidentifiable}{Logical; whether to remove artificial doublets of a
-combination that is generally found to be unidentifiable.}
+\item{removeUnidentifiable}{Logical; whether to remove artificial doublets of
+a combination that is generally found to be unidentifiable.}
 
 \item{includePCs}{The index of principal components to include in the
 predictors (e.g. `includePCs=1:2`).}
@@ -112,18 +115,23 @@ should be made of random cells (as opposed to inter-cluster combinations).}
 \item{propMarkers}{The proportion of features to select based on marker
 identification.}
 
+\item{aggregateFeatures}{Whether to perform feature aggregation (recommended
+for ATAC). Can also be a positive integer, in which case this will indicate
+the number of components to use for feature aggregation (if TRUE, `dims`
+will be used.)}
+
 \item{returnType}{Either "sce" (default), "table" (to return the table of
 cell attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells.}
 
 \item{score}{Score to use for final classification.}
 
-\item{processing}{Counts (real and artificial) processing before KNN. Either 'default'
-(normal \code{scater}-based normalization and PCA), "rawPCA" (PCA without
-normalization), "rawFeatures" (no normalization/dimensional reduction) or a custom
-function with (at least) arguments `e` (the matrix of counts) and `dims` (the desired
-nubmer of dimensions), returning a named matrix with cells as rows and components as
-columns.}
+\item{processing}{Counts (real and artificial) processing before KNN. Either
+'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
+without normalization), "rawFeatures" (no normalization/dimensional
+reduction) or a custom function with (at least) arguments `e` (the matrix of
+counts) and `dims` (the desired number of dimensions), returning a named
+matrix with cells as rows and components as columns.}
 
 \item{metric}{Error metric to optimize during training (e.g. 'merror',
 'logloss', 'auc', 'aucpr').}
@@ -138,15 +146,15 @@ through cross-validation.}
 cells that would be called as doublets are excluding from the training, and
 new scores are calculated. Recommended values are 1 or 2.}
 
+\item{multiSampleMode}{Either "split" (recommended if there is a lot of
+heterogeneity across samples), "singleModel" (recommended _only_ if the
+samples are very similar), or "singleModelSplitThres" (use a single
+classifier, but sample-specific thresholds).}
+
 \item{threshold}{Logical; whether to threshold scores into binary doublet
 calls}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
-
-\item{multiSampleMode}{Either "split" (recommended if there is a lot of
-heterogeneity across samples), "singleModel" (recommended _only_ if the samples are
-very similar), or "singleModelSplitThres" (use a single classifier, but sample-specific
-thresholds).}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
@@ -176,16 +184,28 @@ same sample. See \code{vignette("scDblFinder")} for more details on the
 method.
 
 When multiple samples/captures are present, they should be specified using
-the \code{samples} argument. Although the classifier will be trained
-globally, thresholding and the more computationally-intensive steps will be
-performed separately for each sample (in parallel if \code{BPPARAM} is
-given).
+the \code{samples} argument. In this case, we recommend the use of
+\code{BPPARAM} to perform several of the steps in parallel. Artificial
+doublets and kNN networks will be computed separately; then the behavior will
+ then depend on the `multiSampleMode` argument. If 'split', the whole process
+ is split by sample (this is recommended when there is heterogeneity between
+samples, for instance in the number of cells); if 'singleModel', the
+classifier and thresholding will be trained globally (this is not recommended
+unless the samples are extremely comparable); if 'singleModelSplitThres', the
+classifierwill be trained globally, but the thresholding be performed
+separately for each samples.
 
 When inter-sample doublets are available, they can be provided to
 `scDblFinder` through the \code{knownDoublets} argument to improve the
 identification of further doublets. However, because such 'true' doublets
 can include a lot of homotypic doublets, in practice this often lead to a
 slight decrease in the accuracy of detecting neotypic doublets.
+
+Finally, for some types of data, such as single-cell ATAC-seq, selecting a
+number of top features is ineffective due to the high sparsity of the signal.
+In such contexts, rather than _selecting_ features we recommend to use the
+alternative approach of _aggregating_ similar features (with
+`aggregateFeatures=TRUE`), which strongly improves accuracy.
 }
 \examples{
 library(SingleCellExperiment)

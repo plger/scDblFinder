@@ -189,4 +189,4 @@ After artificial doublets generation, the counts of real and artificial cells mu
 
 ### Can this be used with scATACseq data?
 
-We have not yet thoroughly tested the parameters in the context of scATACseq data, however preliminary results on a couple of datasets (applied on peak-level counts) suggest that it works decently there. However, since scATACseq data normally have more peaks with fewer reads, we suggest increasing the `nfeatures` used.
+Yes, specifically working on peak-level data. Because of the much greater sparsity of single-cell ATAC-seq data and the fact that `scDblFinder` works with a selection of features, using it with standard parameters will yield a poor performance. We therefore recommend to use `aggregateFeatures=TRUE`, which will aggregate similar features (rather than selecting features) before the normal `scDblFinder` procedure, and yields excellent results.
