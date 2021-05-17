@@ -63,7 +63,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
     if(!is.null(d$sample) && perSample){
       si <- split(seq_len(nrow(d)), d$sample)
       if(!is.null(dbr)){
-        if(length(dbr)==1) dbr <- rep(dbr, length(si))
+        if(length(dbr)==1) dbr <- setNames(rep(dbr, length(si)), names(si))
         if(!all(names(si) %in% names(dbr)))
           stop("The names of `dbr` do not correspond to samples of `d`")
       }
