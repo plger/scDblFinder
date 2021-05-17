@@ -692,6 +692,9 @@ scDblFinder <- function(
   if( !("counts" %in% assayNames(sce)) )
     stop("`sce` should have an assay named 'counts'")
   counts(sce) <- as(counts(sce),"dgCMatrix")
+  if(min(colSums(counts(sce)))<200)
+    warning("Some cells in `sce` have an extremely low read counts; note ",
+            "that these could trigger errors and might best be filtered out")
   if(is.null(colnames(sce)))
     colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
   if(is.null(row.names(sce)))
