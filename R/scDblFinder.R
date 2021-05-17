@@ -250,7 +250,8 @@ scDblFinder <- function(
                        dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
                        iter=iter, BPPARAM=BPPARAM, verbose=verbose,
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
-                       perSample=multiSampleMode=="singleModelSplitThres")
+                       perSample=multiSampleMode=="singleModelSplitThres",
+                       includeSamples=TRUE)
       if(returnType=="table") return(d)
       return(.scDblAddCD(sce, d))
     }
