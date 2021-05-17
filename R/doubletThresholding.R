@@ -73,7 +73,6 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
         }else{
           dbr <- dbr[[s]]
         }
-        print(dbr)
         .optimThreshold(d[si[[s]],c("type","src","score","cluster","include.in.training")],
                         dbr=dbr, dbr.sd=dbr.sd, stringency=stringency)
       })
