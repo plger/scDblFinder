@@ -190,3 +190,11 @@ After artificial doublets generation, the counts of real and artificial cells mu
 ### Can this be used with scATACseq data?
 
 Yes, specifically working on peak-level data. Because of the much greater sparsity of single-cell ATAC-seq data and the fact that `scDblFinder` works with a selection of features, using it with standard parameters will yield a poor performance. We therefore recommend to use `aggregateFeatures=TRUE`, which will aggregate similar features (rather than selecting features) before the normal `scDblFinder` procedure, and yields excellent results.
+
+### Should I run QC cell filtering before or after doublet detection?
+
+The input to `scDblFinder` should not include empty droplets, and it might be necessary to remove cells with a very low coverage (e.g. <200 reads) to avoid errors.
+Further quality filtering should be performed _downstream_ of doublet detection, for two reasons:
+1. the default expected doublet rate is calculated on the basis of the cells given, and if you excluded a lot of cells as low quality, `scDblFinder` might think that the doublet rate should be lower than it is.
+2. kicking out all low quality cells first might hamper our ability to detect doublets that are formed by the combination of a good quality cell with a low-quality one.
+This being said, these are mostly theoretical grounds, and unless your QC filtering is very stringent (and it shouldn't be!), it's unlikely to make a big difference.
