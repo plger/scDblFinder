@@ -374,8 +374,8 @@ propHomotypic <- function(clusters){
 # procedure to 0-1 rescale scores across samples so that the mins, maxs, and trimmed mean
 # of real and artificial cells is the same across samples; then doing quantile
 # normalization between these fixed points
-.rescaleSampleScores <- function(d, byType=is.null(q), q=NULL, what="score", newName=NULL,
-                                 mode=c("quantile","linear")){
+.rescaleSampleScores <- function(d, byType=is.null(q), q=NULL, what="score",
+                                 newName=NULL, mode=c("quantile","linear")){
   mode <- match.arg(mode)
   if(what=="score" && is.null(newName)) d$perSampleScore <- d$score
   if(is.null(newName)){
