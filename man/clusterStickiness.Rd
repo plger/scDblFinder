@@ -6,8 +6,9 @@
 \usage{
 clusterStickiness(
   x,
-  type = c("quasibinomial", "nbinom1", "binomial", "poisson"),
-  inclDiff = FALSE
+  type = c("quasibinomial", "nbinom", "binomial", "poisson"),
+  inclDiff = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -16,8 +17,8 @@ clusterStickiness(
 
 \item{type}{The type of test to use (quasibinomial recommended).}
 
-\item{inclDiff}{Logical; whether to include the difficulty in the model. If NULL,
-will be used only if there is a significant trend with the enrichment.}
+\item{inclDiff}{Logical; whether to include the difficulty in the model. If
+NULL, will be used only if there is a significant trend with the enrichment.}
 }
 \value{
 A table of test results for each cluster.

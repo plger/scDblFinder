@@ -24,7 +24,7 @@ added `cxds_score` colData column.
 Calculates a coexpression-based doublet score using the method developed by
 \href{https://doi.org/10.1093/bioinformatics/btz698}{Bais and Kostka 2020}.
 This is the original implementation from the
-\code{\href{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}}
+\href{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}
 package, but enabling scores to be calculated for all cells while the gene
 coexpression is based only on a subset (i.e. excluding known/artificial doublets).
 }

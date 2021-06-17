@@ -29,7 +29,7 @@ scDblFinder(
   nrounds = 0.25,
   max_depth = 5,
   iter = 1,
-  multiSampleMode = c("split", "singleModel", "singleModelSplitThres"),
+  multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
   verbose = is.null(samples),
   BPPARAM = SerialParam(),
@@ -146,10 +146,9 @@ through cross-validation.}
 cells that would be called as doublets are excluding from the training, and
 new scores are calculated. Recommended values are 1 or 2.}
 
-\item{multiSampleMode}{Either "split" (recommended if there is a lot of
-heterogeneity across samples), "singleModel" (recommended _only_ if the
-samples are very similar), or "singleModelSplitThres" (use a single
-classifier, but sample-specific thresholds).}
+\item{multiSampleMode}{Either "split" (recommended if there is
+heterogeneity across samples), "singleModel", "singleModelSplitThres", or
+"asOne" (see details below).}
 
 \item{threshold}{Logical; whether to threshold scores into binary doublet
 calls}
@@ -187,13 +186,24 @@ When multiple samples/captures are present, they should be specified using
 the \code{samples} argument. In this case, we recommend the use of
 \code{BPPARAM} to perform several of the steps in parallel. Artificial
 doublets and kNN networks will be computed separately; then the behavior will
- then depend on the `multiSampleMode` argument. If 'split', the whole process
- is split by sample (this is recommended when there is heterogeneity between
-samples, for instance in the number of cells); if 'singleModel', the
-classifier and thresholding will be trained globally (this is not recommended
-unless the samples are extremely comparable); if 'singleModelSplitThres', the
-classifierwill be trained globally, but the thresholding be performed
-separately for each samples.
+then depend on the `multiSampleMode` argument:
+
+\itemize{
+  \item \emph{split}: the whole process is split by sample. This is the
+  default and recommended mode, because it is the most robust (e.g. to
+  heterogeneity between samples, also for instance in the number of cells),
+  and in practice we have not seen major gains in sharing information across
+  samples;
+  \item \emph{singleModel}: the doublets are generated on a per-sample basis,
+  but the classifier and thresholding will be trained globally;
+  \item \emph{singleModelSplitThres}: the doublets are generated on a
+  per-sample basis, the classifier is trained globally, but the final
+  thresholding is per-sample;
+  \item \emph{asOne}: the doublet rate (if not given) is calculated as the
+  weighted average of sample-specific doublet rates, and all samples are
+  otherwise run as if they were one sample. This can get computationally
+  more intensive, and can lead to biases if there are batch effects.
+}
 
 When inter-sample doublets are available, they can be provided to
 `scDblFinder` through the \code{knownDoublets} argument to improve the
@@ -205,7 +215,8 @@ Finally, for some types of data, such as single-cell ATAC-seq, selecting a
 number of top features is ineffective due to the high sparsity of the signal.
 In such contexts, rather than _selecting_ features we recommend to use the
 alternative approach of _aggregating_ similar features (with
-`aggregateFeatures=TRUE`), which strongly improves accuracy.
+`aggregateFeatures=TRUE`), which strongly improves accuracy. See the
+vignette for more detail.
 }
 \examples{
 library(SingleCellExperiment)

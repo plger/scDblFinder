@@ -8,28 +8,36 @@ doubletPairwiseEnrichment(
   x,
   lower.tail = FALSE,
   sampleWise = FALSE,
-  type = c("poisson", "binomial", "chisq", "nbinom1")
+  type = c("poisson", "binomial", "nbinom", "chisq"),
+  inclDiff = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{x}{A table of double statistics, or a SingleCellExperiment on which scDblFinder
-was run.}
+\item{x}{A table of double statistics, or a SingleCellExperiment on which
+scDblFinder was run.}
 
-\item{lower.tail}{Logical; defaults to FALSE to test enrichment (instead of depletion).}
+\item{lower.tail}{Logical; defaults to FALSE to test enrichment (instead of
+depletion).}
 
 \item{sampleWise}{Logical; whether to perform tests sample-wise in multi-sample
 datasets. If FALSE (default), will aggregate counts before testing.}
 
 \item{type}{Type of test to use.}
+
+\item{inclDiff}{Logical; whether to regress out any effect of the
+identification difficulty in calculating expected counts}
+
+\item{verbose}{Logical; whether to output eventual warnings/notes}
 }
 \value{
 A table of significances for each combination.
 }
 \description{
-Calculates enrichment in any type of doublet (i.e. specific combination of clusters)
-over random expectation.
-Note that when applied to an multisample object, this functions assumes that the
-cluster labels match across samples.
+Calculates enrichment in any type of doublet (i.e. specific combination of
+clusters) over random expectation.
+Note that when applied to an multisample object, this functions assumes that
+the cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE()

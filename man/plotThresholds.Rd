@@ -13,8 +13,8 @@ plotThresholds(
 )
 }
 \arguments{
-\item{d}{A data.frame of cell properties, with each row representing a cell, as
-produced by `scDblFinder(..., returnType="table")`.}
+\item{d}{A data.frame of cell properties, with each row representing a cell,
+as produced by `scDblFinder(..., returnType="table")`.}
 
 \item{ths}{A vector of thresholds between 0 and 1 at which to plot values.}
 
