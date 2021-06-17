@@ -25,10 +25,9 @@
 #' hashes, want you want to give here are the different batches/wells (i.e.
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
-#' @param multiSampleMode Either "split" (recommended if there is a lot of
-#' heterogeneity across samples), "singleModel" (recommended _only_ if the
-#' samples are very similar), or "singleModelSplitThres" (use a single
-#' classifier, but sample-specific thresholds).
+#' @param multiSampleMode Either "split" (recommended if there is
+#' heterogeneity across samples), "singleModel", "singleModelSplitThres", or
+#' "asOne" (see details below).
 #' @param trajectoryMode Logical; whether to generate fewer doublets from cells
 #' that are closer to each other, for datasets with gradients rather than
 #' separated subpopulations. This disrupts the proportionality and is not
@@ -120,13 +119,24 @@
 #' the \code{samples} argument. In this case, we recommend the use of
 #' \code{BPPARAM} to perform several of the steps in parallel. Artificial
 #' doublets and kNN networks will be computed separately; then the behavior will
-#'  then depend on the `multiSampleMode` argument. If 'split', the whole process
-#'  is split by sample (this is recommended when there is heterogeneity between
-#' samples, for instance in the number of cells); if 'singleModel', the
-#' classifier and thresholding will be trained globally (this is not recommended
-#' unless the samples are extremely comparable); if 'singleModelSplitThres', the
-#' classifierwill be trained globally, but the thresholding be performed
-#' separately for each samples.
+#' then depend on the `multiSampleMode` argument:
+#'
+#' \itemize{
+#'   \item \emph{split}: the whole process is split by sample. This is the
+#'   default and recommended mode, because it is the most robust (e.g. to
+#'   heterogeneity between samples, also for instance in the number of cells),
+#'   and in practice we have not seen major gains in sharing information across
+#'   samples;
+#'   \item \emph{singleModel}: the doublets are generated on a per-sample basis,
+#'   but the classifier and thresholding will be trained globally;
+#'   \item \emph{singleModelSplitThres}: the doublets are generated on a
+#'   per-sample basis, the classifier is trained globally, but the final
+#'   thresholding is per-sample;
+#'   \item \emph{asOne}: the doublet rate (if not given) is calculated as the
+#'   weighted average of sample-specific doublet rates, and all samples are
+#'   otherwise run as if they were one sample. This can get computationally
+#'   more intensive, and can lead to biases if there are batch effects.
+#' }
 #'
 #' When inter-sample doublets are available, they can be provided to
 #' `scDblFinder` through the \code{knownDoublets} argument to improve the
@@ -138,7 +148,8 @@
 #' number of top features is ineffective due to the high sparsity of the signal.
 #' In such contexts, rather than _selecting_ features we recommend to use the
 #' alternative approach of _aggregating_ similar features (with
-#' `aggregateFeatures=TRUE`), which strongly improves accuracy.
+#' `aggregateFeatures=TRUE`), which strongly improves accuracy. See the
+#' vignette for more detail.
 #'
 #' @import SingleCellExperiment BiocParallel xgboost
 #' @importFrom SummarizedExperiment colData<- assayNames
@@ -167,8 +178,14 @@ scDblFinder <- function(
   includePCs=1:5, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
   returnType=c("sce","table","full"), score=c("xgb","weighted","ratio"),
   processing="default", metric="logloss", nrounds=0.25, max_depth=5, iter=1,
-  multiSampleMode=c("split","singleModel","singleModelSplitThres"),
+  multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
+
+  if(!isFALSE(trajectoryMode)){
+    trajectoryMode <- FALSE
+    .Deprecated(msg="'trajectoryMode' is deprecated.")
+  }
+  multiSampleMode <- match.arg(multiSampleMode)
 
   ## check arguments
   sce <- .checkSCE(sce)
@@ -180,10 +197,9 @@ scDblFinder <- function(
   }
   returnType <- match.arg(returnType)
   if(!is.null(clusters)){
-    if(length(clusters)>1 || !is.numeric(clusters)){
+    if(length(clusters)>1 || !is.numeric(clusters))
       clusters <- .checkColArg(sce, clusters)
-      if(is.factor(clusters)) clusters <- droplevels(clusters)
-    }
+    if(is.factor(clusters)) clusters <- droplevels(clusters)
   }
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
@@ -194,7 +210,8 @@ scDblFinder <- function(
   if(is.factor(processing)) processing <- as.character(processing)
   if(is.character(processing)){
     stopifnot(length(processing)==1)
-    processing <- match.arg(processing, c("default","rawPCA","rawFeatures"))
+    processing <- match.arg(processing, c("default","rawPCA","rawFeatures",
+                                          "normFeatures"))
   }else if(!is.function(processing)){
     stop("`processing` should either be a function")
   }else if(!all(c("e", "dims") %in% names(formals(processing)))){
@@ -211,16 +228,23 @@ scDblFinder <- function(
     sel_features <- row.names(sce)
   }
 
+  if(!is.null(samples) && multiSampleMode=="asOne"){
+    if(is.null(dbr)){
+      tt <- as.numeric(table(samples))
+      dbr <- weighted.mean(tt/100000, tt)
+    }
+    samples <- NULL
+  }
   if(!is.null(samples)){
     ## splitting by samples
-    multiSampleMode <- match.arg(multiSampleMode)
     if(!(isSplitMode <- multiSampleMode=="split")) includePCs <- c()
     if(returnType=="full")
       warning("`returnType='full'` ignored when splitting by samples")
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
     ## run scDblFinder individually
-    d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
+    d <- lapply(nn, FUN=function(n){
+    #d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
       if(!is.null(knownDoublets) && length(knownDoublets)>1)
@@ -231,7 +255,7 @@ scDblFinder <- function(
                     dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k,
                     processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
-                    propMarkers=propMarkers, trajectoryMode=trajectoryMode,
+                    propMarkers=propMarkers,
                     returnType="table", threshold=isSplitMode,
                     score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
@@ -261,7 +285,7 @@ scDblFinder <- function(
 
   if(ncol(sce)<100)
     warning("scDblFinder might not work well with very low numbers of cells.")
-  if(verbose && ncol(sce)>25000)
+  if(verbose && ncol(sce)>25000 && multiSampleMode!="asOne")
     warning("You are trying to run scDblFinder on a very large number of ",
             "cells. If these are from different captures, please specify this",
             " using the `samples` argument.", immediate=TRUE)
@@ -378,6 +402,7 @@ scDblFinder <- function(
                   default=.defaultProcessing(e, dims=dims),
                   rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
                   rawFeatures=t(e),
+                  normFeatures=t(normalizeCounts(e)),
                   stop("Unknown processing function.")
     )
   }else{
@@ -387,7 +412,10 @@ scDblFinder <- function(
 
   ex <- getExpectedDoublets(clusters, dbr)
   if(verbose) message("Evaluating kNN...")
-  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM)$d
+  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM)
+
+  #if(characterize) knn <- d$knn   ## experimental
+  d <- d$d
   if(is.list(clusters)) clusters <- clusters$k
   d[colnames(sce),"cluster"] <- clusters
   d$lsizes <- lsizes
@@ -405,6 +433,7 @@ scDblFinder <- function(
                    verbose=verbose, metric=metric,
                    filterUnidentifiable=removeUnidentifiable)
 
+  #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
   if(returnType=="table") return(d)
   if(returnType=="full"){
     sce_out <- SingleCellExperiment(list(
@@ -423,7 +452,7 @@ scDblFinder <- function(
                          BPPARAM=SerialParam()){
   knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM,
                                   BNPARAM=AnnoyParam()))
-  knn$type <- matrix(as.numeric(ctype)[knn$index]-1, nrow=nrow(knn$index))
+  knn$type <- matrix(as.integer(ctype)[knn$index]-1L, nrow=nrow(knn$index))
   knn$orig <- matrix(origins[knn$index], nrow=nrow(knn[[1]]))
   if(any(w <- knn$distance==0))
     knn$distance[w] <- min(knn$distance[knn$distance[,1]>0,1])
@@ -447,6 +476,7 @@ scDblFinder <- function(
                    distanceToNearestReal=dr[,2],
                    nearestClass=knn$type[,1],
                    .getMostLikelyOrigins(knn, origins) )
+
   for(ki in k)
     d[[paste0("ratio.k",ki)]] <- rowSums(knn$type[,seq_len(ki)])/ki
 
@@ -518,9 +548,9 @@ scDblFinder <- function(
     }
     preds <- as(as.matrix(d[,prds]), "dgCMatrix")
 
-    if(includeSamples)
-      preds <- cbind(preds,
-                     as(stats::model.matrix(~d$sample)[,-1], "dgCMatrix"))
+    if(includeSamples && !is.null(d$sample))
+      preds <- cbind(preds, as(stats::model.matrix(~d$sample)[,-1,drop=FALSE],
+                               "dgCMatrix"))
 
     if(!is.null(addVals)){
       stopifnot(nrow(addVals)==nrow(preds))
@@ -530,7 +560,9 @@ scDblFinder <- function(
     w <- which(d$type=="real")
     ratio <- rev(grep("^ratio\\.k",colnames(d)))[1]
     if(!is.null(d$sample) && !perSample){
-      d <- .rescaleSampleScores(d, TRUE, what=ratio, newName="adjusted.ratio")
+      tt <- table(d$type, d$sample)
+      expected.ratio <- (1+tt["doublet",])/(1+tt["real",])
+      d$adjusted.ratio <- d[[ratio]]/expected.ratio[d$sample]
       d <- .rescaleSampleScores(d, TRUE, what="cxds_score",
                                 newName="adjusted.cxds")
       d$score <- (d$adjusted.ratio + d$adjusted.cxds)/2
@@ -540,11 +572,13 @@ scDblFinder <- function(
     d$include.in.training <- TRUE
     max.iter <-  iter
     while(iter>0){
-      # remove cells with a high chance of being doublets from the training
-      w <- which(d$type=="real" &
-                 doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
-                                     perSample=perSample,
-                                     returnType="call")=="doublet")
+      # remove cells with a high chance of being doublets from the training,
+      # as well as unidentifiable artificial doublets
+        w <- which( (d$type=="real" &
+          doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
+                              perSample=perSample,
+                              returnType="call")=="doublet") |
+            (d$type=="doublet" & d$score<0.1) )
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
       d$score <- tryCatch({
@@ -577,7 +611,7 @@ scDblFinder <- function(
     th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, perSample=perSample,
                                ... )
     th.stats <- .getDoubletStats(d, th, dbr, dbr.sd)
-    if(length(th)>1){
+    if(!is.null(d$sample) && length(th)>1){
       d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
     }else{
       d$class <- ifelse(d$score >= th, "doublet", "singlet")
@@ -649,7 +683,8 @@ scDblFinder <- function(
 #' @importFrom stats relevel
 .scDblAddCD <- function(sce, d){
   fields <- c("sample","cluster","class","score","ratio","weighted",
-              "difficulty","cxds_score","mostLikelyOrigin","originAmbiguous")
+              "difficulty","cxds_score","mostLikelyOrigin","originAmbiguous",
+              "origin.prob", "origin.call", "origin.2ndBest")
   if(!is.data.frame(d) && is.list(d)) d <- .aggResultsTable(d, fields)
   d <- d[colnames(sce),]
   for(f in fields){
