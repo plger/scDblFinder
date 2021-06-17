@@ -185,7 +185,7 @@ getCellPairs <- function(x, n=1000, ...){
 
 # get cross-cluster pairs of cells
 .getCellPairsFromClusters <- function(clusters, n=1000, ls=NULL, q=c(0.1,0.9),
-                                      selMode="uniform", soft.min=5, ...){
+                                      selMode="proportional", soft.min=5, ...){
   cli <- split(seq_along(clusters), clusters)
   if(!is.null(ls)){
     ls <- split(ls, clusters)
