@@ -243,8 +243,7 @@ scDblFinder <- function(
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
     ## run scDblFinder individually
-    d <- lapply(nn, FUN=function(n){
-    #d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
+    d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
       if(!is.null(knownDoublets) && length(knownDoublets)>1)
