@@ -74,8 +74,8 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #'
 #' Plots scores used for thresholding.
 #'
-#' @param d A data.frame of cell properties, with each row representing a cell, as
-#' produced by `scDblFinder(..., returnType="table")`.
+#' @param d A data.frame of cell properties, with each row representing a cell,
+#' as produced by `scDblFinder(..., returnType="table")`.
 #' @param ths A vector of thresholds between 0 and 1 at which to plot values.
 #' @param dbr The expected (mean) doublet rate.
 #' @param dbr.sd The standard deviation of the doublet rate, representing the
@@ -83,8 +83,10 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #' @param do.plot Logical; whether to plot the data.
 #'
 #' @return A ggplot, or a data.frame if `do.plot==FALSE`.
+#' @importFrom ggplot2 ggplot geom_line aes geom_vline ylim annotate
 #' @export
-plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015, do.plot=TRUE){
+plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015,
+                           do.plot=TRUE){
   dbr <- .gdbr(d,dbr)
   o <- .optimThreshold(d, dbr, dbr.sd, ths=ths)
   if(isFALSE(do.plot)) return(o)
@@ -95,6 +97,7 @@ plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015, do.plot=T
     ggplot2::geom_line(aes(y=FDR), size=1.2, colour="blue", alpha=0.8) +
     ggplot2::geom_line(aes(y=dev), size=1.2, colour="gray", alpha=0.8) +
     ggplot2::geom_line(aes(y=cost), size=1.2, colour="black") +
-    ggplot2::geom_vline(xintercept=th, linetype="dashed") + ggplot2::ylim(c(0,1)) +
+    ggplot2::geom_vline(xintercept=th, linetype="dashed") +
+    ggplot2::ylim(c(0,1)) +
     ggplot2::annotate("text", x=th, y=1, hjust = -0.1, label=round(th,3))
 }
