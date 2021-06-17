@@ -83,7 +83,6 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #' @param do.plot Logical; whether to plot the data.
 #'
 #' @return A ggplot, or a data.frame if `do.plot==FALSE`.
-#' @importFrom ggplot2 ggplot geom_line aes geom_vline ylim annotate
 #' @export
 plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015,
                            do.plot=TRUE){
