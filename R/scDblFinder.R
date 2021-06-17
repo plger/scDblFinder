@@ -364,7 +364,7 @@ scDblFinder <- function(
     artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
 
   if(verbose)
-    message("Creating ~", artificialDoublets, " artifical doublets...")
+    message("Creating ~", artificialDoublets, " artificial doublets...")
   ad <- getArtificialDoublets(as.matrix(counts(sce)), n=artificialDoublets,
                               clusters=clusters, propRandom=propRandom, ...)
 
