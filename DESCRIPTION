@@ -34,7 +34,6 @@ Imports:
     xgboost,
     stats,
     utils,
-    mbkmeans,
     MASS
 Suggests: 
     BiocStyle, 
