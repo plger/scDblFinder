@@ -177,7 +177,7 @@ scDblFinder <- function(
   dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL, removeUnidentifiable=TRUE,
   includePCs=1:5, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
   returnType=c("sce","table","full"), score=c("xgb","weighted","ratio"),
-  processing="default", metric="logloss", nrounds=0.25, max_depth=5, iter=1,
+  processing="default", metric="logloss", nrounds=0.25, max_depth=5, iter=2,
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
 
