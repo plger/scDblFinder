@@ -5,8 +5,8 @@
 #' back the cluster labels.
 #'
 #' @param x An object of class SCE
-#' @param k The number of k-means clusters to use in the primary step (should 
-#' be much higher than the number of expected clusters). Defaults to 1/10th of 
+#' @param k The number of k-means clusters to use in the primary step (should
+#' be much higher than the number of expected clusters). Defaults to 1/10th of
 #' the number of cells with a maximum of 3000.
 #' @param rdname The name of the dimensionality reduction to use.
 #' @param nstart Number of starts for k-means clustering
@@ -16,33 +16,33 @@
 #' the corresponding dimensional reduction exists in `sce`)
 #' @param verbose Logical; whether to output progress messages
 #' @param returnType See return.
-#' @param ... Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if 
+#' @param ... Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if
 #' `x` does not have `rdname`.
 #'
-#' @return By default, a vector of cluster labels. If 
+#' @return By default, a vector of cluster labels. If
 #' `returnType='preclusters'`, returns the k-means pre-clusters. If
-#' `returnType='metacells'`, returns the metacells aggretated by pre-clusters 
+#' `returnType='metacells'`, returns the metacells aggretated by pre-clusters
 #' and the corresponding cell indexes. If `returnType='graph'`, returns the
 #' graph of (meta-)cells and the corresponding cell indexes.
-#' 
+#'
 #' @importFrom igraph cluster_louvain membership
 #' @importFrom scran buildKNNGraph
 #' @importFrom stats kmeans
-#' 
+#'
 #' @examples
 #' sce <- mockDoubletSCE()
 #' sce$cluster <- fastcluster(sce)
-#' 
+#'
 #' @export
 #' @importFrom bluster makeKNNGraph
 #' @importFrom igraph membership cluster_louvain
 #' @importFrom DelayedArray rowsum
-fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20, 
+fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
                          ndims=NULL, nfeatures=1000, verbose=TRUE,
                          returnType=c("clusters","preclusters","metacells",
                                       "graph"), ...){
   returnType <- match.arg(returnType)
-  x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname, 
+  x <- .getDR(x, ndims=ndims, nfeatures=nfeatures, rdname=rdname,
               verbose=verbose, ...)
   if(is.null(k)) k <- min(2500, floor(nrow(x)/10))
   if((returnType != "clusters" || nrow(x)>1000) && nrow(x)>k){
@@ -62,8 +62,8 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
   cl[k]
 }
 
-#' @importFrom scater runPCA 
-#' @importFrom scuttle logNormCounts librarySizeFactors computeLibraryFactors 
+#' @importFrom scater runPCA
+#' @importFrom scuttle logNormCounts librarySizeFactors computeLibraryFactors
 #' @importFrom BiocSingular IrlbaParam
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000, ...){
@@ -78,8 +78,9 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=20,
         sce <- logNormCounts(sce)
     }
     if(!("PCA" %in% reducedDimNames(sce))){
-        sce <- runPCA(sce, ncomponents=ifelse(is.null(ndims),30,ndims), 
-                      ntop=min(nfeatures,nrow(sce)), ...)
+        sce <- runPCA(sce, ncomponents=ifelse(is.null(ndims),30,ndims),
+                      ntop=min(nfeatures,nrow(sce)),
+                      BSPARAM=IrlbaParam(), ...)
     }
     sce
 }
