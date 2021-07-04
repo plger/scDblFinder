@@ -71,9 +71,10 @@
 #' @param processing Counts (real and artificial) processing before KNN. Either
 #' 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
 #' without normalization), "rawFeatures" (no normalization/dimensional
-#' reduction) or a custom function with (at least) arguments `e` (the matrix of
-#' counts) and `dims` (the desired number of dimensions), returning a named
-#' matrix with cells as rows and components as columns.
+#' reduction), "normFeatures" (uses normalized features, without PCA) or a
+#' custom function with (at least) arguments `e` (the matrix of counts) and
+#' `dims` (the desired number of dimensions), returning a named matrix with
+#' cells as rows and components as columns.
 #' @param returnType Either "sce" (default), "table" (to return the table of
 #' cell attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells.
@@ -425,7 +426,7 @@ scDblFinder <- function(
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
   ## classify
-
+  includePCs <- includePCs[includePCs<ncol(pca)]
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
