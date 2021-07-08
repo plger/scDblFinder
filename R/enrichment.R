@@ -2,8 +2,8 @@
 #'
 #' Tests for enrichment of doublets created from each cluster (i.e. cluster's
 #' stickiness). Only applicable with >=4 clusters.
-#' Note that when applied to an multisample object, this functions assumes that the
-#' cluster labels match across samples.
+#' Note that when applied to an multisample object, this functions assumes that
+#' the cluster labels match across samples.
 #'
 #'
 #' @param x A table of double statistics, or a SingleCellExperiment on which
@@ -11,6 +11,7 @@
 #' @param type The type of test to use (quasibinomial recommended).
 #' @param inclDiff Logical; whether to include the difficulty in the model. If
 #' NULL, will be used only if there is a significant trend with the enrichment.
+#' @param verbose Logical; whether to print additional running information.
 #'
 #'
 #' @return A table of test results for each cluster.

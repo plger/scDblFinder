@@ -24,7 +24,6 @@
 #' @param p The p-value threshold determining the deviation in doublet score.
 #' @param returnType The type of value to return, either doublet calls (`call`) or
 #' thresholds (`threshold`).
-#' @param verbose Logical; output extra information.
 #'
 #' @return A vector of doublet calls if `returnType=="call"`, or a threshold (or vector
 #' of thresholds) if `returnType=="threshold"`.
