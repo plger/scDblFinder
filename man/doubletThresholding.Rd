@@ -44,8 +44,6 @@ median absolute deviation in doublet score).}
 
 \item{returnType}{The type of value to return, either doublet calls (`call`) or
 thresholds (`threshold`).}
-
-\item{verbose}{Logical; output extra information.}
 }
 \value{
 A vector of doublet calls if `returnType=="call"`, or a threshold (or vector

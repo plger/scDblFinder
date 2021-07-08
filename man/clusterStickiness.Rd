@@ -19,6 +19,8 @@ clusterStickiness(
 
 \item{inclDiff}{Logical; whether to include the difficulty in the model. If
 NULL, will be used only if there is a significant trend with the enrichment.}
+
+\item{verbose}{Logical; whether to print additional running information.}
 }
 \value{
 A table of test results for each cluster.
@@ -26,8 +28,8 @@ A table of test results for each cluster.
 \description{
 Tests for enrichment of doublets created from each cluster (i.e. cluster's
 stickiness). Only applicable with >=4 clusters.
-Note that when applied to an multisample object, this functions assumes that the
-cluster labels match across samples.
+Note that when applied to an multisample object, this functions assumes that
+the cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE(rep(200,5))
