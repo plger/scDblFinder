@@ -20,8 +20,8 @@ fastcluster(
 \arguments{
 \item{x}{An object of class SCE}
 
-\item{k}{The number of k-means clusters to use in the primary step (should 
-be much higher than the number of expected clusters). Defaults to 1/10th of 
+\item{k}{The number of k-means clusters to use in the primary step (should
+be much higher than the number of expected clusters). Defaults to 1/10th of
 the number of cells with a maximum of 3000.}
 
 \item{rdname}{The name of the dimensionality reduction to use.}
@@ -39,13 +39,13 @@ the corresponding dimensional reduction exists in `sce`)}
 
 \item{returnType}{See return.}
 
-\item{...}{Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if 
+\item{...}{Arguments passed to `scater::runPCA` (e.g. BPPARAM or BSPARAM) if
 `x` does not have `rdname`.}
 }
 \value{
-By default, a vector of cluster labels. If 
+By default, a vector of cluster labels. If
 `returnType='preclusters'`, returns the k-means pre-clusters. If
-`returnType='metacells'`, returns the metacells aggretated by pre-clusters 
+`returnType='metacells'`, returns the metacells aggretated by pre-clusters
 and the corresponding cell indexes. If `returnType='graph'`, returns the
 graph of (meta-)cells and the corresponding cell indexes.
 }

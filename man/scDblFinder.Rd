@@ -28,7 +28,7 @@ scDblFinder(
   metric = "logloss",
   nrounds = 0.25,
   max_depth = 5,
-  iter = 1,
+  iter = 2,
   multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
   verbose = is.null(samples),
@@ -129,9 +129,10 @@ object containing both the real and artificial cells.}
 \item{processing}{Counts (real and artificial) processing before KNN. Either
 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
 without normalization), "rawFeatures" (no normalization/dimensional
-reduction) or a custom function with (at least) arguments `e` (the matrix of
-counts) and `dims` (the desired number of dimensions), returning a named
-matrix with cells as rows and components as columns.}
+reduction), "normFeatures" (uses normalized features, without PCA) or a
+custom function with (at least) arguments `e` (the matrix of counts) and
+`dims` (the desired number of dimensions), returning a named matrix with
+cells as rows and components as columns.}
 
 \item{metric}{Error metric to optimize during training (e.g. 'merror',
 'logloss', 'auc', 'aucpr').}
