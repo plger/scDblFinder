@@ -54,11 +54,11 @@ Contrarily to other methods also based on the generation of artificial doublets,
 
 ### Including known doublets
 
-If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` can enable `scDblFinder` to identify similar doublets. However, if many of those doublets are homotypic (e.g. made from the same cell type, although from different individuals), this can lead to a decrease in accuracy.
+If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` can enable `scDblFinder` to identify similar doublets. See the `knownUse` param for the two alternative ways to use this information.
 
 ## Single-cell ATACseq
 
-The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter.
+The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter (see vignette).
 
 <br/><br/>
 
