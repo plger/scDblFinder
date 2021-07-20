@@ -9,10 +9,11 @@ scDblFinder(
   clusters = NULL,
   samples = NULL,
   trajectoryMode = FALSE,
+  clustCor = NULL,
   artificialDoublets = NULL,
   knownDoublets = NULL,
+  knownUse = c("discard", "positive"),
   dbr = NULL,
-  clustCor = NULL,
   dbr.sd = NULL,
   nfeatures = 1000,
   dims = 20,
@@ -65,21 +66,6 @@ separated subpopulations. This disrupts the proportionality and is not
 anymore the recommended way of handling such datasets. See
 \code{vignette("scDblFinder")} for more details.}
 
-\item{artificialDoublets}{The approximate number of artificial doublets to
-create. If \code{NULL}, will be the maximum of the number of cells or
-\code{5*nbClusters^2}.}
-
-\item{knownDoublets}{An optional logical vector of known doublets (e.g.
-through cell barcodes), or the name of a colData column of `sce` containing
-that information. Including known doublets tends to increase the sensitivity
-of doublet identification, but decrease the specificity (since some of the
-known doublets are homotypic).}
-
-\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
-per thousand cells captured (so 4\% among 4000 thousand cells), which is
-appropriate for 10x datasets. Corrections for homeotypic doublets will be
-performed on the given rate.}
-
 \item{clustCor}{Include Spearman correlations to cell type averages in the
 predictors. If `clustCor` is a matrix of cell type marker expressions (with
 features as rows and cell types as columns), the subset of these which are
@@ -87,6 +73,25 @@ present in the selected features will be correlated to each cell to produce
 additional predictors (i.e. one per cell type). Alternatively, if `clustCor`
 is a positive integer, this number of inter-cluster markers will be selected
 and used for correlation (se `clustCor=Inf` to use all available genes).}
+
+\item{artificialDoublets}{The approximate number of artificial doublets to
+create. If \code{NULL}, will be the maximum of the number of cells or
+\code{5*nbClusters^2}.}
+
+\item{knownDoublets}{An optional logical vector of known doublets (e.g.
+through cell barcodes), or the name of a colData column of `sce` containing
+that information. The way these are used depends on the `knownUse` argument.}
+
+\item{knownUse}{The way to use known doublets, either 'discard' (they are
+discarded for the purpose of training, but counted as positive) or 'positive'
+(they are used as positive doublets for training - usually leads to a mild
+decrease in accuracy due to the fact that known doublets typically include
+a sizeable fraction of homotypic doublets).}
+
+\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
+per thousand cells captured (so 4\% among 4000 thousand cells), which is
+appropriate for 10x datasets. Corrections for homeotypic doublets will be
+performed on the given rate.}
 
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
@@ -208,9 +213,13 @@ then depend on the `multiSampleMode` argument:
 
 When inter-sample doublets are available, they can be provided to
 `scDblFinder` through the \code{knownDoublets} argument to improve the
-identification of further doublets. However, because such 'true' doublets
-can include a lot of homotypic doublets, in practice this often lead to a
-slight decrease in the accuracy of detecting neotypic doublets.
+identification of further doublets. How exactly these are used depends on the
+`knownUse` argument: with 'discard' (default), the known doublets are
+excluded from the training step, but counted as positives. With 'positive',
+they are included and treated as positive doublets for the training step.
+Note that because known doublets can in practice include a lot of homotypic
+doublets, this second approach can often lead to a slight decrease in the
+accuracy of detecting heterotypic doublets.
 
 Finally, for some types of data, such as single-cell ATAC-seq, selecting a
 number of top features is ineffective due to the high sparsity of the signal.

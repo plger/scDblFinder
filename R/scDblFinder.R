@@ -35,9 +35,12 @@
 #' \code{vignette("scDblFinder")} for more details.
 #' @param knownDoublets An optional logical vector of known doublets (e.g.
 #' through cell barcodes), or the name of a colData column of `sce` containing
-#' that information. Including known doublets tends to increase the sensitivity
-#' of doublet identification, but decrease the specificity (since some of the
-#' known doublets are homotypic).
+#' that information. The way these are used depends on the `knownUse` argument.
+#' @param knownUse The way to use known doublets, either 'discard' (they are
+#' discarded for the purpose of training, but counted as positive) or 'positive'
+#' (they are used as positive doublets for training - usually leads to a mild
+#' decrease in accuracy due to the fact that known doublets typically include
+#' a sizeable fraction of homotypic doublets).
 #' @param nfeatures The number of top features to use (default 1000)
 #' @param dims The number of dimensions used.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\%
@@ -141,9 +144,13 @@
 #'
 #' When inter-sample doublets are available, they can be provided to
 #' `scDblFinder` through the \code{knownDoublets} argument to improve the
-#' identification of further doublets. However, because such 'true' doublets
-#' can include a lot of homotypic doublets, in practice this often lead to a
-#' slight decrease in the accuracy of detecting neotypic doublets.
+#' identification of further doublets. How exactly these are used depends on the
+#' `knownUse` argument: with 'discard' (default), the known doublets are
+#' excluded from the training step, but counted as positives. With 'positive',
+#' they are included and treated as positive doublets for the training step.
+#' Note that because known doublets can in practice include a lot of homotypic
+#' doublets, this second approach can often lead to a slight decrease in the
+#' accuracy of detecting heterotypic doublets.
 #'
 #' Finally, for some types of data, such as single-cell ATAC-seq, selecting a
 #' number of top features is ineffective due to the high sparsity of the signal.
@@ -173,12 +180,13 @@
 #' @importFrom SummarizedExperiment rowData<-
 #' @importFrom BiocParallel SerialParam bpnworkers
 scDblFinder <- function(
-  sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE,
-  artificialDoublets=NULL, knownDoublets=NULL, dbr=NULL, clustCor=NULL,
-  dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL, removeUnidentifiable=TRUE,
-  includePCs=1:5, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
-  returnType=c("sce","table","full"), score=c("xgb","weighted","ratio"),
-  processing="default", metric="logloss", nrounds=0.25, max_depth=5, iter=2,
+  sce, clusters=NULL, samples=NULL, trajectoryMode=FALSE, clustCor=NULL,
+  artificialDoublets=NULL, knownDoublets=NULL, knownUse=c("discard","positive"),
+  dbr=NULL, dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL,
+  removeUnidentifiable=TRUE, includePCs=1:5, propRandom=0, propMarkers=0,
+  aggregateFeatures=FALSE,  returnType=c("sce","table","full"),
+  score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
+  nrounds=0.25, max_depth=5, iter=2,
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
 
@@ -191,6 +199,7 @@ scDblFinder <- function(
   ## check arguments
   sce <- .checkSCE(sce)
   score <- match.arg(score)
+  knownUse <- match.arg(knownUse)
   if(!is.null(clustCor)){
     if(is.null(dim(clustCor)) && (!is.numeric(clustCor) || clustCor<0))
       stop("`clustCor` should be either a matrix of marker expression per cell",
@@ -247,12 +256,15 @@ scDblFinder <- function(
     d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
-      if(!is.null(knownDoublets) && length(knownDoublets)>1)
+      if(!is.null(knownDoublets) && length(knownDoublets)>1){
         knownDoublets <- knownDoublets[x]
+        if(!any(knownDoublets)) knownDoublets <- NULL
+      }
       tryCatch(
         scDblFinder(sce[sel_features,x], clusters=clusters, dims=dims, dbr=dbr,
-                    knownDoublets=knownDoublets, clustCor=clustCor,
-                    dbr.sd=dbr.sd, artificialDoublets=artificialDoublets, k=k,
+                    dbr.sd=dbr.sd, clustCor=clustCor,
+                    knownDoublets=knownDoublets, knownUse=knownUse,
+                    artificialDoublets=artificialDoublets, k=k,
                     processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers,
@@ -377,8 +389,11 @@ scDblFinder <- function(
   no <- ncol(sce) + length(wDbl)
   ado2 <- as.factor(c(rep(NA, no), as.character(ado)))
   src <- factor( rep(1:2, c(no,ncol(ad))), labels = c("real","artificial"))
-  ctype <- factor( rep(c(1,2,2), c(ncol(sce),length(wDbl),ncol(ad))),
+  ctype <- factor( rep(c(1,ifelse(knownUse=="positive",2,1),2),
+                       c(ncol(sce),length(wDbl),ncol(ad))),
                    labels=c("real","doublet") )
+  inclInTrain <- rep(c(TRUE,ifelse(knownUse=="positive",TRUE,FALSE),TRUE),
+                     c(ncol(sce),length(wDbl),ncol(ad)))
 
   if(verbose) message("Dimensional reduction")
 
@@ -388,7 +403,7 @@ scDblFinder <- function(
 
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
-  cxds_score <- cxds2(e, whichDbls=which(ctype==2))
+  cxds_score <- cxds2(e, whichDbls=which(ctype==2L | !inclInTrain))
   nfeatures <- Matrix::colSums(e>0)
 
   if(!is.null(clustCor) && !is.null(dim(clustCor))){
@@ -430,7 +445,7 @@ scDblFinder <- function(
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
-                   verbose=verbose, metric=metric,
+                   verbose=verbose, metric=metric, includeInTrain=inclInTrain,
                    filterUnidentifiable=removeUnidentifiable)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
@@ -527,7 +542,8 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         features=NULL, filterUnidentifiable=FALSE, addVals=NULL,
                         metric="logloss", eta=0.3, BPPARAM=SerialParam(),
-                        includeSamples=FALSE, perSample=TRUE, ...){
+                        includeInTrain=TRUE, includeSamples=FALSE,
+                        perSample=TRUE, ...){
   gdbr <- .gdbr(d, dbr)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
@@ -569,7 +585,7 @@ scDblFinder <- function(
     }else{
       d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
     }
-    d$include.in.training <- TRUE
+    d$include.in.training <- includeInTrain
     max.iter <-  iter
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
@@ -578,7 +594,7 @@ scDblFinder <- function(
           doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
                               perSample=perSample,
                               returnType="call")=="doublet") |
-            (d$type=="doublet" & d$score<0.1) )
+            (d$type=="doublet" & d$score<0.1) | !includeInTrain )
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
       d$score <- tryCatch({
