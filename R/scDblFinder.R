@@ -71,6 +71,9 @@
 #' should be made of random cells (as opposed to inter-cluster combinations).
 #' @param propMarkers The proportion of features to select based on marker
 #' identification.
+#' @param trainingFeatures The features to use for training (defaults to an
+#' optimal selection based on benchmark datasets). To exclude features (rather
+#' than list those to be included), prefix them with a "-".
 #' @param processing Counts (real and artificial) processing before KNN. Either
 #' 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
 #' without normalization), "rawFeatures" (no normalization/dimensional
@@ -186,7 +189,7 @@ scDblFinder <- function(
   removeUnidentifiable=TRUE, includePCs=1:5, propRandom=0, propMarkers=0,
   aggregateFeatures=FALSE,  returnType=c("sce","table","full"),
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
-  nrounds=0.25, max_depth=5, iter=2,
+  nrounds=0.25, max_depth=5, iter=2, trainingFeatures=NULL,
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
 
@@ -267,7 +270,7 @@ scDblFinder <- function(
                     artificialDoublets=artificialDoublets, k=k,
                     processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
-                    propMarkers=propMarkers,
+                    propMarkers=propMarkers, trainingFeatures=trainingFeatures,
                     returnType="table", threshold=isSplitMode,
                     score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
@@ -285,6 +288,7 @@ scDblFinder <- function(
       d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
                        dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
                        iter=iter, BPPARAM=BPPARAM, verbose=verbose,
+                       features=trainingFeatures,
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE)
@@ -389,7 +393,7 @@ scDblFinder <- function(
   no <- ncol(sce) + length(wDbl)
   ado2 <- as.factor(c(rep(NA, no), as.character(ado)))
   src <- factor( rep(1:2, c(no,ncol(ad))), labels = c("real","artificial"))
-  ctype <- factor( rep(c(1,ifelse(knownUse=="positive",2,1),2),
+  ctype <- factor( rep(c(1L,ifelse(knownUse=="positive",2L,1L),2L),
                        c(ncol(sce),length(wDbl),ncol(ad))),
                    labels=c("real","doublet") )
   inclInTrain <- rep(c(TRUE,ifelse(knownUse=="positive",TRUE,FALSE),TRUE),
@@ -437,15 +441,17 @@ scDblFinder <- function(
   d$nfeatures <- nfeatures
   d$src <- src
   d$cxds_score <- cxds_score
+  d$include.in.training <- inclInTrain
 
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
   ## classify
+  if(length(includePCs)==1) includePCs <- seq_len(includePCs)
   includePCs <- includePCs[includePCs<ncol(pca)]
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
-                   verbose=verbose, metric=metric, includeInTrain=inclInTrain,
+                   features=trainingFeatures, verbose=verbose, metric=metric,
                    filterUnidentifiable=removeUnidentifiable)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
@@ -542,8 +548,7 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         features=NULL, filterUnidentifiable=FALSE, addVals=NULL,
                         metric="logloss", eta=0.3, BPPARAM=SerialParam(),
-                        includeInTrain=TRUE, includeSamples=FALSE,
-                        perSample=TRUE, ...){
+                        includeSamples=FALSE, perSample=TRUE, ...){
   gdbr <- .gdbr(d, dbr)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
@@ -551,18 +556,28 @@ scDblFinder <- function(
     if(verbose) message("Training model...")
     d$score <- NULL
     if(is.null(features)){
-      prds <- setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
-                                     "distanceToNearestDoublet", "type",
-                                     "src","distanceToNearest","class",
-                                     "nearestClass","cluster","sample",
-                                     "include.in.training"))
+      prds <- .defTrainFeatures(d)
     }else{
-      if(length(mis <- setdiff(features, colnames(d)))>0)
-        warning("The following features were not found: ",
-                paste(mis,collapse=", "))
-      prds <- setdiff(intersect(features, colnames(d)),c("type","src","class"))
+      if("ratio.k*" %in% features)
+        features <- c(features[features!="ratio.k*"],
+                      grep("^ratio\\.k",colnames(d),value=TRUE))
+      toExclude <- grep("^-",features)
+      if(length(toExclude)==0){
+        if(length(mis <- setdiff(features, colnames(d)))>0)
+          warning("The following features were not found: ",
+                  paste(mis,collapse=", "))
+        prds <- intersect(features, colnames(d))
+      }else{
+        if(length(toExclude)!=length(features))
+          stop("Mixture of included/excluded features - use only either.")
+        prds <- setdiff(.defTrainFeatures(d), gsub("^-","",features))
+      }
+      prds <- setdiff(prds,c("type","src","class","cluster"))
     }
-    preds <- as(as.matrix(d[,prds]), "dgCMatrix")
+    if(!is.null(features)) message(paste("Features used for training:\n",
+                                   paste(prds,collapse=", ")))
+    preds <- as(as.matrix(d[,prds,drop=FALSE]), "dgCMatrix")
+
 
     if(includeSamples && !is.null(d$sample))
       preds <- cbind(preds, as(stats::model.matrix(~d$sample)[,-1,drop=FALSE],
@@ -585,7 +600,6 @@ scDblFinder <- function(
     }else{
       d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
     }
-    d$include.in.training <- includeInTrain
     max.iter <-  iter
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
@@ -594,7 +608,7 @@ scDblFinder <- function(
           doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
                               perSample=perSample,
                               returnType="call")=="doublet") |
-            (d$type=="doublet" & d$score<0.1) | !includeInTrain )
+            (d$type=="doublet" & d$score<0.1) | !d$include.in.training )
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
       d$score <- tryCatch({
@@ -645,6 +659,14 @@ scDblFinder <- function(
                         round(100*dbr,1),"%) doublets called")
   }
   d
+}
+
+.defTrainFeatures <- function(d){
+  setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
+                         "distanceToNearestDoublet", "type",
+                         "src","distanceToNearest","class",
+                         "nearestClass","cluster","sample",
+                         "include.in.training"))
 }
 
 #' @import xgboost
