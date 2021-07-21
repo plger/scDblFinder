@@ -441,6 +441,7 @@ scDblFinder <- function(
   d$nfeatures <- nfeatures
   d$src <- src
   d$cxds_score <- cxds_score
+  d$include.in.training <- inclInTrain
 
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
@@ -449,8 +450,7 @@ scDblFinder <- function(
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
-                   features=trainingFeatures,
-                   verbose=verbose, metric=metric, includeInTrain=inclInTrain,
+                   features=trainingFeatures, verbose=verbose, metric=metric,
                    filterUnidentifiable=removeUnidentifiable)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
@@ -547,8 +547,7 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         features=NULL, filterUnidentifiable=FALSE, addVals=NULL,
                         metric="logloss", eta=0.3, BPPARAM=SerialParam(),
-                        includeInTrain=TRUE, includeSamples=FALSE,
-                        perSample=TRUE, ...){
+                        includeSamples=FALSE, perSample=TRUE, ...){
   gdbr <- .gdbr(d, dbr)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
@@ -600,7 +599,7 @@ scDblFinder <- function(
     }else{
       d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
     }
-    d$include.in.training <- includeInTrain
+    includeInTrain <- d$include.in.training
     max.iter <-  iter
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
