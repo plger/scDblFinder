@@ -393,7 +393,7 @@ scDblFinder <- function(
   no <- ncol(sce) + length(wDbl)
   ado2 <- as.factor(c(rep(NA, no), as.character(ado)))
   src <- factor( rep(1:2, c(no,ncol(ad))), labels = c("real","artificial"))
-  ctype <- factor( rep(c(1,ifelse(knownUse=="positive",2,1),2),
+  ctype <- factor( rep(c(1L,ifelse(knownUse=="positive",2L,1L),2L),
                        c(ncol(sce),length(wDbl),ncol(ad))),
                    labels=c("real","doublet") )
   inclInTrain <- rep(c(TRUE,ifelse(knownUse=="positive",TRUE,FALSE),TRUE),
@@ -446,6 +446,7 @@ scDblFinder <- function(
   if(!is.null(clustCor)) d <- cbind(d, clustCor)
 
   ## classify
+  if(length(includePCs)==1) includePCs <- seq_len(includePCs)
   includePCs <- includePCs[includePCs<ncol(pca)]
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
@@ -599,7 +600,6 @@ scDblFinder <- function(
     }else{
       d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
     }
-    includeInTrain <- d$include.in.training
     max.iter <-  iter
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
@@ -608,7 +608,7 @@ scDblFinder <- function(
           doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
                               perSample=perSample,
                               returnType="call")=="doublet") |
-            (d$type=="doublet" & d$score<0.1) | !includeInTrain )
+            (d$type=="doublet" & d$score<0.1) | !d$include.in.training )
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
       d$score <- tryCatch({
