@@ -30,6 +30,7 @@ scDblFinder(
   nrounds = 0.25,
   max_depth = 5,
   iter = 2,
+  trainingFeatures = NULL,
   multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
   verbose = is.null(samples),
@@ -151,6 +152,10 @@ through cross-validation.}
 (ignored if `score` isn't based on classifiers). At each iteration, real
 cells that would be called as doublets are excluding from the training, and
 new scores are calculated. Recommended values are 1 or 2.}
+
+\item{trainingFeatures}{The features to use for training (defaults to an
+optimal selection based on benchmark datasets). To exclude features (rather
+than list those to be included), prefix them with a "-".}
 
 \item{multiSampleMode}{Either "split" (recommended if there is
 heterogeneity across samples), "singleModel", "singleModelSplitThres", or
