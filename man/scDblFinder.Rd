@@ -23,7 +23,7 @@ scDblFinder(
   propRandom = 0,
   propMarkers = 0,
   aggregateFeatures = FALSE,
-  returnType = c("sce", "table", "full"),
+  returnType = c("sce", "table", "full", "counts"),
   score = c("xgb", "weighted", "ratio"),
   processing = "default",
   metric = "logloss",

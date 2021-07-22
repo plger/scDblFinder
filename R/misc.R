@@ -244,6 +244,21 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   x
 }
 
+.checkProcArg <- function(processing){
+  if(is.factor(processing)) processing <- as.character(processing)
+  if(is.character(processing)){
+    stopifnot(length(processing)==1)
+    processing <- match.arg(processing, c("default","rawPCA","rawFeatures",
+                                          "normFeatures"))
+  }else if(!is.function(processing)){
+    stop("`processing` should either be a function")
+  }else if(!all(c("e", "dims") %in% names(formals(processing)))){
+    stop("If a function, `processing` should have at least the arguments `e` ",
+         "(count matrix) and `dims` (number of PCA dimensions required)")
+  }
+  processing
+}
+
 #' cxds2
 #'
 #' Calculates a coexpression-based doublet score using the method developed by
@@ -522,4 +537,80 @@ TFIDF <- function(x, sf=10000){
   x <- log1p(sf*(Diagonal(length(idf), x=idf) %*% tf))
   x[is.na(x)] <- 0
   x
+}
+
+
+
+#' directClassification
+#'
+#' Trains a classifier directly on the expression matrix to distinguish
+#' artificial doublets from real cells.
+#'
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
+#' counts.
+#' @param dbr The expected doublet rate. By default this is assumed to be 1\%
+#' per thousand cells captured (so 4\% among 4000 thousand cells), which is
+#' appropriate for 10x datasets. Corrections for homeotypic doublets will be
+#' performed on the given rate.
+#' @param processing Counts (real and artificial) processing. Either
+#' 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
+#' without normalization), "rawFeatures" (no normalization/dimensional
+#' reduction), "normFeatures" (uses normalized features, without PCA) or a
+#' custom function with (at least) arguments `e` (the matrix of counts) and
+#' `dims` (the desired number of dimensions), returning a named matrix with
+#' cells as rows and components as columns.
+#' @param dims The number of dimensions used.
+#' @param nrounds Maximum rounds of boosting. If NULL, will be determined
+#' through cross-validation.
+#' @param max_depth Maximum depths of each tree.
+#' @param iter A positive integer indicating the number of scoring iterations.
+#' At each iteration, real cells that would be called as doublets are excluding
+#' from the training, and new scores are calculated.
+#' @param ... Any doublet generation or pre-processing argument passed to
+#' `scDblFinder`.
+#'
+#' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
+#' with the additional `colData` column `directDoubletScore`.
+#' @export
+#'
+#' @examples
+#' sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=500)
+#' boxplot(sce$directDoubletScore~sce$type)
+directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
+                                    dims=20, nrounds=0.25, max_depth=6, ...){
+  sce <- .checkSCE(sce)
+  sce.full <- scDblFinder(sce, returnType="counts", dims=dims, dbr=dbr,
+                          processing=processing, ...)
+  e <- counts(sce.full)
+  if(is.character(processing)){
+    preds <- switch(processing,
+                    default=.defaultProcessing(e, dims=dims),
+                    rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
+                    rawFeatures=t(e),
+                    normFeatures=t(normalizeCounts(e)),
+                    stop("Unknown processing function.")
+    )
+  }else{
+    preds <- processing(e, dims=dims)
+    stopifnot(identical(row.names(preds),colnames(e)))
+  }
+  d <- data.frame( row.names=colnames(sce.full),
+                   type=sce.full$type,
+                   src=sce.full$type,
+                   score=sce.full$cxds_score/max(sce.full$cxds_score, na.rm=TRUE),
+                   cluster=sce.full$cluster )
+  d$include.in.training <- TRUE
+  rm(sce.full)
+  for(i in seq_len(iter)){
+    dT <- suppressWarnings(doubletThresholding(d, dbr=dbr, returnType="call"))
+    w <- which( d$type=="real" & dT=="doublet" )
+    message(paste0("Round ",i,": ",length(w)," excluded from training."))
+    d$score <- tryCatch({
+      fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, max_depth=max_depth)
+      predict(fit, as.matrix(preds))
+    }, error=function(e) d$score)
+  }
+  sce$directDoubletScore <- d[colnames(sce), "score"]
+  sce
 }

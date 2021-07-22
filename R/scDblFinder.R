@@ -187,7 +187,7 @@ scDblFinder <- function(
   artificialDoublets=NULL, knownDoublets=NULL, knownUse=c("discard","positive"),
   dbr=NULL, dbr.sd=NULL, nfeatures=1000, dims=20, k=NULL,
   removeUnidentifiable=TRUE, includePCs=1:5, propRandom=0, propMarkers=0,
-  aggregateFeatures=FALSE,  returnType=c("sce","table","full"),
+  aggregateFeatures=FALSE,  returnType=c("sce","table","full","counts"),
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=5, iter=2, trainingFeatures=NULL,
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
@@ -220,17 +220,7 @@ scDblFinder <- function(
   .checkPropArg(propRandom)
   .checkPropArg(dbr.sd)
   .checkPropArg(dbr, acceptNull=TRUE)
-  if(is.factor(processing)) processing <- as.character(processing)
-  if(is.character(processing)){
-    stopifnot(length(processing)==1)
-    processing <- match.arg(processing, c("default","rawPCA","rawFeatures",
-                                          "normFeatures"))
-  }else if(!is.function(processing)){
-    stop("`processing` should either be a function")
-  }else if(!all(c("e", "dims") %in% names(formals(processing)))){
-    stop("If a function, `processing` should have at least the arguments `e` ",
-         "(count matrix) and `dims` (number of PCA dimensions required)")
-  }
+  processing <- .checkProcArg(processing)
 
   ## if clusters are given, it's more efficient to do feature selection before
   ## eventually splitting the dataset
@@ -253,6 +243,7 @@ scDblFinder <- function(
     if(!(isSplitMode <- multiSampleMode=="split")) includePCs <- c()
     if(returnType=="full")
       warning("`returnType='full'` ignored when splitting by samples")
+    if(returnType!="counts") returnType <- "table"
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
     ## run scDblFinder individually
@@ -271,7 +262,7 @@ scDblFinder <- function(
                     processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers, trainingFeatures=trainingFeatures,
-                    returnType="table", threshold=isSplitMode,
+                    returnType=returnType, threshold=isSplitMode,
                     score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
                     aggregateFeatures=aggregateFeatures, ...),
@@ -279,6 +270,11 @@ scDblFinder <- function(
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
     })
+    if(returnType=="counts"){
+      ## aggregate the SCEs
+      for(s in names(d)) d[[s]]$sample <- d[[s]]
+      return(do.call(cbind, d))
+    }
     ## aggregate the property tables
     if(multiSampleMode=="split"){
       return(.scDblAddCD(sce, d))
@@ -399,8 +395,6 @@ scDblFinder <- function(
   inclInTrain <- rep(c(TRUE,ifelse(knownUse=="positive",TRUE,FALSE),TRUE),
                      c(ncol(sce),length(wDbl),ncol(ad)))
 
-  if(verbose) message("Dimensional reduction")
-
   e <- counts(sce)
   if(!is.null(wDbl)) e <- cbind(e, counts(sce.dbl))
   e <- cbind(e, ad[row.names(sce),])
@@ -409,6 +403,20 @@ scDblFinder <- function(
   lsizes <- Matrix::colSums(e)
   cxds_score <- cxds2(e, whichDbls=which(ctype==2L | !inclInTrain))
   nfeatures <- Matrix::colSums(e>0)
+
+  if(returnType=="counts"){
+    sce_out <- SingleCellExperiment(list(
+      counts=cbind(counts(sce), ad[row.names(sce),])))
+    sce_out$type <- ctype
+    sce_out$src <- src
+    sce_out$origin <- ado2
+    sce_out$cluster <- NA
+    colData(sce_out)[colnames(sce),"cluster"] <- clusters
+    sce_out$cxds_score <- cxds_score
+    return(sce_out)
+  }
+
+  if(verbose) message("Dimensional reduction")
 
   if(!is.null(clustCor) && !is.null(dim(clustCor))){
     clustCor <- .clustSpearman(e, clustCor)
@@ -665,8 +673,8 @@ scDblFinder <- function(
   setdiff(colnames(d), c("mostLikelyOrigin","originAmbiguous",
                          "distanceToNearestDoublet", "type",
                          "src","distanceToNearest","class",
-                         "nearestClass","cluster","sample",
-                         "include.in.training"))
+                         "nearestClass","cluster","sample","expected",
+                         "include.in.training","observed"))
 }
 
 #' @import xgboost
