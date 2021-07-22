@@ -56,6 +56,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
     if(!w[[method]]) stop("`d` misses the necessary columns.")
   }
   if(method=="optim"){
+    if(is.null(d$src)) d$src <- d$type
     if(!all(sort(as.character(unique(d$type)))==c("doublet","real")))
       stop("`type` should be either 'real' or 'doublet'.")
     if(is.null(d$include.in.training)) d$include.in.training <- TRUE
