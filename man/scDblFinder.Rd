@@ -8,7 +8,6 @@ scDblFinder(
   sce,
   clusters = NULL,
   samples = NULL,
-  trajectoryMode = FALSE,
   clustCor = NULL,
   artificialDoublets = NULL,
   knownDoublets = NULL,
@@ -19,7 +18,7 @@ scDblFinder(
   dims = 20,
   k = NULL,
   removeUnidentifiable = TRUE,
-  includePCs = 1:5,
+  includePCs = 10,
   propRandom = 0,
   propMarkers = 0,
   aggregateFeatures = FALSE,
@@ -28,8 +27,8 @@ scDblFinder(
   processing = "default",
   metric = "logloss",
   nrounds = 0.25,
-  max_depth = 5,
-  iter = 2,
+  max_depth = 4,
+  iter = 3,
   trainingFeatures = NULL,
   multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
@@ -43,13 +42,13 @@ scDblFinder(
 \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
 counts.}
 
-\item{clusters}{The optional cluster assignments (if omitted, will run
-clustering). This is used to make doublets more efficiently. \code{clusters}
-should either be a vector of labels for each cell, or the name of a colData
-column of \code{sce}. Alternatively, if it is a single integer, will
-determine how many clusters to create (using k-means clustering). This
-options should be used when distinct subpopulations are not expected in the
-data (e.g. trajectories).}
+\item{clusters}{The optional cluster assignments. This is used to make
+doublets more efficiently. \code{clusters} should either be a vector of
+labels for each cell, or the name of a colData column of \code{sce}.
+Alternatively, if `clusters=TRUE`, fast clustering will be performed. If
+`clusters` is a single integer, it will determine how many clusters to
+create (using k-means clustering). If `clusters` is NULL or FALSE, purely
+random artificial doublets will be generated.}
 
 \item{samples}{A vector of the same length as cells (or the name of a column
 of \code{colData(x)}), indicating to which sample each cell belongs. Here, a
@@ -60,12 +59,6 @@ represent different captures. If your samples were multiplexed using cell
 hashes, want you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
-
-\item{trajectoryMode}{Logical; whether to generate fewer doublets from cells
-that are closer to each other, for datasets with gradients rather than
-separated subpopulations. This disrupts the proportionality and is not
-anymore the recommended way of handling such datasets. See
-\code{vignette("scDblFinder")} for more details.}
 
 \item{clustCor}{Include Spearman correlations to cell type averages in the
 predictors. If `clustCor` is a matrix of cell type marker expressions (with
@@ -113,10 +106,12 @@ If omitted, a reasonable set of values is used.}
 a combination that is generally found to be unidentifiable.}
 
 \item{includePCs}{The index of principal components to include in the
-predictors (e.g. `includePCs=1:2`).}
+predictors (e.g. `includePCs=1:2`), or the number of top components to use
+(e.g. `includePCs=10`, equivalent to 1:10).}
 
 \item{propRandom}{The proportion of the artificial doublets which
-should be made of random cells (as opposed to inter-cluster combinations).}
+should be made of random cells (as opposed to inter-cluster combinations).
+If clusters is FALSE or NULL, this is ignored (and set to 1).}
 
 \item{propMarkers}{The proportion of features to select based on marker
 identification.}
@@ -128,7 +123,7 @@ will be used.)}
 
 \item{returnType}{Either "sce" (default), "table" (to return the table of
 cell attributes including artificial doublets), or "full" (returns an SCE
-object containing both the real and artificial cells.}
+object containing both the real and artificial cells).}
 
 \item{score}{Score to use for final classification.}
 
@@ -144,7 +139,9 @@ cells as rows and components as columns.}
 'logloss', 'auc', 'aucpr').}
 
 \item{nrounds}{Maximum rounds of boosting. If NULL, will be determined
-through cross-validation.}
+through cross-validation. If a number <=1, will used the best
+cross-validation round minus `nrounds` times the standard deviation of the
+classification error.}
 
 \item{max_depth}{Maximum depths of each tree.}
 
@@ -154,8 +151,8 @@ cells that would be called as doublets are excluding from the training, and
 new scores are calculated. Recommended values are 1 or 2.}
 
 \item{trainingFeatures}{The features to use for training (defaults to an
-optimal selection based on benchmark datasets). To exclude features (rather
-than list those to be included), prefix them with a "-".}
+optimal pre-selection based on benchmark datasets). To exclude features
+(rather than list those to be included), prefix them with a "-".}
 
 \item{multiSampleMode}{Either "split" (recommended if there is
 heterogeneity across samples), "singleModel", "singleModelSplitThres", or
@@ -183,15 +180,18 @@ Identification of heterotypic (or neotypic) doublets in single-cell RNAseq
 using cluster-based generation of artificial doublets.
 }
 \details{
-This function generates artificial doublets from clusters of real cells,
-evaluates their prevalence in the neighborhood of each cells, and uses this
-along with additional features to classify doublets. The approach is
+This function generates artificial doublets from real cells, evaluates their
+prevalence in the neighborhood of each cells, and uses this along with
+additional cell-level features to classify doublets. The approach is
 complementary to doublets identified via cell hashes and SNPs in multiplexed
 samples: the latter can identify doublets formed by cells of the same type
 from two samples, which are nearly undistinguishable from real cells
 transcriptionally, but cannot identify doublets made by cells of the
 same sample. See \code{vignette("scDblFinder")} for more details on the
 method.
+
+The `clusters` and `propRandom` argument determines whether the artificial
+doublets are generated between clusters or randomly.
 
 When multiple samples/captures are present, they should be specified using
 the \code{samples} argument. In this case, we recommend the use of
@@ -236,7 +236,7 @@ vignette for more detail.
 \examples{
 library(SingleCellExperiment)
 sce <- mockDoubletSCE()
-sce <- scDblFinder(sce, dbr=0.1)
+sce <- scDblFinder(sce)
 table(truth=sce$type, call=sce$scDblFinder.class)
 
 }
