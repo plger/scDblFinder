@@ -20,7 +20,7 @@
 #'
 #' @examples
 #' sce <- mockDoubletSCE(rep(200,5))
-#' sce <- scDblFinder(sce, artificialDoublets=500)
+#' sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #' clusterStickiness(sce)
 clusterStickiness <- function(x, type=c("quasibinomial","nbinom","binomial","poisson"),
                               inclDiff=NULL, verbose=TRUE){
@@ -95,7 +95,7 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom","binomial","poi
 #' @importFrom stats chisq.test pnbinom pnorm ppois fitted
 #' @examples
 #' sce <- mockDoubletSCE()
-#' sce <- scDblFinder(sce, artificialDoublets=500)
+#' sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #' doubletPairwiseEnrichment(sce)
 doubletPairwiseEnrichment <- function(
   x, lower.tail=FALSE, sampleWise=FALSE,

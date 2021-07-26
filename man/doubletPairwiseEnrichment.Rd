@@ -41,6 +41,6 @@ the cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE()
-sce <- scDblFinder(sce, artificialDoublets=500)
+sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 doubletPairwiseEnrichment(sce)
 }
