@@ -46,8 +46,6 @@
 getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
-  }else if(is(x,"list")){
-    clusters <- x$k
   }else{
     clusters <- x
   }
@@ -56,17 +54,18 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
 
   cs <- table(clusters)/ncells
-  eg <- expand.grid(seq_along(cs), seq_along(cs))
-  eg <- eg[eg[,1]<=eg[,2],]
-  expected <- apply(eg,1, FUN=function(x){
-    cs[[x[[1]]]]*cs[[x[[2]]]]
-  })
-  expected <- dbr*ncells*expected/sum(expected)
-  names(expected) <- apply(eg,1,FUN=function(x){
-    paste(names(cs)[x], collapse="+")
-  })
-  if(only.heterotypic) expected <- expected[which(eg[,1]!=eg[,2])]
-  expected
+  expected <- (cs %*% t(cs)) * dbr * ncells
+  expected <- data.frame( type1=rep(row.names(expected),ncol(expected)),
+                          type2=rep(colnames(expected),each=nrow(expected)),
+                          expected=as.numeric(expected) )
+  if(only.heterotypic){
+    expected <- expected[expected[,1]<expected[,2],]
+    expected$expected <- 2*expected$expected
+  }else{
+    expected[,1:2] <- t(apply(expected[,1:2],1,FUN=sort))
+    expected <- aggregate(expected[,3,drop=FALSE], by=expected[,1:2], FUN=sum)
+  }
+  setNames(expected$expected, paste(expected[,1],expected[,2],sep="+"))
 }
 
 .castorigins <- function(e, val=NULL){
@@ -356,7 +355,6 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   sum(dbr*sl)/sum(sl)
 }
 
-
 #' propHomotypic
 #'
 #' Computes the proportion of pairs expected to be made of elements from the same cluster.
@@ -375,15 +373,48 @@ propHomotypic <- function(clusters){
   sum(diag(p))/sum(p)
 }
 
-.totExpectedHeteroDoublets <- function(clusters, dbr=NULL){
-  if(is.factor(clusters)) clusters <- droplevels(clusters)
-  ncells <- length(clusters)
-  if(is.null(dbr)) dbr <- (0.01*ncells/1000)
-  p <- as.numeric(table(clusters)/ncells)
-  p <- (p %*% t(p)) * ncells*dbr
-  diag(p) <- 0
-  sum(p)
+
+.defaultProcessing <- function(e, dims=NULL, doNorm=NULL){
+  # skip normalization if data is too large
+  if(is.null(doNorm)) doNorm <- ncol(e)<=50000
+  if(doNorm){
+    tryCatch({
+      e <- normalizeCounts(e)
+    }, error=function(er){
+      warning("Error in calculating norm factors:", er)
+    })
+  }
+  if(is.null(dims)) dims <- 20
+  pca <- scater::calculatePCA(e, ncomponents=dims, subset_row=seq_len(nrow(e)),
+                              ntop=nrow(e), BSPARAM=BiocSingular::IrlbaParam())
+  if(is.list(pca)) pca <- pca$x
+  row.names(pca) <- colnames(e)
+  pca
 }
+
+.checkSCE <- function(sce){
+  if(is(sce, "SummarizedExperiment")){
+    sce <- as(sce, "SingleCellExperiment")
+  }else if(!is(sce, "SingleCellExperiment")){
+    if(is.null(dim(sce)) || any(sce<0))
+      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    message("Assuming the input to be a matrix of counts or expected counts.")
+    sce <- SingleCellExperiment(list(counts=sce))
+  }
+  if( !("counts" %in% assayNames(sce)) )
+    stop("`sce` should have an assay named 'counts'")
+  counts(sce) <- as(counts(sce),"dgCMatrix")
+  if(min(colSums(counts(sce)))<200)
+    warning("Some cells in `sce` have an extremely low read counts; note ",
+            "that these could trigger errors and might best be filtered out")
+  if(is.null(colnames(sce)))
+    colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(is.null(row.names(sce)))
+    row.names(sce) <- paste0("f",seq_len(nrow(sce)))
+  sce
+}
+
 
 
 # procedure to 0-1 rescale scores across samples so that the mins, maxs, and trimmed mean
@@ -614,3 +645,4 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
   sce$directDoubletScore <- d[colnames(sce), "score"]
   sce
 }
+

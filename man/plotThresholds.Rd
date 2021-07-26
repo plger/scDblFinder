@@ -4,13 +4,7 @@
 \alias{plotThresholds}
 \title{plotThresholds}
 \usage{
-plotThresholds(
-  d,
-  ths = (0:100)/100,
-  dbr = NULL,
-  dbr.sd = 0.015,
-  do.plot = TRUE
-)
+plotThresholds(d, ths = (0:100)/100, dbr = NULL, dbr.sd = NULL, do.plot = TRUE)
 }
 \arguments{
 \item{d}{A data.frame of cell properties, with each row representing a cell,
@@ -23,7 +17,8 @@ as produced by `scDblFinder(..., returnType="table")`.}
 \item{dbr.sd}{The standard deviation of the doublet rate, representing the
 uncertainty in the estimate.}
 
-\item{do.plot}{Logical; whether to plot the data.}
+\item{do.plot}{Logical; whether to plot the data (otherwise will return the
+underlying data.frame).}
 }
 \value{
 A ggplot, or a data.frame if `do.plot==FALSE`.
