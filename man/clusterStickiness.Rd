@@ -13,7 +13,7 @@ clusterStickiness(
 }
 \arguments{
 \item{x}{A table of double statistics, or a SingleCellExperiment on which
-\link{scDblFinder} was run.}
+\link{scDblFinder} was run using the cluster-based approach.}
 
 \item{type}{The type of test to use (quasibinomial recommended).}
 
