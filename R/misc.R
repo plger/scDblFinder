@@ -210,7 +210,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   sce$cluster <- factor(sce$origin, c(names(ncells),names(expected)))
   names(n) <- n <- levels(sce$cluster)
   n[paste(names(ncells),names(ncells),sep="+")] <- names(ncells)
-  levels(sce$cluster) <- as.character(n)
+  levels(sce$cluster) <- gsub("\\+.*","",as.character(n))
   sce$cluster <- droplevels(sce$cluster)
 
   colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
