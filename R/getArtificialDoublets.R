@@ -82,7 +82,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
     if(is.null(clusters)){
       ad.m <- createDoublets(x, ad, adjustSize=FALSE, resamp=resamp,
                              halfSize=halfSize, prefix="rDbl.")
-      oc <- NULL
+      oc <- rep(NA,ncol(ad.m))
     }else{
       oc1 <- matrix(clusters[as.numeric(ad)],ncol=2)
       ad.m <- createDoublets(x, ad, clusters=clusters, adjustSize=adjustSize,

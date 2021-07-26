@@ -52,6 +52,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   clusters <- droplevels(as.factor(clusters))
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
+  if(length(unique(clusters))==1) return(ncells*dbr)
 
   cs <- table(clusters)/ncells
   expected <- (cs %*% t(cs)) * dbr * ncells
@@ -606,7 +607,7 @@ TFIDF <- function(x, sf=10000){
 #' @export
 #'
 #' @examples
-#' sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=500)
+#' sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=1)
 #' boxplot(sce$directDoubletScore~sce$type)
 directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
                                     dims=20, nrounds=0.25, max_depth=6, ...){

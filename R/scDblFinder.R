@@ -406,7 +406,7 @@ scDblFinder <- function(
     sce_out$src <- src
     sce_out$origin <- ado2
     sce_out$cluster <- NA
-    colData(sce_out)[colnames(sce),"cluster"] <- clusters
+    if(!is.null(clusters)) colData(sce_out)[colnames(sce),"cluster"] <- clusters
     sce_out$cxds_score <- cxds_score
     return(sce_out)
   }
