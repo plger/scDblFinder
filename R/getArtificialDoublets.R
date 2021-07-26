@@ -102,7 +102,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
     ad.m <- ad.m$counts
     n <- ceiling(n*(1-propRandom))
   }else{
-    ad.m <- x[,c(),drop=FALSE]
+    ad.m <- as(as.matrix(x[,1:2])[,c(),drop=FALSE], "dgCMatrix")
     oc <- character()
   }
 
