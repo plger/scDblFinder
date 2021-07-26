@@ -44,17 +44,15 @@ sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
 table(sce$scDblFinder.class)
 ```
 
+### Cluster-based detection
+
+`scDblFinder` has two main modes for generating artificial doublets: a random one (`clusters=FALES`, now default) and a cluster-based one (`clusters=TRUE` or providing your own clusters - the approach from previous versions).
+In practice, we observed that both approaches perform well (and better than alternatives).
+We suggest using the cluster-based approach when the datasets are segregated into clear clusters, and the random one for the rest (e.g. developmental trajectories).
+
 ### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the score, but a very strong impact on where the threshold will be placed (the thresholding procedure simultaneously minimizes classification error and departure from the expected doublet rate). It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
-
-### Providing your own clustering
-
-Contrarily to other methods also based on the generation of artificial doublets, `scDblFinder` does not generate them in an entirely random fashion, but specifically generates inter-cluster doublets. This also means that, for putative doublets among the real cells, `scDblFinder` can guess from what clusters their originate. To make this information easier to interpret, you may provide your own clusters (though the `clusters` argument) rather than use the fast internal procedure to determine them. It is important that subpopulations are not misrepresented as belonging to the same cluster, and for this reason, we favor over-clustering for this purpose. For more detail, or for application to datasets containing continuous gradients (e.g. trajectories) rather than distinct subpopulations, see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html).
-
-### Including known doublets
-
-If you already know of some doublets in the data (e.g. identified via cell hashes and SNPs in multiplexed samples), providing this information through the `knownDoublets` can enable `scDblFinder` to identify similar doublets. See the `knownUse` param for the two alternative ways to use this information.
+The expected proportion of doublets has little impact on the score, but a very strong impact on where the threshold will be placed (the thresholding procedure simultaneously minimizes classification error and departure from the expected doublet rate). It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly.
 
 ## Single-cell ATACseq
 

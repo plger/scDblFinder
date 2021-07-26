@@ -46,27 +46,31 @@
 getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
-  }else if(is(x,"list")){
-    clusters <- x$k
   }else{
     clusters <- x
   }
   clusters <- droplevels(as.factor(clusters))
+  lvls <- levels(clusters)
+  if(all(grepl("^[0-9]*$",lvls))) lvls <- as.integer(lvls)
+  clusters <- as.integer(clusters)
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
+  if(length(unique(clusters))==1) return(ncells*dbr)
 
   cs <- table(clusters)/ncells
-  eg <- expand.grid(seq_along(cs), seq_along(cs))
-  eg <- eg[eg[,1]<=eg[,2],]
-  expected <- apply(eg,1, FUN=function(x){
-    cs[[x[[1]]]]*cs[[x[[2]]]]
-  })
-  expected <- dbr*ncells*expected/sum(expected)
-  names(expected) <- apply(eg,1,FUN=function(x){
-    paste(names(cs)[x], collapse="+")
-  })
-  if(only.heterotypic) expected <- expected[which(eg[,1]!=eg[,2])]
-  expected
+  expected <- (cs %*% t(cs)) * dbr * ncells
+  expected <- data.frame( type1=rep(seq_along(lvls),ncol(expected)),
+                          type2=rep(seq_along(lvls),each=nrow(expected)),
+                          expected=as.numeric(expected) )
+  if(only.heterotypic){
+    expected <- expected[expected[,1]<expected[,2],]
+    expected$expected <- 2*expected$expected
+  }else{
+    expected[,1:2] <- t(apply(expected[,1:2], 1, FUN=sort))
+    expected <- aggregate(expected[,3,drop=FALSE], by=expected[,1:2], FUN=sum)
+  }
+  ids <- matrix(lvls[as.integer(as.matrix(expected[,1:2]))],ncol=2)
+  setNames(expected$expected, paste(ids[,1], ids[,2], sep="+"))
 }
 
 .castorigins <- function(e, val=NULL){
@@ -210,7 +214,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   sce$cluster <- factor(sce$origin, c(names(ncells),names(expected)))
   names(n) <- n <- levels(sce$cluster)
   n[paste(names(ncells),names(ncells),sep="+")] <- names(ncells)
-  levels(sce$cluster) <- as.character(n)
+  levels(sce$cluster) <- gsub("\\+.*","",as.character(n))
   sce$cluster <- droplevels(sce$cluster)
 
   colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
@@ -242,6 +246,21 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   if(is.null(x) || length(x)!=1 || !is.numeric(x) || x>1 || x<0)
     stop("`",arg,"` should be a positive value between 0 and 1.")
   x
+}
+
+.checkProcArg <- function(processing){
+  if(is.factor(processing)) processing <- as.character(processing)
+  if(is.character(processing)){
+    stopifnot(length(processing)==1)
+    processing <- match.arg(processing, c("default","rawPCA","rawFeatures",
+                                          "normFeatures"))
+  }else if(!is.function(processing)){
+    stop("`processing` should either be a function")
+  }else if(!all(c("e", "dims") %in% names(formals(processing)))){
+    stop("If a function, `processing` should have at least the arguments `e` ",
+         "(count matrix) and `dims` (number of PCA dimensions required)")
+  }
+  processing
 }
 
 #' cxds2
@@ -341,7 +360,6 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
   sum(dbr*sl)/sum(sl)
 }
 
-
 #' propHomotypic
 #'
 #' Computes the proportion of pairs expected to be made of elements from the same cluster.
@@ -360,15 +378,48 @@ propHomotypic <- function(clusters){
   sum(diag(p))/sum(p)
 }
 
-.totExpectedHeteroDoublets <- function(clusters, dbr=NULL){
-  if(is.factor(clusters)) clusters <- droplevels(clusters)
-  ncells <- length(clusters)
-  if(is.null(dbr)) dbr <- (0.01*ncells/1000)
-  p <- as.numeric(table(clusters)/ncells)
-  p <- (p %*% t(p)) * ncells*dbr
-  diag(p) <- 0
-  sum(p)
+
+.defaultProcessing <- function(e, dims=NULL, doNorm=NULL){
+  # skip normalization if data is too large
+  if(is.null(doNorm)) doNorm <- ncol(e)<=50000
+  if(doNorm){
+    tryCatch({
+      e <- normalizeCounts(e)
+    }, error=function(er){
+      warning("Error in calculating norm factors:", er)
+    })
+  }
+  if(is.null(dims)) dims <- 20
+  pca <- scater::calculatePCA(e, ncomponents=dims, subset_row=seq_len(nrow(e)),
+                              ntop=nrow(e), BSPARAM=BiocSingular::IrlbaParam())
+  if(is.list(pca)) pca <- pca$x
+  row.names(pca) <- colnames(e)
+  pca
 }
+
+.checkSCE <- function(sce){
+  if(is(sce, "SummarizedExperiment")){
+    sce <- as(sce, "SingleCellExperiment")
+  }else if(!is(sce, "SingleCellExperiment")){
+    if(is.null(dim(sce)) || any(sce<0))
+      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    message("Assuming the input to be a matrix of counts or expected counts.")
+    sce <- SingleCellExperiment(list(counts=sce))
+  }
+  if( !("counts" %in% assayNames(sce)) )
+    stop("`sce` should have an assay named 'counts'")
+  counts(sce) <- as(counts(sce),"dgCMatrix")
+  if(min(colSums(counts(sce)))<200)
+    warning("Some cells in `sce` have an extremely low read counts; note ",
+            "that these could trigger errors and might best be filtered out")
+  if(is.null(colnames(sce)))
+    colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(is.null(row.names(sce)))
+    row.names(sce) <- paste0("f",seq_len(nrow(sce)))
+  sce
+}
+
 
 
 # procedure to 0-1 rescale scores across samples so that the mins, maxs, and trimmed mean
@@ -523,3 +574,80 @@ TFIDF <- function(x, sf=10000){
   x[is.na(x)] <- 0
   x
 }
+
+
+
+#' directClassification
+#'
+#' Trains a classifier directly on the expression matrix to distinguish
+#' artificial doublets from real cells.
+#'
+#' @param sce A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}},
+#' \code{\link[SingleCellExperiment]{SingleCellExperiment-class}}, or array of
+#' counts.
+#' @param dbr The expected doublet rate. By default this is assumed to be 1\%
+#' per thousand cells captured (so 4\% among 4000 thousand cells), which is
+#' appropriate for 10x datasets. Corrections for homeotypic doublets will be
+#' performed on the given rate.
+#' @param processing Counts (real and artificial) processing. Either
+#' 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
+#' without normalization), "rawFeatures" (no normalization/dimensional
+#' reduction), "normFeatures" (uses normalized features, without PCA) or a
+#' custom function with (at least) arguments `e` (the matrix of counts) and
+#' `dims` (the desired number of dimensions), returning a named matrix with
+#' cells as rows and components as columns.
+#' @param dims The number of dimensions used.
+#' @param nrounds Maximum rounds of boosting. If NULL, will be determined
+#' through cross-validation.
+#' @param max_depth Maximum depths of each tree.
+#' @param iter A positive integer indicating the number of scoring iterations.
+#' At each iteration, real cells that would be called as doublets are excluding
+#' from the training, and new scores are calculated.
+#' @param ... Any doublet generation or pre-processing argument passed to
+#' `scDblFinder`.
+#'
+#' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment-class}}
+#' with the additional `colData` column `directDoubletScore`.
+#' @export
+#'
+#' @examples
+#' sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=1)
+#' boxplot(sce$directDoubletScore~sce$type)
+directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
+                                    dims=20, nrounds=0.25, max_depth=6, ...){
+  sce <- .checkSCE(sce)
+  sce.full <- scDblFinder(sce, returnType="counts", dims=dims, dbr=dbr,
+                          processing=processing, ...)
+  e <- counts(sce.full)
+  if(is.character(processing)){
+    preds <- switch(processing,
+                    default=.defaultProcessing(e, dims=dims),
+                    rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
+                    rawFeatures=t(e),
+                    normFeatures=t(normalizeCounts(e)),
+                    stop("Unknown processing function.")
+    )
+  }else{
+    preds <- processing(e, dims=dims)
+    stopifnot(identical(row.names(preds),colnames(e)))
+  }
+  d <- data.frame( row.names=colnames(sce.full),
+                   type=sce.full$type,
+                   src=sce.full$type,
+                   score=sce.full$cxds_score/max(sce.full$cxds_score, na.rm=TRUE),
+                   cluster=sce.full$cluster )
+  d$include.in.training <- TRUE
+  rm(sce.full)
+  for(i in seq_len(iter)){
+    dT <- suppressWarnings(doubletThresholding(d, dbr=dbr, returnType="call"))
+    w <- which( d$type=="real" & dT=="doublet" )
+    message(paste0("Round ",i,": ",length(w)," excluded from training."))
+    d$score <- tryCatch({
+      fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, max_depth=max_depth)
+      predict(fit, as.matrix(preds))
+    }, error=function(e) d$score)
+  }
+  sce$directDoubletScore <- d[colnames(sce), "score"]
+  sce
+}
+

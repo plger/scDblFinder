@@ -18,7 +18,8 @@ plotDoubletMap(
 )
 }
 \arguments{
-\item{sce}{A SingleCellExperiment object on which `scDblFinder` has been run.}
+\item{sce}{A SingleCellExperiment object on which `scDblFinder` has been run
+with the cluster-based approach.}
 
 \item{colorBy}{Determines the color mapping. Either "enrichment" (for
 log2-enrichment over expectation) or any column of

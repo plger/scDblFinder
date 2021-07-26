@@ -15,7 +15,7 @@ doubletPairwiseEnrichment(
 }
 \arguments{
 \item{x}{A table of double statistics, or a SingleCellExperiment on which
-scDblFinder was run.}
+scDblFinder was run using the cluster-based approach.}
 
 \item{lower.tail}{Logical; defaults to FALSE to test enrichment (instead of
 depletion).}
@@ -41,6 +41,6 @@ the cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE()
-sce <- scDblFinder(sce, artificialDoublets=500)
+sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 doubletPairwiseEnrichment(sce)
 }

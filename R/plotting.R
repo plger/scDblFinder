@@ -3,7 +3,8 @@
 #' Plots a heatmap of observed versus expected doublets.
 #' Requires the `ComplexHeatmap` package.
 #'
-#' @param sce A SingleCellExperiment object on which `scDblFinder` has been run.
+#' @param sce A SingleCellExperiment object on which `scDblFinder` has been run
+#' with the cluster-based approach.
 #' @param colorBy Determines the color mapping. Either "enrichment" (for
 #' log2-enrichment over expectation) or any column of
 #' `metadata(sce)$scDblFinder.stats`
@@ -80,23 +81,33 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #' @param dbr The expected (mean) doublet rate.
 #' @param dbr.sd The standard deviation of the doublet rate, representing the
 #' uncertainty in the estimate.
-#' @param do.plot Logical; whether to plot the data.
+#' @param do.plot Logical; whether to plot the data (otherwise will return the
+#' underlying data.frame).
 #'
 #' @return A ggplot, or a data.frame if `do.plot==FALSE`.
 #' @export
-plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=0.015,
+plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=NULL,
                            do.plot=TRUE){
-  dbr <- .gdbr(d,dbr)
+  ths <- vapply(ths, FUN.VALUE=numeric(1), acceptNull=FALSE, FUN=.checkPropArg)
+  dbr <- .checkPropArg(dbr)
+  dbr <- .gdbr(d, .estimateHeterotypicDbRate(d, dbr=dbr))
+  stopifnot(all(c("score","type","src") %in% colnames(d)))
+  if(is.null(dbr.sd)) dbr.sd <- mean(0.4*dbr)
   o <- .optimThreshold(d, dbr, dbr.sd, ths=ths)
+  o$dev[o$dev>1] <- 1
+  o$cost <- o$cost/3
+  o$cost[o$cost>1] <- 1
   if(isFALSE(do.plot)) return(o)
+  o$FDR <- NULL
+  o2 <- data.frame(threshold=rep(o$threshold,ncol(o)-1),
+                   variable=factor(rep(colnames(o)[-1],each=nrow(o)),
+                                   colnames(o)[-1]),
+                   value=as.numeric(as.matrix(o[,-1])))
   th <- .optimThreshold(d, dbr, dbr.sd)
-  ggplot2::ggplot(o, aes(threshold, FNR)) +
-    ggplot2::geom_line(size=1.2, colour="red", alpha=0.8) +
-    ggplot2::geom_line(aes(y=FDR), size=1.2, colour="blue", alpha=0.8) +
-    ggplot2::geom_line(aes(y=FDR), size=1.2, colour="blue", alpha=0.8) +
-    ggplot2::geom_line(aes(y=dev), size=1.2, colour="gray", alpha=0.8) +
-    ggplot2::geom_line(aes(y=cost), size=1.2, colour="black") +
+  cols <- c("FPR"="blue", "dev"="gray", "cost"="black", FNR="red", FDR="orange")
+  ggplot2::ggplot(o2, ggplot2::aes(threshold, value, colour=variable)) +
+    ggplot2::geom_line(size=1.3) +
+    ggplot2::scale_color_manual(values=cols) +
     ggplot2::geom_vline(xintercept=th, linetype="dashed") +
-    ggplot2::ylim(c(0,1)) +
-    ggplot2::annotate("text", x=th, y=1, hjust = -0.1, label=round(th,3))
+    ggplot2::annotate("text", x=th, y=Inf, vjust=1, hjust = -0.1, label=round(th,3))
 }

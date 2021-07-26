@@ -7,7 +7,7 @@
 #'
 #'
 #' @param x A table of double statistics, or a SingleCellExperiment on which
-#' \link{scDblFinder} was run.
+#' \link{scDblFinder} was run using the cluster-based approach.
 #' @param type The type of test to use (quasibinomial recommended).
 #' @param inclDiff Logical; whether to include the difficulty in the model. If
 #' NULL, will be used only if there is a significant trend with the enrichment.
@@ -20,14 +20,17 @@
 #'
 #' @examples
 #' sce <- mockDoubletSCE(rep(200,5))
-#' sce <- scDblFinder(sce, artificialDoublets=500)
+#' sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #' clusterStickiness(sce)
 clusterStickiness <- function(x, type=c("quasibinomial","nbinom","binomial","poisson"),
                               inclDiff=NULL, verbose=TRUE){
   type <- match.arg(type)
   if(is(x,"SingleCellExperiment")){
     x <- metadata(x)$scDblFinder.stats
+    if(is.null(x)) stop("No doublet origin statistics; was scDblFinder run ",
+                        "with the cluster-based approach?")
   }
+  stopifnot(all(c("combination","observed","expected") %in% colnames(x)))
 
   if(is.null(inclDiff)) inclDiff <- length(unique(x$combination))>15
 
@@ -76,7 +79,7 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom","binomial","poi
 #' the cluster labels match across samples.
 #'
 #' @param x A table of double statistics, or a SingleCellExperiment on which
-#' scDblFinder was run.
+#' scDblFinder was run using the cluster-based approach.
 #' @param lower.tail Logical; defaults to FALSE to test enrichment (instead of
 #' depletion).
 #' @param sampleWise Logical; whether to perform tests sample-wise in multi-sample
@@ -92,7 +95,7 @@ clusterStickiness <- function(x, type=c("quasibinomial","nbinom","binomial","poi
 #' @importFrom stats chisq.test pnbinom pnorm ppois fitted
 #' @examples
 #' sce <- mockDoubletSCE()
-#' sce <- scDblFinder(sce, artificialDoublets=500)
+#' sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #' doubletPairwiseEnrichment(sce)
 doubletPairwiseEnrichment <- function(
   x, lower.tail=FALSE, sampleWise=FALSE,
@@ -100,7 +103,13 @@ doubletPairwiseEnrichment <- function(
   inclDiff=TRUE, verbose=TRUE){
 
   type <- match.arg(type)
-  if(is(x,"SingleCellExperiment")) x <- metadata(x)$scDblFinder.stats
+  if(is(x,"SingleCellExperiment")){
+    x <- metadata(x)$scDblFinder.stats
+    if(is.null(x)) stop("No doublet origin statistics; was scDblFinder run ",
+                        "with the cluster-based approach?")
+  }
+  stopifnot(all(c("combination","observed","expected") %in% colnames(x)))
+
   if("difficulty" %in% colnames(x) && inclDiff){
     theta <- .getThetaDist(x$observed, x$expected, verbose=verbose)
     mod <- glm(x$observed~0+offset(log(x$expected))+log(x$difficulty),

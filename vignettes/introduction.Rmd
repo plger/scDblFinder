@@ -39,7 +39,14 @@ The `recoverDoublets` method is meant to be used when some doublets are already 
 
 ## scDblFinder
 
-The `scDblFinder` method combines both known doublets (if available) and cluster-based artificial doublets to identify doublets. The approach builds and improves on a variety of earlier efforts, and in addition tries to identify the origins of the putative doublets. See [scDblFinder](scDblFinder.html) for more information.
+The `scDblFinder` method combines both known doublets (if available) and cluster-based artificial doublets to identify doublets. The approach builds and improves on a variety of earlier efforts, and is at present the most accurate approach included in this package. See [scDblFinder](scDblFinder.html) for more information.
+
+## directDblClassification
+
+The `directDblClassification` method identifies doublets by training a classifier directly on gene expression.
+This follows the same procedure as `scDblFinder` for doublet generation and iterative training, but skips the _k_-nearest neighbor step and directly uses the matrix of real cells and artificial doublets.
+This is computationally more intensive and generally leads to worse predictions than `scDblFinder`, and it is included chiefly for comparative purposes.
+See `?directDblClassification` for more information.
 
 ## findDoubletClusters
 

@@ -38,14 +38,17 @@
 #'
 #' @importFrom stats mad qnorm setNames
 #' @export
-doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.1,
+doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, stringency=0.5, p=0.1,
                                  method=c("auto","optim","dbr","griffiths"),
                                  perSample=TRUE, returnType=c("threshold","call")){
   method <- match.arg(method)
   returnType <- match.arg(returnType)
+  if(is.null(d$src)) d$src <- d$type
+  if(is.null(dbr.sd)) dbr.sd <- mean(0.4*.gdbr(d,dbr))
+  dbr <- .estimateHeterotypicDbRate(d, .checkPropArg(dbr))
   if(!is.data.frame(d) && !is(d,"DFrame"))
     stop("`d` should be a data.frame with minimally the 'score' column.")
-  conds <- list("optim"=c("cluster","type","score"),
+  conds <- list("optim"=c("type","score"),
                 "dbr"=c("score"),
                 "griffiths"=c("score"))
   w <- vapply(conds, FUN.VALUE=logical(1), FUN=function(x) all(x %in% colnames(d)))
@@ -56,6 +59,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
     if(!w[[method]]) stop("`d` misses the necessary columns.")
   }
   if(method=="optim"){
+    if(is.null(d$cluster)) d$cluster <- 1L
     if(!all(sort(as.character(unique(d$type)))==c("doublet","real")))
       stop("`type` should be either 'real' or 'doublet'.")
     if(is.null(d$include.in.training)) d$include.in.training <- TRUE
@@ -67,13 +71,8 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
           stop("The names of `dbr` do not correspond to samples of `d`")
       }
       th <- sapply(setNames(names(si),names(si)), FUN=function(s){
-        if(is.null(dbr)){
-          dbr <- 0.01*sum(d$type[si[[s]]]=="real",na.rm=TRUE)/1000
-        }else{
-          dbr <- dbr[[s]]
-        }
         .optimThreshold(d[si[[s]],c("type","src","score","cluster","include.in.training")],
-                        dbr=dbr, dbr.sd=dbr.sd, stringency=stringency)
+                        dbr=dbr[[s]], dbr.sd=dbr.sd, stringency=stringency)
       })
       ret <- as.factor(d$score > th[d$sample])
     }else{
@@ -84,8 +83,6 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   }else{
     if(!is.null(d$src)) d <- d[d$src=="real",]
     if(method=="dbr"){
-      if(!is.null(d$cluster))
-        dbr <- sum(getExpectedDoublets(d$cluster, dbr=dbr))/nrow(d)
       th <- quantile(d$score, 1-dbr)
       if(returnType=="threshold") return(th)
       ret <- as.factor(d$score>th)
@@ -103,7 +100,8 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
       if(returnType=="threshold"){
         return(qnorm(p, mean=meds, sd=mad, lower.tail=FALSE))
       }else{
-        d$p <- pnorm(d$score, mean=meds[d$sample], sd=mad[d$sample], lower.tail=FALSE)
+        d$p <- pnorm(d$score, mean=meds[d$sample], sd=mad[d$sample],
+                     lower.tail=FALSE)
         ret <- as.factor(d$p < p)
       }
     }else{
@@ -114,30 +112,22 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   return(ret)
 }
 
-.optimThreshold <- function(d, dbr, dbr.sd=NULL, ths=NULL, stringency=0.5,devPerSample=FALSE){
-  if(!(stringency > 0) || !(stringency<1)) stop("`stringency` should be >0 and <1.")
+# dbr should be already corrected for homotypy
+.optimThreshold <- function(d, dbr=NULL, dbr.sd=NULL, ths=NULL, stringency=0.5){
+  if(!(stringency > 0) || !(stringency<1))
+    stop("`stringency` should be >0 and <1.")
+  if(is.null(dbr)) dbr <- .gdbr(d, dbr=.estimateHeterotypicDbRate(d))
   if(!is.null(dbr.sd)) dbr <- c(max(0,dbr-dbr.sd), min(1,dbr+dbr.sd))
+  if(is.null(d$cluster)) d$cluster <- 1L
   wR <- which(d$src=="real")
-  if(devPerSample && !is.null(d$sample)){
-    si <- split(wR,d$sample[wR])
-    expected <- lapply(si, FUN=function(i){
-      vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
-      .totExpectedHeteroDoublets(d$cluster[i], dbr=x)) })
-  }else{
-    expected <- vapply(dbr, FUN.VALUE=numeric(1), FUN=function(x)
-    .totExpectedHeteroDoublets(d$cluster[wR], dbr=x))
-  }
+  expected <- dbr*length(wR)
   if(!is.logical(d$type)) d$type <- d$type=="real"
   fdr.include <- which(d$include.in.training)
-  eFN <- sum(grepl("^rDbl\\.",row.names(d)))*propHomotypic(d$cluster[d$src=="real"])
+  eFN <- sum(grepl("^rDbl\\.",row.names(d))) *
+    propHomotypic(d$cluster[d$src=="real"])
+  if(length(unique(d$cluster))==1) eFN <- 0
   totfn <- function(x){
-    if(!devPerSample || is.null(d$sample)){
-      edev <- .prop.dev(d$type,d$score,expected,x)^2
-    }else{
-      edev <- mean(sapply(names(expected), FUN=function(e){
-        .prop.dev(d$type[si[[e]]],d$score[si[[e]]],expected[[e]],x)^2
-      }))
-    }
+    edev <- .prop.dev(d$type,d$score,expected,x)^2
     y <- edev + 2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
     if(!is.null(fdr.include))
       y <- y + .FPR(d$type[fdr.include], d$score[fdr.include], x)*2*stringency
@@ -243,4 +233,21 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=0.015, stringency=0.5, p=0.
   })
   out <- names(out)[which(out)]
   d[d$src!="artificial" | !(d$mostLikelyOrigin %in% out),]
+}
+
+.estimateHeterotypicDbRate <- function(d, dbr=NULL){
+  if(!is.null(d$sample)){
+    sd <- split(d[,setdiff(colnames(d),"sample")],d$sample)
+    if(length(dbr)==1) dbr <- rep(dbr,length(sd))
+    return(unlist(mapply(d=sd, dbr=dbr, FUN=.estimateHeterotypicDbRate)))
+  }
+  dbr <- .gdbr(d, dbr=dbr)
+  if(is.null(d$cluster)){
+    th <- sum(d$src=="artificial")/nrow(d)
+    prop.homo <- sum(d$src=="artificial" & d$score<th)/sum(d$src=="artificial")
+    return(dbr * (1-prop.homo))
+  }
+  if(is.factor(d$cluster)) d$cluster <- droplevels(d$cluster)
+  d <- d[d$src=="real",]
+  sum(getExpectedDoublets(d$cluster, dbr=dbr))/nrow(d)
 }

@@ -7,7 +7,7 @@
 doubletThresholding(
   d,
   dbr = NULL,
-  dbr.sd = 0.015,
+  dbr.sd = NULL,
   stringency = 0.5,
   p = 0.1,
   method = c("auto", "optim", "dbr", "griffiths"),

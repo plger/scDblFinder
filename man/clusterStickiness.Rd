@@ -13,7 +13,7 @@ clusterStickiness(
 }
 \arguments{
 \item{x}{A table of double statistics, or a SingleCellExperiment on which
-\link{scDblFinder} was run.}
+\link{scDblFinder} was run using the cluster-based approach.}
 
 \item{type}{The type of test to use (quasibinomial recommended).}
 
@@ -33,6 +33,6 @@ the cluster labels match across samples.
 }
 \examples{
 sce <- mockDoubletSCE(rep(200,5))
-sce <- scDblFinder(sce, artificialDoublets=500)
+sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 clusterStickiness(sce)
 }
