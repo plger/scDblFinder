@@ -56,7 +56,7 @@ The expected proportion of doublets has little impact on the score, but a very s
 
 ## Single-cell ATACseq
 
-The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter.
+The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter (see vignette).
 
 <br/><br/>
 
