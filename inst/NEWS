@@ -1,3 +1,9 @@
+Changes in version 1.7.3 (2021-07-26)
++ scDblFinder now includes both cluster-based and random modes for artificial doublet generation
++ thresholding has been streamlined
++ default parameters have been optimized using benchmark datasets
++ added the `directDblClassification` method
+
 Changes in version 1.5.11 (2021-01-19)
 + scDblFinder now provides doublet enrichment tests
 + doublet generation and default parameters have been further optimized
