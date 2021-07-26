@@ -56,6 +56,6 @@ Trains a classifier directly on the expression matrix to distinguish
 artificial doublets from real cells.
 }
 \examples{
-sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=500)
+sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=1)
 boxplot(sce$directDoubletScore~sce$type)
 }
