@@ -50,23 +50,27 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
     clusters <- x
   }
   clusters <- droplevels(as.factor(clusters))
+  lvls <- levels(clusters)
+  if(all(grepl("^[0-9]*$",lvls))) lvls <- as.integer(lvls)
+  clusters <- as.integer(clusters)
   ncells <- length(clusters)
   if(is.null(dbr)) dbr <- (0.01*ncells/1000)
   if(length(unique(clusters))==1) return(ncells*dbr)
 
   cs <- table(clusters)/ncells
   expected <- (cs %*% t(cs)) * dbr * ncells
-  expected <- data.frame( type1=rep(row.names(expected),ncol(expected)),
-                          type2=rep(colnames(expected),each=nrow(expected)),
+  expected <- data.frame( type1=rep(seq_along(lvls),ncol(expected)),
+                          type2=rep(seq_along(lvls),each=nrow(expected)),
                           expected=as.numeric(expected) )
   if(only.heterotypic){
     expected <- expected[expected[,1]<expected[,2],]
     expected$expected <- 2*expected$expected
   }else{
-    expected[,1:2] <- t(apply(expected[,1:2],1,FUN=sort))
+    expected[,1:2] <- t(apply(expected[,1:2], 1, FUN=sort))
     expected <- aggregate(expected[,3,drop=FALSE], by=expected[,1:2], FUN=sum)
   }
-  setNames(expected$expected, paste(expected[,1],expected[,2],sep="+"))
+  ids <- matrix(lvls[as.integer(as.matrix(expected[,1:2]))],ncol=2)
+  setNames(expected$expected, paste(ids[,1], ids[,2], sep="+"))
 }
 
 .castorigins <- function(e, val=NULL){

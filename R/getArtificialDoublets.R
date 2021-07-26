@@ -176,16 +176,9 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
 #' # create random labels
 #' x <- sample(head(LETTERS), 100, replace=TRUE)
 #' getCellPairs(x, n=6)
-getCellPairs <- function(x, n=1000, ...){
-  if(is(x,"igraph")) return(.getCellPairsFromGraph(x, n=n, ...))
-  if(is.list(x) && all(c("graph","k") %in% names(x)))
-     return(.getCellPairsFromGraph(x$graph, k=x$k, n=n, ...))
-  .getCellPairsFromClusters(x, n=n, ...)
-}
-
-# get cross-cluster pairs of cells
-.getCellPairsFromClusters <- function(clusters, n=1000, ls=NULL, q=c(0.1,0.9),
-                                      selMode="proportional", soft.min=5, ...){
+getCellPairs <- function(clusters, n=1000, ls=NULL, q=c(0.1,0.9),
+                         selMode="proportional", soft.min=5, ...){
+  if(is.factor(clusters)) clusters <- droplevels(clusters)
   cli <- split(seq_along(clusters), clusters)
   if(!is.null(ls)){
     ls <- split(ls, clusters)
@@ -218,33 +211,6 @@ getCellPairs <- function(x, n=1000, ...){
   }))
   ca <- as.data.frame(ca)
   ca$orig.clusters <- factor(ca$orig.clusters, levels=seq_along(lvls), labels=lvls)
-  ca[!duplicated(ca),]
-}
-
-# get pairs of cells based on distances on the meta-cell graph
-#' @importFrom igraph distances V
-.getCellPairsFromGraph <- function(g, k=seq_len(length(V(g))), n=1000,
-                                   weightFun=NULL, ...){
-  cli <- split(seq_along(k), k)
-  ca <- expand.grid(seq_along(cli), seq_along(cli))
-  ca <- as.data.frame(ca[ca[,1]<ca[,2],])
-  d <- distances(g)
-  d[is.infinite(d)] <- max(d[!is.infinite(d)])
-  if(is.null(weightFun)) weightFun <- function(d) sqrt(d)-0.5
-  if(is.character(weightFun)) weightFun <- get(weightFun)
-  d <- weightFun(d)
-  d[is.nan(d) | d<0] <- 0
-  ca$dist <- vapply(seq_len(nrow(ca)), FUN.VALUE=numeric(1),
-                    FUN=function(i) d[ca[i,1],ca[i,2]])
-  ca$n <- rpois(nrow(ca), n/sum(ca$dist)*ca$dist)
-  ca <- ca[ca$n>0,]
-  oc <- rep(factor(paste(names(cli)[ca[,1]], names(cli)[ca[,2]], sep="+")),ca$n)
-  ca <- do.call(rbind, lapply( seq_len(nrow(ca)), FUN=function(i){
-    cbind( sample(cli[[ca[i,1]]],size=ca$n[i],replace=TRUE),
-           sample(cli[[ca[i,2]]],size=ca$n[i],replace=TRUE) )
-  }))
-  ca <- data.frame(ca, orig.clusters=oc)
-  colnames(ca) <- c("cell1","cell2","orig.clusters")
   ca[!duplicated(ca),]
 }
 
