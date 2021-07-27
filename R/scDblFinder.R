@@ -628,7 +628,7 @@ scDblFinder <- function(
                           " cells excluded from training.")
       d$score <- tryCatch({
         fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, metric=metric,
-                         max_depth=max_depth, eta=eta,
+                         max_depth=max_depth, eta=eta, #base_score=gdbr,
                          nthreads=BiocParallel::bpnworkers(BPPARAM))
         predict(fit, as.matrix(preds))
       }, error=function(e) d$score)
@@ -727,7 +727,7 @@ scDblFinder <- function(
                levels=seq_along(names(d)), labels=names(d))
   d <- do.call(rbind, lapply(d, FUN=function(x){
     x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
-    x$cluster <- as.character(x$cluster)
+    if(!is.null(x$cluster)) x$cluster <- as.character(x$cluster)
     x[,cn]
   }))
   d$cluster <- as.factor(d$cluster)
