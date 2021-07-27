@@ -21,6 +21,12 @@ test_that("scDblFinder works as expected", {
     expect(min(sce$scDblFinder.score)>=0 & max(sce$scDblFinder.score)<=1,
            failure_message="scDblFinder.score not within 0-1")
     expect_gt(sum(sce$type==sce$scDblFinder.class)/ncol(sce), 0.8)
+    sce <- scDblFinder(sce, samples="sample", artificialDoublets=250, 
+                       dbr=0.1, verbose=FALSE)
+    expect_equal(sum(is.na(sce$scDblFinder.score)),0)
+    expect(min(sce$scDblFinder.score)>=0 & max(sce$scDblFinder.score)<=1,
+           failure_message="scDblFinder.score not within 0-1")
+    expect_gt(sum(sce$type==sce$scDblFinder.class)/ncol(sce), 0.8)
 })
 
 test_that("feature aggregation works as expected", {
