@@ -730,7 +730,7 @@ scDblFinder <- function(
     if(!is.null(x$cluster)) x$cluster <- as.character(x$cluster)
     x[,cn]
   }))
-  d$cluster <- as.factor(d$cluster)
+  if(!is.null(d$cluster)) d$cluster <- as.factor(d$cluster)
   d$sample <- ss
   d
 }
