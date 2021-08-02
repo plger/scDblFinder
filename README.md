@@ -1,3 +1,4 @@
+[![R build status](https://github.com/ETHZ-INS/scanMiR/workflows/R-CMD-check/badge.svg)](https://github.com/ETHZ-INS/scanMiR/actions)
 <img align="right" style="margin-left: 20px; margin-bottom: 10px;" src="inst/docs/sticker.svg"/>
 
 # scDblFinder
