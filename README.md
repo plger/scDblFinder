@@ -68,6 +68,6 @@ For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/p
 
 `scDblFinder` was independently evaluated by Nan Miles Xi and Jingyi Jessica Li in the [addendum](https://arxiv.org/abs/2101.08860) to their excellent [benchmark](https://doi.org/10.1016/j.cels.2020.11.008), where they write that _"scDblFinder achieves the highest mean AUPRC and AUROC values, and it is also the top method in terms of the precision, recall, and TNR under the 10% identification rate."_ 
 
-<img src="inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods (Xi and Li 2021)"/>
-
-In addition, it is roughly 10x faster (and scales much better) than the best alternative.
+The figure below compares some of the methods implemented in this package (in bold) with alternative methods (including the top alternative, `DoubletFinder`):
+<img src="inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods"/>
+**Figure1:** Accuracy (area under the precision and recall curve) of doublet identification using alternative methods across 16 benchmark datasets. The size of the dots indicates the relative ranking for the dataset, and the numbers/colours indicate the actual area under the (PR) curve. For each dataset, the top method is circled in black. Mean running time is shown on the left.
