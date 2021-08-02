@@ -46,7 +46,8 @@ Suggests:
     ggplot2,
     dplyr,
     MASS,
-    viridisLite
+    viridisLite,
+    mbkmeans
 VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.1.1

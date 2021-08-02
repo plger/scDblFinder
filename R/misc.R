@@ -537,7 +537,7 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=2,
                 rank=max(dims.use))$x[,dims.use]
   if(is.null(use.mbk)) use.mbk <- nrow(x) > 30000
   if(use.mbk && suppressWarnings(require("mbkmeans", quietly=TRUE))){
-    fc <- mbkmeans:::mbkmeans(t(pca), k, num_init=num_init, ...)$Clusters
+    fc <- mbkmeans::mbkmeans(t(pca), k, num_init=num_init, ...)$Clusters
   }else{
     fc <- kmeans(pca, k, nstart=num_init, iter.max=100)$cluster
   }
