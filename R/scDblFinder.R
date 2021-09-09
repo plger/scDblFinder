@@ -645,7 +645,11 @@ scDblFinder <- function(
       iter <- iter-1
     }
     d$include.in.training[w] <- FALSE
-
+    ########################
+    # Uncomment and use with scDblFinder(..., returnType="table") to extract
+    # variable importance
+    # return(xgb.importance(model=fit))
+    #######################
   }else{
     if(scoreType=="ratio"){
       d$score <- d$ratio

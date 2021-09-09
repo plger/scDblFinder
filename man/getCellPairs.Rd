@@ -4,16 +4,24 @@
 \alias{getCellPairs}
 \title{getCellPairs}
 \usage{
-getCellPairs(x, n = 1000, ...)
+getCellPairs(
+  clusters,
+  n = 1000,
+  ls = NULL,
+  q = c(0.1, 0.9),
+  selMode = "proportional",
+  soft.min = 5,
+  ...
+)
 }
 \arguments{
-\item{x}{A vector of cluster labels for each cell, or a list containing
-metacells and graph}
-
 \item{n}{The number of cell pairs to obtain}
 
 \item{...}{Further arguments, for instance the `k` vector of precluster
 labels if `x` is a metacell graph.}
+
+\item{x}{A vector of cluster labels for each cell, or a list containing
+metacells and graph}
 }
 \value{
 A data.frame with the columns
