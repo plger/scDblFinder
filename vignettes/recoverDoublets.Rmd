@@ -74,3 +74,9 @@ In this theoretical framework, we can easily spot a case where our method fails.
 If both $C_1$ and $C_2$ are unique to a given sample, all events in $D_{12}$ will be intra-sample doublets.
 This means that no events in $D_{12}$ will ever be detected as inter-sample doublets, which precludes their detection as intra-sample doublets by `recoverDoublets`.
 The computational remedy is to augment the predictions with simulation-based methods (e.g., `scDblFinder()`) while the experimental remedy is to ensure that multiplexed samples include technical or biological replicates.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```

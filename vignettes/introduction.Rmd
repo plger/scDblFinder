@@ -64,3 +64,9 @@ BiocManager::install("scDblFinder")
 # or, to get that latest developments:
 BiocManager::install("plger/scDblFinder")
 ```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
