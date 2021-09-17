@@ -151,6 +151,7 @@ NULL
 
 #' @importFrom Matrix crossprod
 #' @importFrom scuttle normalizeCounts
+#' @importFrom DelayedArray sweep
 .spawn_doublet_pcs <- function(x, size.factors, V, centers, niters=10000L, block=10000L) {
     collected <- list()
     counter <- 1L
