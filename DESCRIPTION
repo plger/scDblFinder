@@ -1,7 +1,7 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 1.7.5
+Version: 1.7.6
 Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -50,5 +50,5 @@ Suggests:
     mbkmeans
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 biocViews: Preprocessing, SingleCell, RNASeq
