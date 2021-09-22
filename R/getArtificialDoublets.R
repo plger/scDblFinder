@@ -163,11 +163,16 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
 #'
 #' Given a vector of cluster labels, returns pairs of cross-cluster cells
 #'
-#' @param x A vector of cluster labels for each cell, or a list containing
+#' @param clusters A vector of cluster labels for each cell, or a list containing
 #' metacells and graph
 #' @param n The number of cell pairs to obtain
-#' @param ... Further arguments, for instance the `k` vector of precluster
-#' labels if `x` is a metacell graph.
+#' @param ls Optional library sizes
+#' @param q Library size quantiles between which to include cells (ignored if 
+#' `ls` is NULL)
+#' @param selMode How to decide the number of pairs of each kind to produce.
+#' Either 'proportional' (default, proportional to the abundance of the 
+#' underlying clusters), 'uniform' or 'sqrt'.
+#' @param soft.min Minimum number of pairs of a given type.
 #'
 #' @return A data.frame with the columns
 #' @export
@@ -177,7 +182,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL,resamp=0.25,
 #' x <- sample(head(LETTERS), 100, replace=TRUE)
 #' getCellPairs(x, n=6)
 getCellPairs <- function(clusters, n=1000, ls=NULL, q=c(0.1,0.9),
-                         selMode="proportional", soft.min=5, ...){
+                         selMode="proportional", soft.min=5){
   if(is.factor(clusters)) clusters <- droplevels(clusters)
   cli <- split(seq_along(clusters), clusters)
   if(!is.null(ls)){

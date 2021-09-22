@@ -10,18 +10,25 @@ getCellPairs(
   ls = NULL,
   q = c(0.1, 0.9),
   selMode = "proportional",
-  soft.min = 5,
-  ...
+  soft.min = 5
 )
 }
 \arguments{
+\item{clusters}{A vector of cluster labels for each cell, or a list containing
+metacells and graph}
+
 \item{n}{The number of cell pairs to obtain}
 
-\item{...}{Further arguments, for instance the `k` vector of precluster
-labels if `x` is a metacell graph.}
+\item{ls}{Optional library sizes}
 
-\item{x}{A vector of cluster labels for each cell, or a list containing
-metacells and graph}
+\item{q}{Library size quantiles between which to include cells (ignored if 
+`ls` is NULL)}
+
+\item{selMode}{How to decide the number of pairs of each kind to produce.
+Either 'proportional' (default, proportional to the abundance of the 
+underlying clusters), 'uniform' or 'sqrt'.}
+
+\item{soft.min}{Minimum number of pairs of a given type.}
 }
 \value{
 A data.frame with the columns
