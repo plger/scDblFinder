@@ -5,7 +5,7 @@
 
 The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell sequencing data (i.e. multiple cells captured within the same droplet or reaction volume). The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
-For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
+For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://f1000research.com/articles/10-979/v1). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
 **scDblFinder has improved considerably since earlier versions, so please make sure you're using an up-to-date version!**
 
