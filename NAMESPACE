@@ -2,6 +2,7 @@
 
 export(TFIDF)
 export(addDoublets)
+export(amulet)
 export(clusterStickiness)
 export(computeDoubletDensity)
 export(createDoublets)
