@@ -536,7 +536,7 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=2,
   pca <- runPCA(x, BSPARAM=IrlbaParam(), center=FALSE,
                 rank=max(dims.use))$x[,dims.use]
   if(is.null(use.mbk)) use.mbk <- nrow(x) > 30000
-  if(use.mbk && suppressWarnings(require("mbkmeans", quietly=TRUE))){
+  if(use.mbk && suppressWarnings(requireNamespace("mbkmeans", quietly=TRUE))){
     fc <- mbkmeans::mbkmeans(t(pca), k, num_init=num_init, ...)$Clusters
   }else{
     fc <- kmeans(pca, k, nstart=num_init, iter.max=100)$cluster
@@ -686,6 +686,8 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
 #' contain non-overlapping fragments, and should therefore be excluded using the
 #' `maxWidth` argument.
 #' 
+#' @importFrom IRanges width
+#' @importFrom SummarizedExperiment ranges
 #' @export
 #' @examples
 #' x <- mockDoubletSCE()
@@ -694,8 +696,9 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
 amulet <- function(x, feature.na2.min=max(2,0.01*ncol(x)), maxWidth=1000L,
                    feature.q.threshold=0.01, correction.method="BH"){
   if(is(x, "SingleCellExperiment")){
-    if(!is.null(rowRanges(x))){
-      y <- counts(x)[which(IRanges::width(ranges(rowRanges(x)))<=maxWidth),]
+    if(!is.null(ranges(x))){
+      r
+      y <- counts(x)[which(IRanges::width(ranges(x))<=maxWidth),]
     }else{
       y <- counts(x)
     }
@@ -718,3 +721,4 @@ amulet <- function(x, feature.na2.min=max(2,0.01*ncol(x)), maxWidth=1000L,
   p.adjust(ppois(cs, lambda = mean(cs), lower.tail=FALSE), 
            method=correction.method)
 }
+
