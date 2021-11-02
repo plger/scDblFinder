@@ -696,7 +696,8 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
 amulet <- function(x, feature.na2.min=max(2,0.01*ncol(x)), maxWidth=1000L,
                    feature.q.threshold=0.01, correction.method="BH"){
   if(is(x, "SingleCellExperiment")){
-    if(!is.null(ranges(x))){
+    if(!is.null(ranges(x)) && 
+       !all(sum(IRanges::width(ranges(x)))==0L) ){
       y <- counts(x)[which(IRanges::width(ranges(x))<=maxWidth),]
     }else{
       y <- counts(x)
