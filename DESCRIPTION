@@ -34,7 +34,8 @@ Imports:
     xgboost,
     stats,
     utils,
-    MASS
+    MASS,
+    IRanges
 Suggests: 
     BiocStyle, 
     knitr, 
