@@ -651,3 +651,70 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
   sce
 }
 
+
+
+#' amulet
+#' 
+#' A reimplementation of the Amulet doublet detection method for single-cell 
+#' ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021).
+#'
+#' @param x A `SingleCellExperiment` object, or a matrix of counts with cells
+#' as columns. If the rows represent peaks, it is recommended to limite their
+#' width (see details).
+#' @param feature.na2.min the minimum number of cells in which a feature has 
+#' more than 2 reads in order for the feature to be kept
+#' @param maxWidth the maximum width for a feature to be included. This is 
+#' ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.
+#' @param feature.q.threshold significance threshold for features to be excluded
+#' @param correction.method multiple testing corrected method (passed to 
+#' `p.adjust`)
+#'
+#' @return If `x` is a `SingleCellExperiment`, returns the object with an 
+#' additional `amulet.q` colData column. Otherwise returns a vector of the 
+#' amulet doublet q-values for each cell.
+#' 
+#' @details 
+#' The rationale for the amulet method is that a single diploid cell should not 
+#' have more than two reads covering a single genomic location, and the method 
+#' looks for cells enriched with sites covered by more than two reads.
+#' If the method is applied on a peak-level count matrix, however, larger peaks
+#' can however contain multiple reads even though no single nucleotide is 
+#' covered more than once. Therefore, in such case we recommend to limit the 
+#' width of the peaks used for this analysis, ideally to maximum twice the upper
+#' bound of the fragment size. For example, with a mean fragment size of 250bp 
+#' and standard deviation of 125bp, peaks larger than 1000bp are very likely to 
+#' contain non-overlapping fragments, and should therefore be excluded using the
+#' `maxWidth` argument.
+#' 
+#' @export
+#' @examples
+#' x <- mockDoubletSCE()
+#' x <- amulet(x)
+#' table(call=x$amulet.q<0.05, truth=x$type)
+amulet <- function(x, feature.na2.min=max(2,0.01*ncol(x)), maxWidth=1000L,
+                   feature.q.threshold=0.01, correction.method="BH"){
+  if(is(x, "SingleCellExperiment")){
+    if(!is.null(rowRanges(x))){
+      y <- counts(x)[which(IRanges::width(ranges(rowRanges(x)))<=maxWidth),]
+    }else{
+      y <- counts(x)
+    }
+    x$amulet.q <- amulet( y, feature.na2.min=feature.na2.min, 
+                          feature.q.threshold=feature.q.threshold, 
+                          correction.method=correction.method )
+    return(x)
+  }
+  x <- x>2L
+  rs <- rowSums(x)
+  x <- x[rs>=feature.na2.min,]
+  rs <- rs[rs>=feature.na2.min]
+  if(feature.q.threshold<1){
+    rp <- p.adjust(ppois(rs, lambda = mean(rs), lower.tail=FALSE), 
+                   method=correction.method)
+    x <- x[rp>feature.q.threshold,]
+  }
+
+  cs <- colSums(x)
+  p.adjust(ppois(cs, lambda = mean(cs), lower.tail=FALSE), 
+           method=correction.method)
+}

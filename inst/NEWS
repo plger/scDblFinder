@@ -1,3 +1,6 @@
+Changes in version 1.9.1 (2021-11-02)
++ added reimplementation of the amulet method for scATAC-seq
+
 Changes in version 1.7.3 (2021-07-26)
 + scDblFinder now includes both cluster-based and random modes for artificial doublet generation
 + thresholding has been streamlined
