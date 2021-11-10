@@ -567,14 +567,19 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
   sce
 }
 
-
+#' @importFrom GenomicRanges makeGRangesFromDataFrame
+#' @importFrom utils read.delim
 .import.bed <- function(x){
-  if(suppressWarnings(requireNamespace("rtracklayer", quietly=TRUE))){
-    return(rtracklayer::import.bed(x))
-  }
-  x <- read.delim(x, header=FALSE, row.names=FALSE, stringsAsFactors=TRUE)
-  if(!is.factor(x[,1]) || !is.integer(x[,2]) || !is.integer(x[,3]))
+  y <- read.delim(x, header=FALSE, nrows=5, stringsAsFactors=FALSE)
+  stopifnot(ncol(y)>=3)
+  if(!is.character(y[,1]) || !is.integer(y[,2]) || !is.integer(y[,3]))
     stop("Malformed bed!")
+  colClasses <- head(c("factor","integer","integer","factor","integer",
+                       rep("NULL", ncol(y))), 
+                     ncol(y))
+
+  if(ncol(y)>4 & !is.integer(y[,5])) colClasses <- colClasses[1:4]
+  x <- read.delim(x, header=FALSE, colClasses=colClasses, stringsAsFactors=TRUE)
   nc <- seq_len(min(5,ncol(x)))
   colnames(x)[nc] <- c("seqname", "start", "end", "name", "score")[nc]
   return(makeGRangesFromDataFrame(x, keep.extra.columns=TRUE))
