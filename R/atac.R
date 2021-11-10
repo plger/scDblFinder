@@ -169,7 +169,9 @@ amuletFromCounts <- function(x, feature.na2.min=max(2,0.01*ncol(x)),
 #- A reimplementation of the Amulet doublet detection method for single-cell 
 #' ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021)
 #'
-#' @param x The path to a fragments file
+#' @param x The path to a fragments file, or a GRanges object containing the
+#' fragments (with the `name` column containing the barcode, and the `score`
+#' column containing the count).
 #' @param barcodes Optional character vector of cell barcodes to consider
 #' @param minFrags Minimum number of fragments for a barcode to be 
 #' considered. If `uniqueFrags=TRUE`, this is the minimum number of unique 
@@ -186,7 +188,7 @@ amuletFromCounts <- function(x, feature.na2.min=max(2,0.01*ncol(x)),
 #' @return A vector of the number of overlaps above `above`, named with cell 
 #' barcodes
 #' @importFrom GenomicRanges reduce
-#' @importFrom S4Vectors splitAsList
+#' @importFrom S4Vectors splitAsList mcols
 #' @importFrom IRanges overlapsAny
 #' @export
 amuletFromFragments <- function(x, barcodes=NULL, minFrags=500L, above=2L,

@@ -35,7 +35,8 @@ Imports:
     stats,
     utils,
     MASS,
-    IRanges
+    IRanges,
+    GenomicRanges
 Suggests: 
     BiocStyle, 
     knitr, 
