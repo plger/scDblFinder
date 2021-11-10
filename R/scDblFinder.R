@@ -397,7 +397,8 @@ scDblFinder <- function(
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
   cxds_score <- cxds2(e, whichDbls=which(ctype==2L | !inclInTrain))
-  nfeatures <- Matrix::colSums(e>0)
+  nfeatures <- Matrix::colSums(e>0L)
+  nAbove2 <- Matrix::colSums(e>2L)
 
   if(returnType=="counts"){
     sce_out <- SingleCellExperiment(list(
@@ -426,6 +427,7 @@ scDblFinder <- function(
                   default=.defaultProcessing(e, dims=dims),
                   rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
                   rawFeatures=t(e),
+                  atac=.atacProcessing(e, dims=dims),
                   normFeatures=t(normalizeCounts(e)),
                   stop("Unknown processing function.")
     )
@@ -450,6 +452,7 @@ scDblFinder <- function(
   }
   d$lsizes <- lsizes
   d$nfeatures <- nfeatures
+  d$nAbove2 <- nAbove2
   d$src <- src
   d$cxds_score <- cxds_score
   d$include.in.training <- inclInTrain

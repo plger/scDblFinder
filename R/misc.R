@@ -253,7 +253,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
   if(is.character(processing)){
     stopifnot(length(processing)==1)
     processing <- match.arg(processing, c("default","rawPCA","rawFeatures",
-                                          "normFeatures"))
+                                          "normFeatures", "atac"))
   }else if(!is.function(processing)){
     stop("`processing` should either be a function")
   }else if(!all(c("e", "dims") %in% names(formals(processing)))){
@@ -397,6 +397,11 @@ propHomotypic <- function(clusters){
   pca
 }
 
+.atacProcessing <- function(e, dims=NULL){
+  runPCA(TFIDF(e), BSPARAM=IrlbaParam(), center=FALSE,
+              rank=max(dims))$x[,seq_len(max(dims))]
+}
+
 .checkSCE <- function(sce){
   if(is(sce, "SummarizedExperiment")){
     sce <- as(sce, "SingleCellExperiment")
@@ -487,95 +492,6 @@ propHomotypic <- function(clusters){
   return(d)
 }
 
-#' aggregateFeatures
-#'
-#' Aggregates similar features (rows).
-#'
-#' @param x A integer/numeric (sparse) matrix, or a `SingleCellExperiment`
-#' including a `counts` assay.
-#' @param dims.use The PCA dimensions to use for clustering rows.
-#' @param k The approximate number of meta-features desired
-#' @param num_init The number of initializations used for k-means clustering.
-#' @param use.mbk Logical; whether to use minibatch k-means (see
-#' \code{\link[mbkmeans]{mbkmeans}}). If NULL, the minibatch approach will be
-#' used if there are more than 30000 features.
-#' @param use.subset How many cells (columns) to use to cluster the features.
-#' @param use.TFIDF Logical; whether to use \link{TFIDF} normalization (instead
-#' of standard normalization) to assess the similarity between features.
-#' similarity
-#' @param ... Passed to \code{\link[mbkmeans]{mbkmeans}}. Can for instance be
-#' used to pass the `BPPARAM` argument for multithreading.
-#'
-#' @return An aggregated version of `x` (either an array or a
-#' `SingleCellExperiment`, depending on the input).
-#'
-#' @importFrom scuttle logNormCounts
-#' @importFrom BiocSingular runPCA IrlbaParam
-aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=2,
-                               use.mbk=NULL, use.subset=5000, use.TFIDF=TRUE,
-                              ...){
-  xo <- x
-  if(ncol(x)>use.subset){
-    if(is(x,"SingleCellExperiment")){
-      cs <- Matrix::colSums(counts(x))
-    }else{
-      cs <- Matrix::colSums(x)
-    }
-    x <- x[,order(cs,decreasing=TRUE)[seq_len(use.subset)]]
-  }
-  if(use.TFIDF){
-    if(is(x,"SingleCellExperiment")) x <- counts(x)
-    x <- TFIDF(x)
-  }else{
-    if(is(x,"SingleCellExperiment")){
-      if("logcounts" %in% assayNames(x)) x <- scuttle::logNormCounts(x)
-      x <- logcounts(x)
-    }
-    x <- t(normalizeCounts(t(x)))
-  }
-  pca <- runPCA(x, BSPARAM=IrlbaParam(), center=FALSE,
-                rank=max(dims.use))$x[,dims.use]
-  if(is.null(use.mbk)) use.mbk <- nrow(x) > 30000
-  if(use.mbk && suppressWarnings(requireNamespace("mbkmeans", quietly=TRUE))){
-    fc <- mbkmeans::mbkmeans(t(pca), k, num_init=num_init, ...)$Clusters
-  }else{
-    fc <- kmeans(pca, k, nstart=num_init, iter.max=100)$cluster
-  }
-  x <- scuttle::sumCountsAcrossFeatures(xo, fc)
-  row.names(x) <- paste0("feat",seq_len(nrow(x)))
-  if(is(xo,"SingleCellExperiment")){
-    x <- SingleCellExperiment(list(counts=x), colData=colData(xo),
-                              reducedDims=reducedDims(xo))
-  }
-  x
-}
-
-#
-#' TFIDF
-#'
-#' The Term Frequency - Inverse Document Frequency (TF-IDF) normalization, as
-#' implemented in Stuart & Butler et al. 2019.
-#'
-#' @param x The matrix of occurrences
-#' @param sf Scaling factor
-#'
-#' @return An array of same dimensions as `x`
-#' @export
-#' @importFrom Matrix tcrossprod Diagonal rowSums colSums
-#'
-#' @examples
-#' m <- matrix(rpois(500,1),nrow=50)
-#' m <- TFIDF(m)
-TFIDF <- function(x, sf=10000){
-  if(!is(x,"sparseMatrix")) x <- as(x, "sparseMatrix")
-  tf <- Matrix::tcrossprod(x, Diagonal(x=1L/Matrix::colSums(x)))
-  idf <- ncol(x)/Matrix::rowSums(x)
-  x <- log1p(sf*(Diagonal(length(idf), x=idf) %*% tf))
-  x[is.na(x)] <- 0
-  x
-}
-
-
 
 #' directClassification
 #'
@@ -652,73 +568,14 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
 }
 
 
-
-#' amulet
-#' 
-#' A reimplementation of the Amulet doublet detection method for single-cell 
-#' ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021).
-#'
-#' @param x A `SingleCellExperiment` object, or a matrix of counts with cells
-#' as columns. If the rows represent peaks, it is recommended to limite their
-#' width (see details).
-#' @param feature.na2.min the minimum number of cells in which a feature has 
-#' more than 2 reads in order for the feature to be kept
-#' @param maxWidth the maximum width for a feature to be included. This is 
-#' ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.
-#' @param feature.q.threshold significance threshold for features to be excluded
-#' @param correction.method multiple testing corrected method (passed to 
-#' `p.adjust`)
-#'
-#' @return If `x` is a `SingleCellExperiment`, returns the object with an 
-#' additional `amulet.q` colData column. Otherwise returns a vector of the 
-#' amulet doublet q-values for each cell.
-#' 
-#' @details 
-#' The rationale for the amulet method is that a single diploid cell should not 
-#' have more than two reads covering a single genomic location, and the method 
-#' looks for cells enriched with sites covered by more than two reads.
-#' If the method is applied on a peak-level count matrix, however, larger peaks
-#' can however contain multiple reads even though no single nucleotide is 
-#' covered more than once. Therefore, in such case we recommend to limit the 
-#' width of the peaks used for this analysis, ideally to maximum twice the upper
-#' bound of the fragment size. For example, with a mean fragment size of 250bp 
-#' and standard deviation of 125bp, peaks larger than 1000bp are very likely to 
-#' contain non-overlapping fragments, and should therefore be excluded using the
-#' `maxWidth` argument.
-#' 
-#' @importFrom IRanges width
-#' @importFrom SummarizedExperiment ranges
-#' @export
-#' @examples
-#' x <- mockDoubletSCE()
-#' x <- amulet(x)
-#' table(call=x$amulet.q<0.05, truth=x$type)
-amulet <- function(x, feature.na2.min=max(2,0.01*ncol(x)), maxWidth=1000L,
-                   feature.q.threshold=0.01, correction.method="BH"){
-  if(is(x, "SingleCellExperiment")){
-    if(!is.null(ranges(x)) && 
-       !all(sum(IRanges::width(ranges(x)))==0L) ){
-      y <- counts(x)[which(IRanges::width(ranges(x))<=maxWidth),]
-    }else{
-      y <- counts(x)
-    }
-    x$amulet.q <- amulet( y, feature.na2.min=feature.na2.min, 
-                          feature.q.threshold=feature.q.threshold, 
-                          correction.method=correction.method )
-    return(x)
+.import.bed <- function(x){
+  if(suppressWarnings(requireNamespace("rtracklayer", quietly=TRUE))){
+    return(rtracklayer::import.bed(x))
   }
-  x <- x>2L
-  rs <- rowSums(x)
-  x <- x[rs>=feature.na2.min,]
-  rs <- rs[rs>=feature.na2.min]
-  if(feature.q.threshold<1){
-    rp <- p.adjust(ppois(rs, lambda = mean(rs), lower.tail=FALSE), 
-                   method=correction.method)
-    x <- x[rp>feature.q.threshold,]
-  }
-
-  cs <- colSums(x)
-  p.adjust(ppois(cs, lambda = mean(cs), lower.tail=FALSE), 
-           method=correction.method)
+  x <- read.delim(x, header=FALSE, row.names=FALSE, stringsAsFactors=TRUE)
+  if(!is.factor(x[,1]) || !is.integer(x[,2]) || !is.integer(x[,3]))
+    stop("Malformed bed!")
+  nc <- seq_len(min(5,ncol(x)))
+  colnames(x)[nc] <- c("seqname", "start", "end", "name", "score")[nc]
+  return(makeGRangesFromDataFrame(x, keep.extra.columns=TRUE))
 }
-
