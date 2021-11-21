@@ -132,7 +132,7 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=2,
 #' @export
 #' @examples
 #' x <- mockDoubletSCE()
-#' x <- amulet(x)
+#' x <- amuletFromCounts(x)
 #' table(call=x$amulet.q<0.05, truth=x$type)
 amuletFromCounts <- function(x, feature.na2.min=max(2,0.01*ncol(x)), 
                              maxWidth=500L, feature.q.threshold=0.01, 
@@ -144,9 +144,11 @@ amuletFromCounts <- function(x, feature.na2.min=max(2,0.01*ncol(x)),
     }else{
       y <- counts(x)
     }
-    x$amulet.q <- amuletFromCounts( y, feature.na2.min=feature.na2.min, 
+    x$amulet.p <- amuletFromCounts( y, feature.na2.min=feature.na2.min, 
                                     feature.q.threshold=feature.q.threshold, 
-                                    correction.method=correction.method )
+                                    correction.method="none" )
+    if(correction.method != "none") 
+      x$amulet.q <- p.adjust(x$amulet.p, method=correction.method)
     return(x)
   }
   x <- x>2L

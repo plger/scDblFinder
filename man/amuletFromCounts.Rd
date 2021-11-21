@@ -55,7 +55,7 @@ contain non-overlapping fragments, and should therefore be excluded using the
 }
 \examples{
 x <- mockDoubletSCE()
-x <- amulet(x)
+x <- amuletFromCounts(x)
 table(call=x$amulet.q<0.05, truth=x$type)
 }
 \seealso{
