@@ -183,6 +183,8 @@ bpstart(bp)
 sce <- scDblFinder(sce, clusters="cluster", samples="sample", BPPARAM=bp)
 bpstop(bp)
 ```
+Note that the explicit `bpstart`/`bpstop` are critical here: because the thread's seeds are set at the creation of the cluster, they will tick if you don't ensure that you're using a new one.
+
 
 ### Can I use this in combination with Seurat or other tools?
 
