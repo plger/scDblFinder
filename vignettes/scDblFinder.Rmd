@@ -175,16 +175,15 @@ You will get this error if you have some cells that have zero (or very close to 
 
 ### How can I make this reproducible?
 
-Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results. You can ensure reproducibility using `set.seed()`, however this will not be sufficient when multithreading. In such case, using the following procedure:
+Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results.
+You can ensure reproducibility using `set.seed()`, however this will not be sufficient when multithreading.
+In such case, the seed needs to be passed to the BPPARAMs:
 
 ```
 bp <- MulticoreParam(3, RNGseed=1234)
-bpstart(bp)
 sce <- scDblFinder(sce, clusters="cluster", samples="sample", BPPARAM=bp)
-bpstop(bp)
 ```
-Note that the explicit `bpstart`/`bpstop` are critical here: because the thread's seeds are set at the creation of the cluster, they will tick if you don't ensure that you're using a new one.
-
+(Note that in `BiocParallel` versions <1.28, one had in addition to explicitly start the cluster before the run using `bpstart(bp)`, and then `bpstop(bp)` after `scDblFinder`.)
 
 ### Can I use this in combination with Seurat or other tools?
 
