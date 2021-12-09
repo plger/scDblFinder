@@ -220,6 +220,12 @@ scDblFinder <- function(
   .checkPropArg(dbr, acceptNull=TRUE)
   processing <- .checkProcArg(processing)
 
+  if(!bpisup(BPPARAM)){
+    ## pre-start params for independent seeds between bplapply calls
+    bpstart(BPPARAM)
+    on.exit(bpstop(BPPARAM))
+  }
+
   ## if clusters are given, it's more efficient to do feature selection before
   ## eventually splitting the dataset
   if(!is.null(clusters) && length(clusters)>1 && !aggregateFeatures){
