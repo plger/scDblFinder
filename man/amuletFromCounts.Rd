@@ -43,7 +43,7 @@ contain non-overlapping fragments, and should therefore be excluded using the
 \examples{
 x <- mockDoubletSCE()
 x <- amuletFromCounts(x)
-table(call=x$amulet.q<0.05, truth=x$type)
+table(call=x$amuletFromCounts.q<0.05, truth=x$type)
 }
 \seealso{
 \code{\link{amulet}}, \code{\link{amulet2}}

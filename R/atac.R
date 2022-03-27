@@ -237,7 +237,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
 #' @examples
 #' x <- mockDoubletSCE()
 #' x <- amuletFromCounts(x)
-#' table(call=x$amulet.q<0.05, truth=x$type)
+#' table(call=x$amuletFromCounts.q<0.05, truth=x$type)
 amuletFromCounts <- function(x, maxWidth=500L){
   d <- .overlapsFromCounts(x, maxWidth)
   q <- p.adjust(ppois(d$nAbove2, lambda=mean(d$nAbove2), lower.tail=FALSE), 
