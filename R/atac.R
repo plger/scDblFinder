@@ -203,8 +203,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
 #' ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021), based on tile/peak 
 #' counts. Note that this is only a fast approximation to the original Amulet 
 #' method, and performs considerably worse; for an equivalent implementation, 
-#' see \code{\link{amulet}} (and \code{\link{amulet2}} for a library-size 
-#' adjusted one).
+#' see \code{\link{amulet}}.
 #'
 #' @param x A `SingleCellExperiment` object, or a matrix of counts with cells
 #' as columns. If the rows represent peaks, it is recommended to limite their
@@ -229,7 +228,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
 #' contain non-overlapping fragments, and should therefore be excluded using the
 #' `maxWidth` argument.
 #' 
-#' @seealso \code{\link{amulet}}, \code{\link{amulet2}}
+#' @seealso \code{\link{amulet}}
 #' 
 #' @importFrom IRanges width
 #' @importFrom SummarizedExperiment ranges
@@ -280,3 +279,4 @@ amulet <- function(x, ...){
   d$q.value <- p.adjust(d$p.value, method="BH")
   d
 }
+
