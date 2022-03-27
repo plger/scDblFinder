@@ -38,7 +38,8 @@ Imports:
     IRanges,
     GenomicRanges,
     GenomeInfoDb,
-    Rsamtools
+    Rsamtools,
+    rtracklayer
 Suggests: 
     BiocStyle, 
     knitr, 
