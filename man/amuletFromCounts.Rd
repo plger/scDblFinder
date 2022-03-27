@@ -4,41 +4,28 @@
 \alias{amuletFromCounts}
 \title{amuletFromCounts}
 \usage{
-amuletFromCounts(
-  x,
-  feature.na2.min = max(2, 0.01 * ncol(x)),
-  maxWidth = 500L,
-  feature.q.threshold = 0.01,
-  correction.method = "BH"
-)
+amuletFromCounts(x, maxWidth = 500L)
 }
 \arguments{
 \item{x}{A `SingleCellExperiment` object, or a matrix of counts with cells
 as columns. If the rows represent peaks, it is recommended to limite their
 width (see details).}
 
-\item{feature.na2.min}{the minimum number of cells in which a feature has 
-more than 2 reads in order for the feature to be kept}
-
 \item{maxWidth}{the maximum width for a feature to be included. This is 
 ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.}
-
-\item{feature.q.threshold}{significance threshold for features to be excluded}
-
-\item{correction.method}{multiple testing corrected method (passed to 
-`p.adjust`)}
 }
 \value{
 If `x` is a `SingleCellExperiment`, returns the object with an 
-additional `amulet.q` colData column. Otherwise returns a vector of the 
-amulet doublet q-values for each cell.
+additional `amuletFromCounts.q` colData column. Otherwise returns a vector of
+ the amulet doublet q-values for each cell.
 }
 \description{
 A reimplementation of the Amulet doublet detection method for single-cell 
 ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021), based on tile/peak 
 counts. Note that this is only a fast approximation to the original Amulet 
-method; for an equivalent implementation, see 
-\code{\link{amuletFromFragments}}.
+method, and performs considerably worse; for an equivalent implementation, 
+see \code{\link{amulet}} (and \code{\link{amulet2}} for a library-size 
+adjusted one).
 }
 \details{
 The rationale for the amulet method is that a single diploid cell should not 
@@ -59,5 +46,5 @@ x <- amuletFromCounts(x)
 table(call=x$amulet.q<0.05, truth=x$type)
 }
 \seealso{
-\code{\link{amuletFromFragments}}
+\code{\link{amulet}}, \code{\link{amulet2}}
 }

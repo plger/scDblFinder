@@ -164,7 +164,7 @@
 #' `aggregateFeatures=TRUE`), which strongly improves accuracy. See the
 #' vignette for more detail.
 #'
-#' @import SingleCellExperiment BiocParallel xgboost
+#' @import SingleCellExperiment BiocParallel
 #' @importFrom SummarizedExperiment colData<- assayNames
 #' @importFrom scuttle normalizeCounts
 #' @importFrom scater runPCA
@@ -700,7 +700,7 @@ scDblFinder <- function(
                          "include.in.training","observed"))
 }
 
-#' @import xgboost
+#' @importFrom xgboost xgb.cv xgboost
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5,
                       tree_method="exact", subsample=0.75, nthreads=1,
                       metric="logloss", ...){
