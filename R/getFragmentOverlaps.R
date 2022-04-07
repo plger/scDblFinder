@@ -154,7 +154,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
                 " are missing from the fragments file!")
     uniqFrags <- uniqFrags[intersect(names(uniqFrags), barcodes)]
   }
-  seqlengths(gr) <- sapply(split(end(gr), seqnames(gr)), max)
+  seqlengths(gr) <- sapply(split(end(gr), seqnames(gr)), max)[seqlevels(gr)]
   gr <- gr[gr$name %in% names(uniqFrags)]
   gr$name <- droplevels(gr$name)
   if(length(gr)==0) return(emptyOutput)
