@@ -73,7 +73,7 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
   pca <- runPCA(x, BSPARAM=IrlbaParam(), center=FALSE,
                 rank=max(dims.use))$x[,dims.use]
   if(is.null(use.mbk)) use.mbk <- nrow(x) > 30000
-  if(use.mbk && suppressWarnings(requireNamespace("mbkmeans", quietly=TRUE))){
+  if(use.mbk && requireNamespace("mbkmeans", quietly=TRUE)){
     fc <- mbkmeans::mbkmeans(t(pca), k, num_init=num_init, ...)$Clusters
   }else{
     fc <- kmeans(pca, k, nstart=num_init, iter.max=100)$cluster

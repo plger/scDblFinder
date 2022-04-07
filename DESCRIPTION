@@ -1,7 +1,7 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 1.9.5
+Version: 1.9.7
 Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -10,10 +10,11 @@ URL: https://github.com/plger/scDblFinder
 BugReports: https://github.com/plger/scDblFinder/issues
 Description:
     The scDblFinder package gathers various methods for the detection and 
-    handling of doublets/multiplets in single-cell RNA sequencing data (i.e. 
+    handling of doublets/multiplets in single-cell sequencing data (i.e. 
     multiple cells captured within the same droplet or reaction volume). It
-    includes methods formerly found in the scran package, and the new fast
-    and comprehensive scDblFinder method.
+    includes methods formerly found in the scran package, the new fast
+    and comprehensive scDblFinder method, and a reimplementation of the
+    Amulet detection method for single-cell ATAC-seq.
 License: GPL-3
 Imports: 
     igraph, 
@@ -50,7 +51,6 @@ Suggests:
     ComplexHeatmap,
     ggplot2,
     dplyr,
-    MASS,
     viridisLite,
     mbkmeans
 VignetteBuilder: knitr

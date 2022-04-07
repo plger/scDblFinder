@@ -14,11 +14,14 @@ column containing the count).}
 \item{...}{Any argument to \code{\link{getFragmentOverlaps}}.}
 }
 \value{
-A vector of the number of overlaps above `above`, named with cell 
-barcodes
+A data.frame including, for each barcode, the number sites covered by
+  more than two reads, the number of reads, and p- and q-values (low values
+  indicative of doublets).
 }
 \description{
-ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021)
+ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021). The rationale is
+that cells with unexpectedly many loci covered by more than two reads are 
+more likely to be doublets.
 }
 \details{
 When used on normal (or compressed) fragment files, this 
@@ -26,5 +29,6 @@ implementation is relatively fast (except for reading in the data) but it
 has a large memory footprint since the overlaps are performed in memory. It 
 is therefore recommended to compress the fragment files using bgzip and index
 them with Tabix; in this case each chromosome will be read and processed 
-separately, leading to a considerably lower memory footprint.
+separately, leading to a considerably lower memory footprint. See the 
+underlying \code{\link{getFragmentOverlaps}} for details.
 }

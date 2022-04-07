@@ -574,7 +574,7 @@ scDblFinder <- function(
                         includeSamples=FALSE, perSample=TRUE, ...){
   gdbr <- .gdbr(d, dbr)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
-  if(is.null(dbr.sd)) dbr.sd <- 0.4*gdbr
+  if(is.null(dbr.sd)) dbr.sd <- 0.3*gdbr+0.025
   if(scoreType=="xgb"){
     if(verbose) message("Training model...")
     d$score <- NULL
