@@ -14,7 +14,11 @@ For a brief overview of the methods, see the [introductory vignette](https://bio
 
 ## Getting started
 
-You may install the latest version of the package with:
+You may install the pakage using:
+```r
+BiocManager::install("scDblFinder")
+```
+Or, to get the very latest version,
 ```r
 BiocManager::install("plger/scDblFinder")
 ```
