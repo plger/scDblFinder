@@ -8,11 +8,13 @@ clamulet(
   x,
   artificialDoublets = NULL,
   iter = 2,
+  minCount = 0.001,
   maxN = 500,
   nfeatures = 25,
   max_depth = 5,
   threshold = 0.75,
   returnAll = FALSE,
+  verbose = TRUE,
   ...
 )
 }
@@ -24,6 +26,10 @@ for performance/memory-related guidelines)}
 
 \item{iter}{The number of learning iterations (should be 1 to)}
 
+\item{minCount}{The minimum number of cells in which a locus is detected to
+be considered. If lower than 1, it is interpreted as a fraction of the 
+number of cells.}
+
 \item{maxN}{The maximum number of regions per cell to consider to establish
 windows for meta-features}
 
@@ -34,6 +40,8 @@ windows for meta-features}
 \item{threshold}{The score threshold used during iterations}
 
 \item{returnAll}{Logical; whether to return data also for artificial doublets}
+
+\item{verbose}{Logical; whether to print progress information}
 
 \item{...}{Arguments passed to \code{\link{getFragmentOverlaps}}}
 }

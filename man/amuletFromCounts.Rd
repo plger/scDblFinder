@@ -4,7 +4,7 @@
 \alias{amuletFromCounts}
 \title{amuletFromCounts}
 \usage{
-amuletFromCounts(x, maxWidth = 500L)
+amuletFromCounts(x, maxWidth = 500L, exclude = c("chrM", "M", "Mt"))
 }
 \arguments{
 \item{x}{A `SingleCellExperiment` object, or a matrix of counts with cells
@@ -23,7 +23,7 @@ additional `amuletFromCounts.q` colData column. Otherwise returns a vector of
 A reimplementation of the Amulet doublet detection method for single-cell 
 ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021), based on tile/peak 
 counts. Note that this is only a fast approximation to the original Amulet 
-method, and performs considerably worse; for an equivalent implementation, 
+method, and *performs considerably worse*; for an equivalent implementation, 
 see \code{\link{amulet}}.
 }
 \details{

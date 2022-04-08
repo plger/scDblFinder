@@ -42,20 +42,29 @@ amulet <- function(x, ...){
 #'   for performance/memory-related guidelines)
 #' @param artificialDoublets The number of artificial doublets to generate
 #' @param iter The number of learning iterations (should be 1 to)
+#' @param minCount The minimum number of cells in which a locus is detected to
+#'   be considered. If lower than 1, it is interpreted as a fraction of the 
+#'   number of cells.
 #' @param threshold The score threshold used during iterations
 #' @param maxN The maximum number of regions per cell to consider to establish
 #'   windows for meta-features
 #' @param nfeatures The number of meta-features to consider
 #' @param max_depth The maximum tree depth
 #' @param returnAll Logical; whether to return data also for artificial doublets
+#' @param verbose Logical; whether to print progress information
 #' @param ... Arguments passed to \code{\link{getFragmentOverlaps}}
 #'
 #' @return A data.frame
-clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
-                     nfeatures=25, max_depth=5, threshold=0.75, returnAll=FALSE,
-                     ...){
+#' @export
+#' @importFrom IRanges Views viewMaxs slice
+clamulet <- function(x, artificialDoublets=NULL, iter=2, minCount=0.001, 
+                     maxN=500, nfeatures=25, max_depth=5, threshold=0.75, 
+                     returnAll=FALSE, verbose=TRUE, ...){
   m <- .clamulet.buildTable(x, nADbls=artificialDoublets, maxN=maxN,
-                            nfeatures=nfeatures, ...)
+                            nfeatures=nfeatures, verbose=verbose, ...)
+  
+  if(verbose) message(format(Sys.time(), "%X"), " - Iterative training")
+  
   d <- data.frame(row.names=row.names(m$m))
   d$include.in.training <- TRUE
   d$type <- m$labels
@@ -65,7 +74,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
   while(iter>0){
     # remove cells with a high chance of being doublets from the training
     w <- which(d$type=="real" & d$score > 0.75)
-    message("iter=",max.iter-iter,", ", length(w),
+    if(verbose) message("iter=",max.iter-iter,", ", length(w),
                         " cells excluded from training.")
     d$score <- tryCatch({
       fit <- .xgbtrain(m$m[-w,], d$type[-w], max_depth=max_depth, nthreads=1L)
@@ -79,39 +88,40 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
     d <- d[d$type=="real",]
     d$type <- NULL
   }
+  if(verbose) message(format(Sys.time(), "%X"), "Done!")
   d
 }
 
 
-.clamulet.buildTable <- function(x, nADbls=NULL, maxN=500, nfeatures=25, ...){
-  co <- getFragmentOverlaps(x, ..., ret="coverages", fullInMemory=TRUE)
-  # obtain window counts
+.clamulet.buildTable <- function(x, nADbls=NULL, minCount=0.001, maxN=500, 
+                                 nfeatures=25, verbose=TRUE, ...){
+  co <- getFragmentOverlaps(x, ..., ret="coverages", fullInMemory=TRUE,
+                            verbose=verbose)
+  if(verbose) message(format(Sys.time(), "%X"), " - Obtaining windows")
   seqlvls <- unique(unlist(lapply(head(co,100), names)))
-  windows <- reduce(unlist(GRangesList(lapply(co, FUN=function(x){
-    x <- x[names(x) %in% seqlvls]
-    x <- slice(x, lower=1L, rangesOnly=TRUE)
-    x <- GRanges(rep(factor(names(x), seqlvls), lengths(x)), 
-                 unlist(x, use.names=FALSE))
+  if(minCount<1) minCount <- max(as.integer(round(minCount*length(co))),2L)
+  windows <- coverage(unlist(GRangesList(lapply(co, FUN=function(x){
+    x <- .sliceGR(x, seqlvls=seqlvls)
     if(length(x)>maxN) x <- x[sample.int(length(x),maxN)]
     x
-  }))), min.gapwidth=10L)
-  sl <- sapply(split(end(windows), seqnames(windows)), max)
+  }))))
+  windows <- reduce(.sliceGR(windows, lower=minCount, seqlvls=seqlvls),
+                    min.gapwidth=100L)
+
+  if(verbose) message(format(Sys.time(), "%X"), " - Obtaining window counts")
   windows <- split(ranges(windows), seqnames(windows))
-  counts <- lapply(setNames(names(windows), names(windows)), FUN=function(x){
-    length((vi)[[1]])
-    as(sapply(co, FUN=function(y){
-      viewMaxs(Views(y[[x]], start=start(windows[[x]]), end=end(windows[[x]])))
-    }), "dgCMatrix")
-  })
-  rm(windows)
-  counts <- do.call(rbind, counts)
+  counts <- .getCovCounts(co, windows)
+
+  if(verbose) message(format(Sys.time(), "%X"), " - Aggregating features")
   counts <- aggregateFeatures(counts, seq_len(min(ncol(counts)-1,10)),
                               k=min(nrow(counts), nfeatures))
   
+  if(verbose) message(format(Sys.time(), "%X"),
+                      " - Computing features for artificial doublets")
   # get combination of cells for artificial doublets
   if(is.null(nADbls)) nADbls <- length(co)
-  comb <- matrix(sample(seq_along(co), size=floor(nADbls*2.2),
-                        replace=TRUE), ncol=2)
+  comb <- matrix(sample.int(length(co), size=2*floor(nADbls*2.2), replace=TRUE),
+                 ncol=2)
   comb <- comb[comb[,1]!=comb[,2],]
   comb <- head(comb[!duplicated(comb),], nADbls)
   
@@ -119,6 +129,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
   acounts <- counts[,comb[,1]]+counts[,comb[,2]]
   colnames(acounts) <- paste("artificial", seq_len(ncol(acounts)))
   
+  if(verbose) message(format(Sys.time(), "%X"),
+                      " - Counting overlaps for real cells")
   d <- data.frame(row.names=c(colnames(counts), colnames(acounts)), 
                   type=rep(factor(c("real","doublet"), c("real","doublet")),
                            c(ncol(counts),ncol(acounts))),
@@ -135,6 +147,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
   tt <- table(gr2$name)
   d[names(tt),"nAbove2"] <- as.integer(tt)  
   
+  if(verbose) message(format(Sys.time(), "%X"),
+                      " - Counting overlaps for artificial doublets")
   # get overlaps for artificial cells
   co <- lapply(setNames(seq_len(nrow(comb)), colnames(acounts)),
                FUN=function(x){
@@ -152,28 +166,48 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
   list(m=t(m), labels=d$type)
 }
 
-
+# adds up to RleLists
 .sumRleLists <- function(x,y){
   names(useqlvls) <- useqlvls <- union(names(x),names(y))
   isEmptyRle <- function(x) length(x@values)==1
-  RleList(lapply(useqlvls, FUN=function(seql){
+  as(lapply(useqlvls, FUN=function(seql){
     if(is.null(x[[seql]]) || isEmptyRle(x[[seql]])) return(y[[seql]])
     if(is.null(y[[seql]]) || isEmptyRle(y[[seql]])) return(x[[seql]])
     suppressWarnings(x[[seql]]+y[[seql]])
-  }))
+  }), "RleList")
 }
 
+# obtains loci with >lower coverage from a list of coverage RleList
 .getOvsFromCovs <- function(co, seqlvls=NULL, lower=3L){
   if(is.null(seqlvls)) seqlvls <- unique(unlist(lapply(co,names)))
-  grl <- GRangesList(lapply(co, FUN=function(x){
-    x <- slice(x, lower=lower, rangesOnly=TRUE)
-    if(sum(lengths(x))==0) return(GRanges(factor(levels=seqlvls)))
-    GRanges(rep(factor(names(x), seqlvls), lengths(x)),
-            unlist(x, use.names=FALSE))
-  }))
+  grl <- GRangesList(lapply(co, lower=lower, seqlvls=seqlvls, FUN=.sliceGR))
   gr2 <- unlist(grl, use.names=FALSE)
   gr2$name <- rep(factor(names(grl), names(co)),lengths(grl))
   gr2
+}
+
+# obtains maximum count per window from a list of coverage RleList
+.getCovCounts <- function(co, windows, fun=IRanges::viewMaxs){
+  if(is(windows, "GRanges"))
+    windows <- split(ranges(windows), seqnames(windows))
+  windows <- windows[lengths(windows)>0]
+  def <- as(lapply(windows, FUN=function(x) Rle(0L, max(end(x)))), "RleList")
+  as(sapply(co, FUN=function(x){
+    if(length( missing <- setdiff(names(def), names(x)) )>0)
+      x <- c(x, def[missing])
+    x <- x[names(windows)]
+    unlist(fun(Views(x, windows)), use.names=FALSE)
+  }), "dgCMatrix")
+}
+
+# slide a RleList and returns a GR
+.sliceGR <- function(x, lower=1L, seqlvls=NULL){
+  if(is.null(seqlvls)) seqlvls <- names(x)
+  x <- x[names(x) %in% seqlvls]
+  x <- slice(x, lower=as.integer(round(lower)), rangesOnly=TRUE)
+  if(sum(lengths(x))==0) return(GRanges(factor(levels=seqlvls)))
+  GRanges(rep(factor(names(x), seqlvls), lengths(x)), 
+          unlist(x, use.names=FALSE))
 }
 
 
@@ -183,7 +217,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
 #' A reimplementation of the Amulet doublet detection method for single-cell 
 #' ATACseq (Thibodeau, Eroglu, et al., Genome Biology 2021), based on tile/peak 
 #' counts. Note that this is only a fast approximation to the original Amulet 
-#' method, and performs considerably worse; for an equivalent implementation, 
+#' method, and *performs considerably worse*; for an equivalent implementation, 
 #' see \code{\link{amulet}}.
 #'
 #' @param x A `SingleCellExperiment` object, or a matrix of counts with cells
@@ -218,21 +252,17 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, maxN=500,
 #' x <- mockDoubletSCE()
 #' x <- amuletFromCounts(x)
 #' table(call=x$amuletFromCounts.q<0.05, truth=x$type)
-amuletFromCounts <- function(x, maxWidth=500L){
-  d <- .overlapsFromCounts(x, maxWidth)
-  q <- p.adjust(ppois(d$nAbove2, lambda=mean(d$nAbove2), lower.tail=FALSE), 
-                method="fdr")
-  if(is(x,"SummarizedExperiment")){
-    x$amuletFromCounts.q <- q
-    return(x)
-  }
-  q
-}
-
-.overlapsFromCounts <- function(x, maxWidth=500L, ...){
+amuletFromCounts <- function(x, maxWidth=500L, exclude=c("chrM","M","Mt")){
   if(is(x, "SingleCellExperiment")){
     if(!is.null(ranges(x)) && 
        !all(sum(IRanges::width(ranges(x)))==0L) ){
+      if(!is.null(exclude)){
+        if(is.character(exclude)){
+          x <- x[!(seqnames(granges(x)) %in% exclude),]
+        }else{
+          x <- x[!overlapsAny(granges(x),exclude)]
+        }
+      } 
       y <- counts(x)[which(IRanges::width(ranges(x))<=maxWidth),]
     }else{
       y <- counts(x)
@@ -247,5 +277,12 @@ amuletFromCounts <- function(x, maxWidth=500L){
   rs <- rowSums(y)
   rp <- p.adjust(ppois(rs, lambda=mean(rs), lower.tail=FALSE))
   y <- y[rp>0.01,]
-  data.frame(row.names=colnames(y), nFrags=libsizes, nAbove2=colSums(y))
+  d <- data.frame(row.names=colnames(y), nFrags=libsizes, nAbove2=colSums(y))
+  q <- p.adjust(ppois(d$nAbove2, lambda=mean(d$nAbove2), lower.tail=FALSE), 
+                method="fdr")
+  if(is(x,"SummarizedExperiment")){
+    x$amuletFromCounts.q <- q
+    return(x)
+  }
+  q
 }

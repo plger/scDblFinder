@@ -61,7 +61,8 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
     barcodes <- readLines(barcodes) # assume barcodes to be a text file
   if(!is.null(regionsToExclude)){
     if(length(regionsToExclude)==1 && file.exists(regionsToExclude)){
-      if(verbose) message("Reading regions to exclude...")
+      if(verbose) message(format(Sys.time(), "%X"),
+                          " - Reading regions to exclude")
       regionsToExclude <- rtracklayer::import(regionsToExclude)
     }else{
       stopifnot(is.null(regionsToExclude) || is(regionsToExclude, "GRanges"))
@@ -76,8 +77,9 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
     if(!file.exists(x)) stop("x should be a fragment file!")
     if(!fullInMemory &&
        is(tf <- tryCatch(TabixFile(x), error=function(e) NULL), "TabixFile")){
-      if(verbose) message("Reading Tabix-indexed fragment file and ",
-                          "computing overlaps...")
+      if(verbose) message(format(Sys.time(), "%X"),
+                          " - Reading Tabix-indexed fragment file and ",
+                          "computing overlaps")
       x <- bplapply(seqnamesTabix(tf), BPPARAM=BPPARAM, FUN=function(x){
         if(verbose) cat(paste0(x,", "))
         getFragmentOverlaps(
@@ -90,7 +92,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
       })
       if(verbose){
         cat("\n")
-        message("Merging...")
+        message(format(Sys.time(), "%X"), " - Merging")
       }
       if(ret=="loci") return(unlist(GRangesList(x)))
       if(ret=="coverages"){
@@ -133,6 +135,9 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
            the 'score' column containing the counts).")
     gr <- x
   }
+  if(!all(!is.na(seqlengths(gr))))
+    seqlengths(gr) <- setNames(sapply(split(end(gr), seqnames(gr)), max)
+                               [seqlevels(gr)], seqlevels(gr))
   gr <- gr[(width(gr)<=maxFragSize),]
   gr$name <- as.factor(gr$name)
   if(!is.null(regionsToExclude)){
@@ -142,7 +147,8 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
     gr <- gr[!overlapsAny(gr, regionsToExclude)]
   }
   
-  if(verbose) message("Splitting and subsetting barcodes...")
+  if(verbose) message(format(Sys.time(), "%X"),
+                      "Splitting and subsetting barcodes...")
   uniqFrags <- table(gr$name)
   if(minFrags<1L & minFrags>0L) minFrags <- round(minFrags*length(gr))
   if(is.null(barcodes)){
@@ -154,7 +160,6 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
                 " are missing from the fragments file!")
     uniqFrags <- uniqFrags[intersect(names(uniqFrags), barcodes)]
   }
-  seqlengths(gr) <- sapply(split(end(gr), seqnames(gr)), max)[seqlevels(gr)]
   gr <- gr[gr$name %in% names(uniqFrags)]
   gr$name <- droplevels(gr$name)
   if(length(gr)==0) return(emptyOutput)
@@ -165,8 +170,11 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   }else{
     gr <- GenomicRanges::split(granges(gr), gr$name)
   }
-  if(ret=="coverages") return(lapply(gr, FUN=coverage))
-  if(verbose) message("Obtaining overlaps...")
+  if(ret=="coverages"){
+    if(verbose) message(format(Sys.time(), "%X"), " - Computing coverages")
+    return(lapply(gr, FUN=coverage))
+  }
+  if(verbose) message(format(Sys.time(), "%X"), "Obtaining overlaps...")
   d <- data.frame(row.names=names(gr), nFrags=as.integer(lengths(gr)), 
                   uniqFrags=as.integer(uniqFrags[names(gr)]))
   d$nAbove2 <- 0L
