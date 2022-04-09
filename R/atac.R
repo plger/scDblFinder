@@ -67,7 +67,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
   
   if(verbose) message(format(Sys.time(), "%X"), " - Scoring network")
   k <- .defaultKnnKs(k, sum(labels=="real"))
-  kd <- .evaluateKNN(m, labels, rep(NA_integer_,length(labels)), k=k)$d
+  kd <- .evaluateKNN(m$m, labels, rep(NA_integer_,length(labels)), k=k)$d
   d <- m <- cbind(d, kd[,grep("weighted|ratio", colnames(kd))])
   m <- as.matrix(m)
   
