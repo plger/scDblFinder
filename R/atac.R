@@ -57,33 +57,39 @@ amulet <- function(x, ...){
 #' @return A data.frame
 #' @export
 #' @importFrom IRanges Views viewMaxs slice
-clamulet <- function(x, artificialDoublets=NULL, iter=2, minCount=0.001, 
+clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001, 
                      maxN=500, nfeatures=25, max_depth=5, threshold=0.75, 
                      returnAll=FALSE, verbose=TRUE, ...){
   m <- .clamulet.buildTable(x, nADbls=artificialDoublets, maxN=maxN,
                             nfeatures=nfeatures, verbose=verbose, ...)
+  d <- m$d
+  labels <- m$labels
+  
+  if(verbose) message(format(Sys.time(), "%X"), " - Scoring network")
+  k <- .defaultKnnKs(k, sum(labels=="real"))
+  kd <- .evaluateKNN(m, labels, rep(NA_integer_,length(labels)), k=k)$d
+  d <- m <- cbind(d, kd[,grep("weighted|ratio", colnames(kd))])
+  m <- as.matrix(m)
   
   if(verbose) message(format(Sys.time(), "%X"), " - Iterative training")
   
-  d <- data.frame(row.names=row.names(m$m))
   d$include.in.training <- TRUE
-  d$type <- m$labels
-  d$score <- predict(.xgbtrain(m$m, m$labels, max_depth=3), m$m)
+  d$type <- labels
+  d$score <- predict(.xgbtrain(m, labels, max_depth=3), m)
   
   max.iter <-  iter
   while(iter>0){
     # remove cells with a high chance of being doublets from the training
-    w <- which(d$type=="real" & d$score > 0.75)
+    w <- which(d$type=="real" & d$score > 0.6)
     if(verbose) message("iter=",max.iter-iter,", ", length(w),
                         " cells excluded from training.")
     d$score <- tryCatch({
-      fit <- .xgbtrain(m$m[-w,], d$type[-w], max_depth=max_depth, nthreads=1L)
-      predict(fit, as.matrix(m$m))
+      fit <- .xgbtrain(m[-w,], d$type[-w], max_depth=max_depth, nthreads=1L)
+      predict(fit, m)
     }, error=function(e) d$score)
     iter <- iter-1
   }
   d$include.in.training[w] <- FALSE
-  d <- cbind(m$m[,c("total","total.nAbove2","nAbove2")], d)
   if(!returnAll){
     d <- d[d$type=="real",]
     d$type <- NULL
@@ -162,8 +168,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, minCount=0.001,
   tt <- table(gr2$name)
   d[names(tt),"nAbove2"] <- as.integer(tt)
   
-  m <- rbind( 10000*cbind(counts, acounts)/d$total, t(d[,-1]))
-  list(m=t(m), labels=d$type)
+  m <- t(scale(t(t(10000*cbind(counts, acounts))/d$total)))
+  list(m=m, d=d[,-1], labels=d$type)
 }
 
 # adds up to RleLists

@@ -306,10 +306,7 @@ scDblFinder <- function(
             "cells. If these are from different captures, please specify this",
             " using the `samples` argument.", immediate=TRUE)
 
-  if(is.null(k)){ ## reasonable sets of ks (for KNN)
-    k <- c(3,10,20)
-    if((kmax <- max(ceiling(sqrt(ncol(sce)/6)),20))>=30) k <- c(k,kmax)
-  }
+  k <- .defaultKnnKs(k, ncol(sce))
 
   orig <- sce
   wDbl <- c()
@@ -764,4 +761,14 @@ scDblFinder <- function(
   if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
     metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
   sce
+}
+
+
+## sets a reasonable set of ks (for KNN)
+.defaultKnnKs <- function(k, n){
+  if(is.null(k)){
+    k <- c(3,10,20)
+    if((kmax <- max(ceiling(sqrt(ncol(n)/6)),20))>=30) k <- c(k,kmax)
+  }
+  k
 }

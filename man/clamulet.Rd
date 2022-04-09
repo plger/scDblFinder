@@ -8,6 +8,7 @@ clamulet(
   x,
   artificialDoublets = NULL,
   iter = 2,
+  k = NULL,
   minCount = 0.001,
   maxN = 500,
   nfeatures = 25,

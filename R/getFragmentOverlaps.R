@@ -121,10 +121,10 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
       })), row.names=barcodes))
     }else{
       if(!fullInMemory){
-        warning("Fragment file is not tabix-indexed, requiring the",
+        message("Fragment file is not tabix-indexed, requiring the",
                 "whole file to be imported in memory.")
       }else if(verbose){
-        message("Reading full fragments...")
+        message(format(Sys.time(), "%X"), " - Reading full fragments...")
       }
       gr <- rtracklayer::import(x, format="bed")
     }
@@ -148,7 +148,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   }
   
   if(verbose) message(format(Sys.time(), "%X"),
-                      "Splitting and subsetting barcodes...")
+                      " - Splitting and subsetting barcodes...")
   uniqFrags <- table(gr$name)
   if(minFrags<1L & minFrags>0L) minFrags <- round(minFrags*length(gr))
   if(is.null(barcodes)){
@@ -174,7 +174,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
     if(verbose) message(format(Sys.time(), "%X"), " - Computing coverages")
     return(lapply(gr, FUN=coverage))
   }
-  if(verbose) message(format(Sys.time(), "%X"), "Obtaining overlaps...")
+  if(verbose) message(format(Sys.time(), "%X"), " - Obtaining overlaps...")
   d <- data.frame(row.names=names(gr), nFrags=as.integer(lengths(gr)), 
                   uniqFrags=as.integer(uniqFrags[names(gr)]))
   d$nAbove2 <- 0L
