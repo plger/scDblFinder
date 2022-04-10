@@ -1,0 +1,129 @@
+---
+title: "Doublet identifiation in single-cell ATAC-seq"
+author:
+- name: Pierre-Luc Germain
+  affiliation: University and ETH Zürich
+package: scDblFinder
+output:
+  BiocStyle::html_document
+abstract: |
+  An introduction to the methods implemented for doublet detection in single-cell
+  ATAC-seq.
+vignette: |
+  %\VignetteIndexEntry{6_scATAC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+library(BiocStyle)
+```
+
+# Introduction
+
+Analyses in single-cell RNAseq are typically limited to a relatively small (e.g. one or two thousands) set of features that are most informative; these are often the genes with a higher expression (and hence more chances of being quantified).
+In contrast, single-cell ATACseq (scATACseq) data is considerably more sparse, with most reads being spread across hundreds of thousands of regions.
+In this context, selecting a subset of genes is highly ineffective, and therefore many of the methods developed for single-cell RNAseq are not easily applicable, and need to be adapted.
+Methods have therefore been developed specifically for scATACseq data (Granja et al. 2021; Thibodeau et al. 2021).
+
+This vignette presents different approaches to doublet detection in single-cell ATAC-seq implemented in the package: the first is an adaptation of `scDblFinder`, the second a reimplementation of the AMULET method from Thibodeau et al. (2021). The latter has the advantage of capturing homotypic doublets, but does not perform well in all datasets, and especially requires the cells to have a high library size. We therefore next present two ways of combining the two.
+
+# Applying the scDblFinder method
+
+With default parameters, the `scDblFinder` method performs very poorly on scATACseq data due to the increase spread of the reads across many features. Since working with all features (i.e. tiles or peaks) is computationally very expensive, an alternative approach is to begin by reducing the size of the dataset, not through _selection_ (as in scRNAseq), but by _aggregating_ correlated features into a relatively small set.
+This has the advantage of using all information, as well as making the count data more continuous.
+This method yields comparable performance to specialized single-cell ATACseq software (Germain et al., 2021).
+
+The feature aggregation can be triggered using the `aggregateFeatures=TRUE` argument, which will aggregate peak or tile counts into the number of meta-features defined by the `nfeatures`.
+If the number of meta-features is low (which we recommend), the meta-features can be directly used to calculated distances rather than going through the SVD step (which can be triggered with the `processing` argument). Such an example would be:
+
+```{r}
+library(scDblFinder)
+# we use a dummy SingleCellExperiment as example:
+sce <- mockDoubletSCE(ngenes=300)
+# setting low number of artificial doublets (same as ncells) just for speedup:
+sce <- scDblFinder(sce, artificialDoublets=1, aggregateFeatures=TRUE, nfeatures=25, processing="normFeatures")
+```
+
+# Using the Amulet method
+
+The AMULET method from Thibodeau et al. (2021) is based on the assumption that, in a diploid cell, any given genomic region should be captured at most twice. Therefore, cells with loci covered by more than two fragments are indicative of the droplet being a doublet. Of note, this approach has the advantage of capturing homotypic doublets, which instead tend to be missed by other methods. Since it was only available in the form of a mixture of java and python scripts, we re-implemented the method in `scDblFinder` (see `?amulet`), leading to equal or superior results to the original implementation (Germain et al. 2021).
+
+As in the original implementation, we recommend excluding the mitochondrial and sex chromosomes, as well as repetitive regions. This can be specified with the `regionsToExclude` argument (see the underlying `?getFragmentOverlaps`). It can be used as follows:
+
+```{r}
+# here we use a dummy fragment file for example:
+fragfile <- system.file("extdata", "example_fragments.tsv.gz", package="scDblFinder")
+
+# we might also give a GRanges of repeat elements, so that these regions are excluded:
+repeats <- GRanges("chr6", IRanges(1000,2000))
+# it's better to combine these with mitochondrial and sex chromosomes
+otherChroms <- GRanges(c("M","chrM","MT","X","Y","chrX","chrY"),IRanges(1L,width=10^8))
+# here since I don't know what chromosome notation you'll be using I've just put them all,
+# although this will trigger a warning when combining them:
+toExclude <- suppressWarnings(c(repeats, otherChroms))
+# we then launch the method
+res <- amulet(fragfile, regionsToExclude=toExclude)
+res
+```
+
+The results is a data.frame with statistics for each barcode, including a p-value. In contrast to the `scDblFinder` score, a lower p-value here is indicative of the droplet being more likely to be a doublet (as in the original method).
+By default, only the barcodes with a minimum number of reads are considered, but it is possible to specify the droplets for which to gather statistics using the `barcodes` argument.
+
+While the package includes an implementation that works based on peak/tile count matrices (see `?amuletFromCounts`), it has a much lower performance with respect to the one based directly on the fragment files (see `?amulet`), and we therefore discourage its use.
+
+The workhorse behind the `amulet` function is the `getFragmentOverlaps`, which also includes all of the relevant arguments.
+If the fragment files are not Tabix-indexed, the whole fragment file will have to be loaded in memory for processing; while this ensures relatively rapid computation, it has high memory requirements. Therefore, if the fragment file is Tabix-indexed (as is for instance done as part of the ArchR pipeline), it will be read and processed per chromosome, which is a little slower due to overhead, but keeps memory requirements rather low. This behavior can be disabled by specifying `fullInMemory=TRUE`.
+
+# Combining mehtods
+
+While the `scDblFinder`-based approach generally performs well, none of the two approach is optimal across all datasets tested. We therefore investigated two strategies for combining the rationales of each approach.
+
+The Amulet method tends to perform best with datasets that have homotypic doublets and where cells have a high library size (i.e. median library size per cell of 10-15k reads), while the `scDblFinder`-based approach works better for heterotypic doublets. Until an optimal solution is found, we recommend using multiple approaches to inform decisions, in particular using the p-value combination method below.
+
+## The Clamulet method
+
+The `clamulet` method (Classification-powered Amulet-like method) operates similarly to the `scDblFinder` method, but generates artificial doublets by operating on the fragment coverages. This has the advantage that the number of loci covered by more than two reads can be computed for artificial doublets, enabling the use of this feature (along with the kNN-based ones) in a classification scheme. It however has the disadvantage of being rather slow and memory hungry, and appears to be outperformed by a simple p-value combination of the two methods (see below).
+
+The `clamulet` method uses the aforementioned aggregation approach, and its usage includes a number of arguments from both the `scDblFinder` and `amulet` method (see in particular `?getFragmentOverlaps`):
+
+```{r, eval=FALSE}
+# not run
+d <- clamulet("path/to/fragments.tsv.gz")
+```
+
+Since our dummy fragment file is so small (5 barcodes), here we'll have to adjust the arguments for an example to run:
+
+```{r}
+d <- clamulet(fragfile, k=2, nfeatures=3)
+d
+```
+
+The score can then be interpreted as for `scDblFinder`. We however note that this method proved *inferior to alternatives*.
+
+## Simple p-value combination
+
+The amulet and scDblFinder scores above can be simply combined by treating them as p-values and aggregating them (here using the `r CRANpkg("aggregation")` package, but see also the `r CRANpkg("metap")` package):
+
+```{r, eval=FALSE}
+res$scDblFinder.p <- 1-colData(sce)[row.names(res), "scDblFinder.score"]
+res$combined <- apply(res[,c("scDblFinder.p", "q.value")], 1,
+                      FUN=aggregation::fisher)
+```
+
+We found this to perform better than averaging the scores or their ranks, and while it is not the very best method in any of the datasets tested, it has a more robust performance overall (see Germain et al., 2021).
+
+
+# References
+
+Jeffrey M. Granja et al., “ArchR Is a Scalable Software Package for Integrative Single-Cell Chromatin Accessibility Analysis,” Nature Genetics, February 25, 2021, 1–9, https://doi.org/10.1038/s41588-021-00790-6
+
+Asa Thibodeau et al., “AMULET: A Novel Read Count-Based Method for Effective Multiplet Detection from Single Nucleus ATAC-Seq Data,” Genome Biology 22, no. 1 (December 2021): 252, https://doi.org/10.1186/s13059-021-02469-x
+
+Pierre-Luc Germain et al., “Doublet Identification in Single-Cell Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021), https://doi.org/10.12688/f1000research.73600.1
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
