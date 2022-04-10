@@ -42,6 +42,7 @@ amulet <- function(x, ...){
 #'   for performance/memory-related guidelines)
 #' @param artificialDoublets The number of artificial doublets to generate
 #' @param iter The number of learning iterations (should be 1 to)
+#' @param k The number(s) of nearest neighbors at which to gather statistics 
 #' @param minCount The minimum number of cells in which a locus is detected to
 #'   be considered. If lower than 1, it is interpreted as a fraction of the 
 #'   number of cells.
@@ -53,6 +54,15 @@ amulet <- function(x, ...){
 #' @param returnAll Logical; whether to return data also for artificial doublets
 #' @param verbose Logical; whether to print progress information
 #' @param ... Arguments passed to \code{\link{getFragmentOverlaps}}
+#' 
+#' @details 
+#' `clamulet` operates similarly to the `scDblFinder` method, but generates 
+#' doublets by operating on the fragment coverages. This has the advantage that
+#' the number of loci covered by more than two reads can be computed for 
+#' artificial doublets, enabling the use of this feature (along with the 
+#' kNN-based ones) in a classification scheme. It however has the disadvantage
+#' of being rather slow and memory hungry, and appears to be outperformed by a
+#' simple p-value combination of the two methods (see vignette).
 #'
 #' @return A data.frame
 #' @export
@@ -99,6 +109,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
 }
 
 
+#' @importFrom GenomicRanges seqnames
 .clamulet.buildTable <- function(x, nADbls=NULL, minCount=0.001, maxN=500, 
                                  nfeatures=25, verbose=TRUE, ...){
   co <- getFragmentOverlaps(x, ..., ret="coverages", fullInMemory=TRUE,
@@ -173,9 +184,10 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
 }
 
 # adds up to RleLists
+#' @importFrom S4Vectors runValue
 .sumRleLists <- function(x,y){
   names(useqlvls) <- useqlvls <- union(names(x),names(y))
-  isEmptyRle <- function(x) length(x@values)==1
+  isEmptyRle <- function(x) length(runValue(x))==1
   as(lapply(useqlvls, FUN=function(seql){
     if(is.null(x[[seql]]) || isEmptyRle(x[[seql]])) return(y[[seql]])
     if(is.null(y[[seql]]) || isEmptyRle(y[[seql]])) return(x[[seql]])
@@ -193,6 +205,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
 }
 
 # obtains maximum count per window from a list of coverage RleList
+#' @importFrom S4Vectors Rle
+#' @importFrom GenomicRanges seqnames start end
 .getCovCounts <- function(co, windows, fun=IRanges::viewMaxs){
   if(is(windows, "GRanges"))
     windows <- split(ranges(windows), seqnames(windows))
@@ -230,6 +244,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
 #' as columns. If the rows represent peaks, it is recommended to limite their
 #' width (see details).
 #' @param maxWidth the maximum width for a feature to be included. This is 
+#' ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.
+#' @param exclude an optional `GRanges` of regions to be excluded. This is 
 #' ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.
 #'
 #' @return If `x` is a `SingleCellExperiment`, returns the object with an 

@@ -13,6 +13,9 @@ width (see details).}
 
 \item{maxWidth}{the maximum width for a feature to be included. This is 
 ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.}
+
+\item{exclude}{an optional `GRanges` of regions to be excluded. This is 
+ignored unless `x` is a `SingleCellExperiment` with `rowRanges`.}
 }
 \value{
 If `x` is a `SingleCellExperiment`, returns the object with an 

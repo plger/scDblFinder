@@ -27,6 +27,8 @@ for performance/memory-related guidelines)}
 
 \item{iter}{The number of learning iterations (should be 1 to)}
 
+\item{k}{The number(s) of nearest neighbors at which to gather statistics}
+
 \item{minCount}{The minimum number of cells in which a locus is detected to
 be considered. If lower than 1, it is interpreted as a fraction of the 
 number of cells.}
@@ -51,4 +53,13 @@ A data.frame
 }
 \description{
 Classification-powered Amulet-like method
+}
+\details{
+`clamulet` operates similarly to the `scDblFinder` method, but generates 
+doublets by operating on the fragment coverages. This has the advantage that
+the number of loci covered by more than two reads can be computed for 
+artificial doublets, enabling the use of this feature (along with the 
+kNN-based ones) in a classification scheme. It however has the disadvantage
+of being rather slow and memory hungry, and appears to be outperformed by a
+simple p-value combination of the two methods (see vignette).
 }

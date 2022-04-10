@@ -557,7 +557,7 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
   for(i in seq_len(iter)){
     dT <- suppressWarnings(doubletThresholding(d, dbr=dbr, returnType="call"))
     w <- which( d$type=="real" & dT=="doublet" )
-    message(paste0("Round ",i,": ",length(w)," excluded from training."))
+    message("Round ",i,": ",length(w)," excluded from training.")
     d$score <- tryCatch({
       fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, max_depth=max_depth)
       predict(fit, as.matrix(preds))
