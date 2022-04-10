@@ -8,8 +8,6 @@ The methods included here are _complementary_ to doublets detection via cell has
 
 For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://f1000research.com/articles/10-979/v1). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
-**scDblFinder has improved considerably since earlier versions, so please make sure you're using an up-to-date version!**
-
 <br/><br/>
 
 ## Getting started
