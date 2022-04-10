@@ -64,6 +64,8 @@ The expected proportion of doublets has little impact on the score, but a very s
 
 The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter (see vignette).
 
+In addition, the package includes a reimplementation of the Amulet method from Thibodeau et al. (2021).
+
 <br/><br/>
 
 For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html).
