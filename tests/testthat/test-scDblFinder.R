@@ -43,3 +43,14 @@ test_that("doublet enrichment works as expected", {
   cs <- clusterStickiness(sce)$FDR
   expect_equal(sum(is.na(cs)),0)
 })
+
+
+test_that("amulet works as expected", {
+  fragfile <- system.file("extdata","example_fragments.tsv.gz",
+                          package="scDblFinder")
+  res <- amulet(fragfile)
+  expect_equal(res$nFrags, c(878,2401,2325,1882,1355))
+  expect_equal(sum(res$nAbove2<=1), 4)
+  expect_equal(res["barcode5","nAbove2"], 6)
+  expect_lt(res["barcode5","p.value"], 0.01)
+})
