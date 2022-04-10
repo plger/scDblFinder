@@ -1,7 +1,7 @@
 Package: scDblFinder
 Type: Package
 Title: scDblFinder
-Version: 1.9.9
+Version: 1.9.10
 Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -15,7 +15,7 @@ Description:
     includes methods formerly found in the scran package, the new fast
     and comprehensive scDblFinder method, and a reimplementation of the
     Amulet detection method for single-cell ATAC-seq.
-License: GPL-3
+License: GPL-3 + file LICENSE
 Imports: 
     igraph, 
     Matrix,
@@ -56,4 +56,4 @@ Suggests:
 VignetteBuilder: knitr
 Encoding: UTF-8
 RoxygenNote: 7.1.2
-biocViews: Preprocessing, SingleCell, RNASeq
+biocViews: Preprocessing, SingleCell, RNASeq, ATACSeq

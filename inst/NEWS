@@ -1,3 +1,7 @@
+Changes in version 1.9.9 (2022-04-9)
++ improved amulet reimplementation
++ added clamulet and scATAC vignette
+
 Changes in version 1.9.1 (2021-11-02)
 + added reimplementation of the amulet method for scATAC-seq
 

@@ -42,7 +42,8 @@
 #' @importFrom Rsamtools TabixFile seqnamesTabix
 #' @importFrom rtracklayer import
 #' @importFrom stats ppois
-#' @importFrom GenomeInfoDb keepSeqlevels seqlevels seqlengths seqlengths<-
+#' @importFrom GenomeInfoDb keepSeqlevels seqlevels seqlevelsInUse
+#' @importFrom GenomeInfoDb seqlengths seqlengths<- 
 #' @export
 getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   c("M","chrM","MT","X","Y","chrX","chrY"),
