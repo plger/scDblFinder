@@ -32,3 +32,10 @@ them with Tabix; in this case each chromosome will be read and processed
 separately, leading to a considerably lower memory footprint. See the 
 underlying \code{\link{getFragmentOverlaps}} for details.
 }
+\examples{
+# here we use a dummy fragment file for example:
+fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
+                         package="scDblFinder" )
+res <- amulet(fragfile)
+
+}

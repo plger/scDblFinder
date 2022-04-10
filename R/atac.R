@@ -22,6 +22,12 @@
 #'   more than two reads, the number of reads, and p- and q-values (low values
 #'   indicative of doublets).
 #' 
+#' @examples
+#' # here we use a dummy fragment file for example:
+#' fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
+#'                          package="scDblFinder" )
+#' res <- amulet(fragfile)
+#' 
 #' @importFrom GenomicRanges reduce
 #' @importFrom S4Vectors splitAsList mcols
 #' @importFrom IRanges overlapsAny
@@ -104,7 +110,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
     d <- d[d$type=="real",]
     d$type <- NULL
   }
-  if(verbose) message(format(Sys.time(), "%X"), "Done!")
+  if(verbose) message(format(Sys.time(), "%X"), " Done!")
   d
 }
 
