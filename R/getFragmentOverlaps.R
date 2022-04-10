@@ -42,7 +42,7 @@
 #' @importFrom Rsamtools TabixFile seqnamesTabix
 #' @importFrom rtracklayer import
 #' @importFrom stats ppois
-#' @importFrom GenomeInfoDb keepSeqlevels seqlevels
+#' @importFrom GenomeInfoDb keepSeqlevels seqlevels seqlengths seqlengths<-
 #' @export
 getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   c("M","chrM","MT","X","Y","chrX","chrY"),
@@ -141,10 +141,14 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   gr <- gr[(width(gr)<=maxFragSize),]
   gr$name <- as.factor(gr$name)
   if(!is.null(regionsToExclude)){
-    regionsToExclude <- keepSeqlevels(regionsToExclude,
-                                      intersect(seqlevels(gr),seqlevels(regionsToExclude)),
-                                      pruning.mode="coarse")
-    gr <- gr[!overlapsAny(gr, regionsToExclude)]
+    regionsToExclude <- regionsToExclude[which(
+                    as.factor(seqnames(regionsToExclude)) %in% seqlevels(gr))]
+    if(length(regionsToExclude)>0){
+      regionsToExclude <- keepSeqlevels(regionsToExclude,
+                                        value=seqlevelsInUse(regionsToExclude),
+                                        pruning.mode="coarse")
+      gr <- gr[!overlapsAny(gr, regionsToExclude)]
+    }
   }
   
   if(verbose) message(format(Sys.time(), "%X"),
