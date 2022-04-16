@@ -71,6 +71,8 @@
 #' @param trainingFeatures The features to use for training (defaults to an
 #' optimal pre-selection based on benchmark datasets). To exclude features
 #' (rather than list those to be included), prefix them with a "-".
+#' @param unident.th The score threshold below which artificial doublets will be
+#' considered unidentifiable.
 #' @param processing Counts (real and artificial) processing before KNN. Either
 #' 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
 #' without normalization), "rawFeatures" (no normalization/dimensional
@@ -191,7 +193,7 @@ scDblFinder <- function(
   removeUnidentifiable=TRUE, includePCs=10, propRandom=0, propMarkers=0,
   aggregateFeatures=FALSE,  returnType=c("sce","table","full","counts"),
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
-  nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL,
+  nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
 
@@ -212,6 +214,8 @@ scDblFinder <- function(
       clusters <- .checkColArg(sce, clusters)
     if(is.factor(clusters)) clusters <- droplevels(clusters)
   }
+  if(is.null(unident.th))
+    unident.th <- ifelse(is.null(clusters) || isFALSE(clusters), 0.2, 0)
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
   .checkPropArg(propMarkers)
@@ -260,7 +264,7 @@ scDblFinder <- function(
       }
       tryCatch(
         scDblFinder(sce[sel_features,x], clusters=clusters, dims=dims, dbr=dbr,
-                    dbr.sd=dbr.sd, clustCor=clustCor,
+                    dbr.sd=dbr.sd, clustCor=clustCor, unident.th=unident.th,
                     knownDoublets=knownDoublets, knownUse=knownUse,
                     artificialDoublets=artificialDoublets, k=k,
                     processing=processing, nfeatures=nfeatures,
@@ -288,7 +292,7 @@ scDblFinder <- function(
       d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
                        dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
                        iter=iter, BPPARAM=BPPARAM, verbose=verbose,
-                       features=trainingFeatures,
+                       features=trainingFeatures, unident.th=unident.th,
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE)
@@ -369,7 +373,7 @@ scDblFinder <- function(
   ## get the artificial doublets
   if(is.null(artificialDoublets))
     artificialDoublets <- min( 25000, max(5000,
-                                          ceiling(ncol(sce)*0.6),
+                                          ceiling(ncol(sce)*0.8),
                                           10*length(unique(cl))^2 ) )
   if(artificialDoublets<=2)
     artificialDoublets <- min(ceiling(artificialDoublets*ncol(sce)),25000)
@@ -469,7 +473,8 @@ scDblFinder <- function(
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
                    max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
                    features=trainingFeatures, verbose=verbose, metric=metric,
-                   filterUnidentifiable=removeUnidentifiable)
+                   filterUnidentifiable=removeUnidentifiable,
+                   unident.th=unident.th)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
   if(returnType=="table") return(d)
@@ -568,7 +573,7 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         features=NULL, filterUnidentifiable=TRUE, addVals=NULL,
                         metric="logloss", eta=0.3, BPPARAM=SerialParam(),
-                        includeSamples=FALSE, perSample=TRUE, ...){
+                        includeSamples=FALSE, perSample=TRUE, unident.th=0.1, ...){
   gdbr <- .gdbr(d, dbr)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.3*gdbr+0.025
@@ -628,7 +633,7 @@ scDblFinder <- function(
           doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
                               perSample=perSample,
                               returnType="call")=="doublet") |
-            (d$type=="doublet" & d$score<0.1 & filterUnidentifiable) |
+            (d$type=="doublet" & d$score<unident.th & filterUnidentifiable) |
             !d$include.in.training )
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
@@ -765,10 +770,10 @@ scDblFinder <- function(
 
 
 ## sets a reasonable set of ks (for KNN)
-.defaultKnnKs <- function(k, n){
-  if(is.null(k)){
-    k <- c(3,10,20)
-    if((kmax <- max(ceiling(sqrt(ncol(n)/6)),20))>=30) k <- c(k,kmax)
-  }
-  k
+.defaultKnnKs <- function(k=NULL, n){
+  if(!is.null(dim(n))) n <- ncol(n)
+  if(!is.null(k)) k[k<=n/3]
+  kmax <- max(ceiling(sqrt(n/6)),20)
+  k <- c(3,10,15,20,25,50,kmax)
+  unique(k[k<=kmax])
 }

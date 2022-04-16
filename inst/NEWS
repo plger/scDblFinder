@@ -1,3 +1,6 @@
+Changes in version 1.9.11 (2022-04-16)
++ fixed larger kNN size
+
 Changes in version 1.9.9 (2022-04-9)
 + improved amulet reimplementation
 + added clamulet and scATAC vignette

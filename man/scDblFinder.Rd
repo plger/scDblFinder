@@ -30,6 +30,7 @@ scDblFinder(
   max_depth = 4,
   iter = 3,
   trainingFeatures = NULL,
+  unident.th = NULL,
   multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
   verbose = is.null(samples),
@@ -153,6 +154,9 @@ new scores are calculated. Recommended values are 1 or 2.}
 \item{trainingFeatures}{The features to use for training (defaults to an
 optimal pre-selection based on benchmark datasets). To exclude features
 (rather than list those to be included), prefix them with a "-".}
+
+\item{unident.th}{The score threshold below which artificial doublets will be
+considered unidentifiable.}
 
 \item{multiSampleMode}{Either "split" (recommended if there is
 heterogeneity across samples), "singleModel", "singleModelSplitThres", or
