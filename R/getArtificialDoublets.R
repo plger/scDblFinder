@@ -41,8 +41,8 @@
 #' doublets <- getArtificialDoublets(m, 30)
 #'
 #' @export
-getArtificialDoublets <- function( x, n=3000, clusters=NULL, resamp=0.1,
-                                   halfSize=0, adjustSize=0.1, propRandom=0.1,
+getArtificialDoublets <- function( x, n=3000, clusters=NULL, resamp=0.25,
+                                   halfSize=0.25, adjustSize=0.25, propRandom=0.1,
                                    selMode=c("proportional","uniform","sqrt"),
                                    n.meta.cells=2, meta.triplets=TRUE,
                                    trim.q=c(0.05,0.95) ){
