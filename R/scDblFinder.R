@@ -773,7 +773,7 @@ scDblFinder <- function(
 .defaultKnnKs <- function(k=NULL, n){
   if(!is.null(dim(n))) n <- ncol(n)
   if(!is.null(k)) return(k[k<=ceiling(n/2)])
-  kmax <- max(ceiling(sqrt(n/6)),20)
+  kmax <- max(ceiling(sqrt(n/2)),25)
   k <- c(3,10,15,20,25,50,kmax)
   unique(k[k<=kmax])
 }
