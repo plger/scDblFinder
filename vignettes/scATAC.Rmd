@@ -104,12 +104,14 @@ The score can then be interpreted as for `scDblFinder`. We however note that thi
 
 ## Simple p-value combination
 
-The amulet and scDblFinder scores above can be simply combined by treating them as p-values and aggregating them (here using the `r CRANpkg("aggregation")` package, but see also the `r CRANpkg("metap")` package):
+The amulet and scDblFinder scores above can be simply combined by treating them as p-values and aggregating them (here using Fisher's method from the `r CRANpkg("aggregation")` package, but see also the `r CRANpkg("metap")` package):
 
 ```{r, eval=FALSE}
 res$scDblFinder.p <- 1-colData(sce)[row.names(res), "scDblFinder.score"]
-res$combined <- apply(res[,c("scDblFinder.p", "q.value")], 1,
-                      FUN=aggregation::fisher)
+res$combined <- apply(res[,c("scDblFinder.p", "p.value")], 1, FUN=function(x){
+  x[x<0.001] <- 0.001 # prevent too much skew from very small or 0 p-values
+  suppressWarnings(aggregation::fisher(x))
+})
 ```
 
 We found this to perform better than averaging the scores or their ranks, and while it is not the very best method in any of the datasets tested, it has a more robust performance overall (see Germain et al., 2021).

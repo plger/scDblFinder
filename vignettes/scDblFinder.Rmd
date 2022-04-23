@@ -24,6 +24,10 @@ library(BiocStyle)
 The `scDblFinder` method combines the strengths of various doublet detection approaches, 
 training an iterative classifier on the neighborhood of real cells and artificial doublets.
 
+`scDblFinder()` has two main modes of operation: cluster-based or not.
+Both perform quite well (see [Germain et al., 2021](https://f1000research.com/articles/10-979)).
+In general, we recommend the cluster-based approach in datasets with a very clear cluster structure, and the random approach in more complex datasets.
+
 ## Installation
 
 ```{r, eval=FALSE}
@@ -37,29 +41,42 @@ BiocManager::install("plger/scDblFinder")
 
 ## Usage
 
-The input of `scDblFinder` is an object `sce` of class `r Biocpkg("SingleCellExperiment")` (empty drops having already been removed) containing at least the counts (assay 'counts'). If normalized expression (assay 'logcounts') and PCA (reducedDim 'PCA') are also present, these will be used for the clustering step (unless clusters are given.)
+The input of `scDblFinder` is an object `sce` of class `r Biocpkg("SingleCellExperiment")` (empty drops having already been removed) containing at least the counts (assay 'counts'). Alternatively, a simple count matrix can also be provided.
 
-Given an SCE object:
+Given an SCE object, `scDblFinder` (using the random approach) can be launched as follows :
 
 ```{r, warning=FALSE}
 set.seed(123)
 library(scDblFinder)
 # we create a dummy dataset; since it's small we set a higher doublet rate
-sce <- mockDoubletSCE(dbl.rate=0.1)
-# we run scDblFinder (providing the unsually high doublet rate)
+sce <- mockDoubletSCE(dbl.rate=0.1, ngenes=300 )
+# we run scDblFinder (providing the unusually high doublet rate)
 sce <- scDblFinder(sce, dbr=0.1)
 ```
 
 For 10x data, it is usually safe to leave the `dbr` empty, and it will be automatically estimated.
+
 `scDblFinder` will add a number of columns to the colData of `sce` prefixed with 'scDblFinder', the most important of which are:
 
 * `sce$scDblFinder.score` : the final doublet score
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
+We can compare the calls with the truth in this toy example:
+
 ```{r}
 table(truth=sce$type, call=sce$scDblFinder.class)
 ```
 
+To use the *cluster-based* approach, one simply needs to additionally provide the `clusters` argument:
+
+```{r}
+sce <- scDblFinder(sce, clusters="cluster")
+table(truth=sce$type, call=sce$scDblFinder.class)
+```
+
+The `clusters` argument can be either a vector of cluster labels for each column of `sce`, a colData column of `sce` containing such labels, or `TRUE`.
+If `clusters=TRUE`, the fast clustering approach (see `?fastcluster`) will be employed.
+If normalized expression (assay 'logcounts') and/or PCA (reducedDim 'PCA') are already present in the object, these will be used for the clustering step.
 
 ### Multiple samples
 
@@ -158,12 +175,13 @@ Then you most likely have a wrong doublet rate. If you did not provide it (`dbr`
 
 The most common cause for an unexpectedly large proportion of doublets is if you have a multi-sample dataset and did not split by samples. `scDblFinder` will think that the data is a single capture with loads of cells, and hence with a very high doublet rate. Splitting by sample should solve the issue.
 
-The thresholding tries to minimize both the deviance from the expected number of doublets and the misclassification (i.e. of artificial doublets), meaning that the effective (i.e. final) doublet rate will differ from the given one. `scDblFinder` also considers false positives to be less problematic than false negatives. You can reduce to some degree the deviation from the input doublet rate by setting `dbr.sd=0`.
+The thresholding tries to minimize both the deviation from the expected number of doublets and the misclassification (i.e. of artificial doublets), meaning that the effective (i.e. final) doublet rate will differ from the given one. `scDblFinder` also considers false positives to be less problematic than false negatives. You can reduce to some degree the deviation from the input doublet rate by setting `dbr.sd=0`.
 
 ### Should I use the cluster-based doublet generation or not?
 
-While both approaches perform very similarly in benchmarks, the random generation approach is often slightly superior in complex datasets. If your data is very clearly segregated into clusters, or if you are interested in the origin of the doublets, the cluster-based approach is preferable. This will also enable a more accurate accounting of homotypic doublets, and therefore a slightly better thresholding.
-Otherwise, and especially if your data does not segregate very clearly into clusters, the random approach (e.g. `clusters=FALSE`) is preferable.
+Both approaches perform very similarly overall in benchmarks.
+If your data is very clearly segregated into clusters, or if you are interested in the origin of the doublets, the cluster-based approach is preferable. This will also enable a more accurate accounting of homotypic doublets, and therefore a slightly better thresholding.
+Otherwise, and especially if your data does not segregate very clearly into clusters, the random approach (e.g. `clusters=FALSE`, the default) is preferable.
 
 ### The clusters don't make any sense!
 
@@ -171,7 +189,7 @@ If you ran `scDblFinder` on a multi-sample dataset and did not provide the clust
 
 ### 'Size factors should be positive' error
 
-You will get this error if you have some cells that have zero (or very close to zero) reads. After filtering out these cells the error should go away. Note, however, that we recommend not having too stringent filtering before running scDblFinder.
+You will get this error if you have some cells that have zero reads (or a very low read count, leading to zero after feature selection). After filtering out these cells the error should go away.
 
 ### How can I make this reproducible?
 
@@ -193,11 +211,7 @@ After artificial doublets generation, the counts of real and artificial cells mu
 
 ### Can this be used with scATACseq data?
 
-Yes, specifically working on peak-level data. Because of the much greater sparsity of single-cell ATAC-seq data and the fact that `scDblFinder` works with a selection of features, using it with standard parameters will yield a poor performance. We therefore recommend to use `aggregateFeatures=TRUE`, which will aggregate similar features (rather than selecting features) before the normal `scDblFinder` procedure, and yields excellent results. If few enough (which we recommend), these features can be directly used to calculated distances rather than going through the SVD step, in the following way:
-
-```{r, eval=FALSE}
-sce <- scDblFinder(sce, aggregateFeatures=TRUE, nfeatures=25, processing="normFeatures")
-```
+Yes, see the [scATAC vignette](scATAC.html) specifically on this topic.
 
 ### Should I run QC cell filtering before or after doublet detection?
 
