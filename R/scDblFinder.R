@@ -403,7 +403,7 @@ scDblFinder <- function(
 
   # evaluate by library size and non-zero features
   lsizes <- Matrix::colSums(e)
-  cxds_score <- cxds2(e, whichDbls=which(ctype==2L | !inclInTrain))
+  cxds_score <- cxds2(e, whichDbls=which(ctype=="doublet" | !inclInTrain))
   nfeatures <- Matrix::colSums(e>0L)
   nAbove2 <- Matrix::colSums(e>2L)
 
