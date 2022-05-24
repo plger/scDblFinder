@@ -122,6 +122,10 @@ NULL
     if (is.null(size.factors.norm)) {
         size.factors.norm <- librarySizeFactors(x, BPPARAM=BPPARAM)
     }
+    if(!all(size.factors.norm>0))
+        stop("Some size.factors are not positive. This typically happens ",
+             "because some cells have no reads in the features specified by ",
+             "`subset.row` -- these should be filtered out.")
 
     # Manually controlling the size factor centering here to ensure the final counts are on the same scale.
     size.factors.norm <- size.factors.norm/mean(size.factors.norm)
