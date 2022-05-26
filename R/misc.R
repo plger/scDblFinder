@@ -291,6 +291,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
                           binThresh=binThresh)
     return(x)
   }
+  x[is.na(x)] <- 0L
   Bp <- x <- x > binThresh
   ps <- Matrix::rowMeans(x)
   if(nrow(x)>ntop){
