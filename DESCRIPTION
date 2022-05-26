@@ -2,7 +2,6 @@ Package: scDblFinder
 Type: Package
 Title: scDblFinder
 Version: 1.11.2
-Depends: R (>= 4.0)
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
     person("Aaron", "Lun", email="infinite.monkeys.with.keyboards@gmail.com", role="ctb"))
@@ -16,6 +15,9 @@ Description:
     and comprehensive scDblFinder method, and a reimplementation of the
     Amulet detection method for single-cell ATAC-seq.
 License: GPL-3 + file LICENSE
+Depends:
+    R (>= 4.0),
+    SingleCellExperiment
 Imports: 
     igraph, 
     Matrix,
@@ -25,7 +27,6 @@ Imports:
     BiocSingular,
     S4Vectors,
     SummarizedExperiment, 
-    SingleCellExperiment, 
     scran,
     scater, 
     scuttle,
