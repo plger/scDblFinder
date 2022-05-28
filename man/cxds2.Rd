@@ -4,7 +4,7 @@
 \alias{cxds2}
 \title{cxds2}
 \usage{
-cxds2(x, whichDbls = c(), ntop = 500, binThresh = 0)
+cxds2(x, whichDbls = c(), ntop = 500, binThresh = NULL)
 }
 \arguments{
 \item{x}{A matrix of counts, or a `SingleCellExperiment` containing a
@@ -26,11 +26,14 @@ Calculates a coexpression-based doublet score using the method developed by
 This is the original implementation from the
 \href{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}
 package, but enabling scores to be calculated for all cells while the gene
-coexpression is based only on a subset (i.e. excluding known/artificial doublets).
+coexpression is based only on a subset (i.e. excluding known/artificial 
+doublets) and making it robust to low sparsity.
 }
 \examples{
 sce <- mockDoubletSCE()
 sce <- cxds2(sce)
+# which is equivalent to
+# sce$cxds_score <- cxds2(counts(sce))
 }
 \references{
 \url{https://doi.org/10.1093/bioinformatics/btz698}

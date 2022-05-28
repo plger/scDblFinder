@@ -270,7 +270,8 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' This is the original implementation from the
 #' \href{https://www.bioconductor.org/packages/release/bioc/html/scds.html}{scds}
 #' package, but enabling scores to be calculated for all cells while the gene
-#' coexpression is based only on a subset (i.e. excluding known/artificial doublets).
+#' coexpression is based only on a subset (i.e. excluding known/artificial 
+#' doublets) and making it robust to low sparsity.
 #'
 #' @param x A matrix of counts, or a `SingleCellExperiment` containing a
 #' 'counts'
@@ -281,19 +282,41 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' @return A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an
 #' added `cxds_score` colData column.
 #' @export
-#' @importFrom stats pbinom
+#' @importFrom stats pbinom quantile median
 #' @examples
 #' sce <- mockDoubletSCE()
 #' sce <- cxds2(sce)
-cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=0){
+#' # which is equivalent to
+#' # sce$cxds_score <- cxds2(counts(sce))
+cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
   if(is(x,"SingleCellExperiment")){
     x$cxds_score <- cxds2(counts(x), whichDbls=whichDbls, ntop=ntop,
                           binThresh=binThresh)
     return(x)
   }
   x[is.na(x)] <- 0L
-  Bp <- x <- x > binThresh
-  ps <- Matrix::rowMeans(x)
+  if(is.null(binThresh)){
+    # to handle datasets with very low sparsity, filter out rows with too few
+    # zeros and adjust the binarization threshold
+    if(is(x,"sparseMatrix")){
+      pNonZero <- length(x@x)/length(x)
+    }else{
+      pNonZero <- sum(x>0)/length(x)
+    }
+    if(pNonZero>0.5){
+      pNonZero <- rowSums(x>0)/ncol(x)
+      x <- x[head(order(pNonZero), ntop),]
+      if(is(x,"sparseMatrix")){
+        binThresh <- max(1L, as.numeric(quantile(x@x, mean(pNonZero)*0.5)))
+      }else{
+        binThresh <- max(1L, median(x))
+      }
+    }else{
+      binThresh <- 1L
+    }
+  }
+  Bp <- x <- x >= binThresh
+  ps <- rowMeans(x)
   if(nrow(x)>ntop){
     hvg <- order(ps * (1 - ps), decreasing=TRUE)[seq_len(ntop)]
     Bp <- x <- x[hvg, ]
