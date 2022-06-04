@@ -280,7 +280,7 @@ mockDoubletSCE <- function(ncells=c(200,300), ngenes=200, mus=NULL,
 #' @param binThresh The count threshold to be considered expressed.
 #' @references \url{https://doi.org/10.1093/bioinformatics/btz698}
 #' @return A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an
-#' added `cxds_score` colData column.
+#'   added `cxds_score` colData column.
 #' @export
 #' @importFrom stats pbinom quantile median
 #' @examples
@@ -386,7 +386,8 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
 
 #' propHomotypic
 #'
-#' Computes the proportion of pairs expected to be made of elements from the same cluster.
+#' Computes the proportion of pairs expected to be made of elements from the 
+#' same cluster.
 #'
 #' @param clusters A vector of cluster labels
 #'
@@ -451,9 +452,9 @@ propHomotypic <- function(clusters){
 
 
 
-# procedure to 0-1 rescale scores across samples so that the mins, maxs, and trimmed mean
-# of real and artificial cells is the same across samples; then doing quantile
-# normalization between these fixed points
+# procedure to 0-1 rescale scores across samples so that the mins, maxs, and 
+# trimmed mean of real and artificial cells is the same across samples; then 
+# doing quantile normalization between these fixed points
 .rescaleSampleScores <- function(d, byType=is.null(q), q=NULL, what="score",
                                  newName=NULL, mode=c("quantile","linear")){
   mode <- match.arg(mode)
