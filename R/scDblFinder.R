@@ -251,7 +251,6 @@ scDblFinder <- function(
     if(!(isSplitMode <- multiSampleMode=="split")) includePCs <- c()
     if(returnType=="full")
       warning("`returnType='full'` ignored when splitting by samples")
-    if(returnType!="counts") returnType <- "table"
     cs <- split(seq_along(samples), samples, drop=TRUE)
     names(nn) <- nn <- names(cs)
     ## run scDblFinder individually
@@ -270,8 +269,8 @@ scDblFinder <- function(
                     processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers, trainingFeatures=trainingFeatures,
-                    returnType=returnType, threshold=isSplitMode,
-                    score=ifelse(isSplitMode,score,"weighted"),
+                    returnType=ifelse(returnType=="counts","counts","table"),
+                    threshold=isSplitMode, score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
                     aggregateFeatures=aggregateFeatures, ...),
                error=function(e){
@@ -284,10 +283,8 @@ scDblFinder <- function(
       return(do.call(cbind, d))
     }
     ## aggregate the property tables
-    if(multiSampleMode=="split"){
-      return(.scDblAddCD(sce, d))
-    }else{
-      d <- .aggResultsTable(d)
+    d <- .aggResultsTable(d)
+    if(multiSampleMode!="split"){
       ## score and thresholding
       d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
                        dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
@@ -296,9 +293,9 @@ scDblFinder <- function(
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE)
-      if(returnType=="table") return(d)
-      return(.scDblAddCD(sce, d))
     }
+    if(returnType=="table") return(d)
+    return(.scDblAddCD(sce, d))
   }
 
   ## Handling a single sample
