@@ -194,13 +194,16 @@ You will get this error if you have some cells that have zero reads (or a very l
 ### How can I make this reproducible?
 
 Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results.
-You can ensure reproducibility using `set.seed()`, however this will not be sufficient when multithreading.
+You can ensure reproducibility using `set.seed()`, however this will not be sufficient when processing multiple samples because `BiocParallel` is used.
 In such case, the seed needs to be passed to the BPPARAMs:
 
 ```
 bp <- MulticoreParam(3, RNGseed=1234)
 sce <- scDblFinder(sce, clusters="cluster", samples="sample", BPPARAM=bp)
 ```
+
+Similarly, when processing the samples serially, use `SerialParam(RNGseed = seed)`.
+
 (Note that in `BiocParallel` versions <1.28, one had in addition to explicitly start the cluster before the run using `bpstart(bp)`, and then `bpstop(bp)` after `scDblFinder`.)
 
 ### Can I use this in combination with Seurat or other tools?
