@@ -6,7 +6,7 @@
 The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell sequencing data (i.e. multiple cells captured within the same droplet or reaction volume), including the novel `scDblFinder` method.
 The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
-For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://f1000research.com/articles/10-979/v1). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
+For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://f1000research.com/articles/10-979/). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
 <br/><br/>
 
@@ -31,16 +31,14 @@ sce <- scDblFinder(sce)
 This will add a number of columns to the `colData` of `sce`, the most important of which are:
 
 * `sce$scDblFinder.score` : the final doublet score (the higher the more likely that the cell is a doublet)
-* `sce$scDblFinder.ratio` : the ratio of artificial doublets in the cell's neighborhood
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
 There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the [vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html) (`vignette("scDblFinder")`).
 
 ### Multiple samples
 
-If you have multiple samples (understood as different cell captures, i.e. for multiplexed samples with cell hashes, rather use the well/batch), then it is preferable to provide `scDblFinder` with this information. The generation of artificial doublets and the characterization of the nearest neighbors will be performed separately for each capture, the final scoring will be performed globally, and the thresholding will take into consideration batch/sample-specific doublet rates. You can do this by simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or,
-if these are stored in a column of `colData`, the name of the column. In this case,
-you might also consider multithreading it using the `BPPARAM` parameter. For example:
+If you have multiple samples (understood as different cell captures, i.e. for multiplexed samples with cell hashes, rather use the batch), then it is preferable to provide `scDblFinder` with this information in order to take into consideration batch/sample-specific doublet rates. You can do this by simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or, if these are stored in a column of `colData`, the name of the column. With default settings, the this will result in samples being processed separately, which appears to be faster, more robust to batch effects, and as accurate as training a single model (see the `multiSampleMode` argument for other options).
+In such cases, you might also consider multithreading it using the `BPPARAM` parameter. For example:
 
 ```r
 library(BiocParallel)
