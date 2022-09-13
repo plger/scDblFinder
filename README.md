@@ -75,3 +75,8 @@ For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/p
 The figure below compares some of the methods implemented in this package (in bold) with alternative methods (including the top alternative, `DoubletFinder`):
 <img src="inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods"/>
 **Figure1:** Accuracy (area under the precision and recall curve) of doublet identification using alternative methods across 16 benchmark datasets from Xi and Li (2020). The colour of the dots indicates the relative ranking for the dataset, while the size and numbers indicate the actual area under the (PR) curve. For each dataset, the top method is circled in black. Methods with names in black are provided in the `scDblFinder` package. Running times are indicated on the left. On top the number of cells in each dataset is shown, and colored by the proportion of variance explained by the first two components (relative to that explained by the first 100), as a rough guide to dataset simplicity.
+
+
+<br/><br/>
+
+Rather a <b>python</b> person? You can have a look at [vaeda](https://www.biorxiv.org/content/10.1101/2022.04.15.488440v1.full), another doublet finding method which appears to have performances very close to those of scDblFinder.
