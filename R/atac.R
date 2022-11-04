@@ -223,7 +223,7 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
       x <- c(x, def[missing])
     x <- x[names(windows)]
     unlist(fun(Views(x, windows)), use.names=FALSE)
-  }), "dgCMatrix")
+  }), "CsparseMatrix")
 }
 
 # slide a RleList and returns a GR

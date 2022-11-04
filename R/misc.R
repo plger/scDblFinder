@@ -439,7 +439,7 @@ propHomotypic <- function(clusters){
   }
   if( !("counts" %in% assayNames(sce)) )
     stop("`sce` should have an assay named 'counts'")
-  counts(sce) <- as(counts(sce),"dgCMatrix")
+  counts(sce) <- as(counts(sce),"CsparseMatrix")
   if(min(colSums(counts(sce)))<200)
     warning("Some cells in `sce` have an extremely low read counts; note ",
             "that these could trigger errors and might best be filtered out")

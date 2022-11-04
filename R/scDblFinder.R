@@ -598,16 +598,16 @@ scDblFinder <- function(
     }
     if(!is.null(features)) message(paste("Features used for training:\n",
                                    paste(prds,collapse=", ")))
-    preds <- as(as.matrix(d[,prds,drop=FALSE]), "dgCMatrix")
+    preds <- as(as.matrix(d[,prds,drop=FALSE]), "CsparseMatrix")
 
 
     if(includeSamples && !is.null(d$sample))
       preds <- cbind(preds, as(stats::model.matrix(~d$sample)[,-1,drop=FALSE],
-                               "dgCMatrix"))
+                               "CsparseMatrix"))
 
     if(!is.null(addVals)){
       stopifnot(nrow(addVals)==nrow(preds))
-      preds <- cbind(preds, as(addVals, "dgCMatrix"))
+      preds <- cbind(preds, as(addVals, "CsparseMatrix"))
       rm(addVals)
     }
     w <- which(d$type=="real")

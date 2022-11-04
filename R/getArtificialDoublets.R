@@ -102,7 +102,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL, resamp=0.25,
     ad.m <- ad.m$counts
     n <- ceiling(n*(1-propRandom))
   }else{
-    ad.m <- as(as.matrix(x[,1:2])[,c(),drop=FALSE], "dgCMatrix")
+    ad.m <- as(as.matrix(x[,1:2])[,c(),drop=FALSE], "CsparseMatrix")
     oc <- character()
   }
 
@@ -149,7 +149,7 @@ getArtificialDoublets <- function( x, n=3000, clusters=NULL, resamp=0.25,
     ca <- expand.grid(i, i, i)
     ca <- ca[ca[,1]<ca[,2] & ca[,2]<ca[,3],,drop=FALSE]
     m2 <- round((meta[,ca[,1],drop=FALSE]+meta[,ca[,2]]+meta[,ca[,3]])/2)
-    if(is(ad.m,"dgCMatrix")) m2 <- as(m2,"dgCMatrix")
+    if(is(ad.m,"sparseMatrix")) m2 <- as(m2,"CsparseMatrix")
     oc2 <- rep(NA_character_, ncol(m2))
     names(oc2) <- colnames(m2) <-
       paste0("artTriplet.", ncol(ad.m)+seq_len(ncol(m2)))
@@ -352,7 +352,7 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
   }else{
     x <- round(x)
   }
-  x <- as(x,"dgCMatrix")
+  x <- as(x,"CsparseMatrix")
   colnames(x) <- paste0( prefix, seq_len(ncol(x)) )
   x
 }
