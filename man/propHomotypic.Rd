@@ -13,7 +13,8 @@ propHomotypic(clusters)
 A numeric value between 0 and 1.
 }
 \description{
-Computes the proportion of pairs expected to be made of elements from the same cluster.
+Computes the proportion of pairs expected to be made of elements from the 
+same cluster.
 }
 \examples{
 clusters <- sample(LETTERS[1:5], 100, replace=TRUE)

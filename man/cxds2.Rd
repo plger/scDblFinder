@@ -18,7 +18,7 @@ cxds2(x, whichDbls = c(), ntop = 500, binThresh = NULL)
 }
 \value{
 A cxds score or, if `x` is a `SingleCellExperiment`, `x` with an
-added `cxds_score` colData column.
+  added `cxds_score` colData column.
 }
 \description{
 Calculates a coexpression-based doublet score using the method developed by

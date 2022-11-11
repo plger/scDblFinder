@@ -7,8 +7,8 @@
 getFragmentOverlaps(
   x,
   barcodes = NULL,
-  regionsToExclude = GRanges(c("M", "chrM", "MT", "X", "Y", "chrX", "chrY"),
-    IRanges(1L, width = 10^8)),
+  regionsToExclude = GRanges(c("M", "chrM", "MT", "X", "Y", "chrX", "chrY"), IRanges(1L,
+    width = 10^8)),
   minFrags = 500L,
   uniqueFrags = TRUE,
   maxFragSize = 1000L,
