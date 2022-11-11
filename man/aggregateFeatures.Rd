@@ -7,11 +7,12 @@
 aggregateFeatures(
   x,
   dims.use = seq(2L, 12L),
-  k = 1000,
+  k = 100,
   num_init = 3,
   use.mbk = NULL,
   use.subset = 5000,
-  use.TFIDF = TRUE,
+  norm.fn = TFIDF,
+  twoPass = FALSE,
   ...
 )
 }
@@ -31,12 +32,17 @@ used if there are more than 30000 features.}
 
 \item{use.subset}{How many cells (columns) to use to cluster the features.}
 
-\item{use.TFIDF}{Logical; whether to use \link{TFIDF} normalization (instead
-of standard normalization) to assess the similarity between features.
-similarity}
+\item{twoPass}{Logical; whether to perform the procedure twice, so in the 
+second round cells are aggregated based on the meta-features of the first 
+round, before re-clustering the features. Ignored if the dataset has fewer
+than `use.subset` cells.}
 
 \item{...}{Passed to \code{\link[mbkmeans]{mbkmeans}}. Can for instance be
 used to pass the `BPPARAM` argument for multithreading.}
+
+\item{use.TFIDF}{Logical; whether to use \link{TFIDF} normalization (instead
+of standard normalization) to assess the similarity between features.
+similarity}
 }
 \value{
 An aggregated version of `x` (either an array or a

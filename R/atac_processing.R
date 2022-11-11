@@ -40,6 +40,11 @@ TFIDF <- function(x, sf=10000){
 #' @param use.TFIDF Logical; whether to use \link{TFIDF} normalization (instead
 #' of standard normalization) to assess the similarity between features.
 #' similarity
+#' @param twoPass Logical; whether to perform the procedure twice, so in the 
+#'   second round cells are aggregated based on the meta-features of the first 
+#'   round, before re-clustering the features. Ignored if the dataset has fewer
+#'   than `use.subset` cells.
+#'   
 #' @param ... Passed to \code{\link[mbkmeans]{mbkmeans}}. Can for instance be
 #' used to pass the `BPPARAM` argument for multithreading.
 #'
@@ -48,28 +53,60 @@ TFIDF <- function(x, sf=10000){
 #'
 #' @importFrom scuttle logNormCounts
 #' @importFrom BiocSingular runPCA IrlbaParam
+#' @export
 aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
-                              use.mbk=NULL, use.subset=5000, use.TFIDF=TRUE,
-                              ...){
+                              use.mbk=NULL, use.subset=5000, 
+                              norm.fn=TFIDF, twoPass=FALSE, ...){
   xo <- x
+  
   if(ncol(x)>use.subset){
     if(is(x,"SingleCellExperiment")){
       cs <- Matrix::colSums(counts(x))
     }else{
       cs <- Matrix::colSums(x)
     }
-    x <- x[,order(cs,decreasing=TRUE)[seq_len(use.subset)]]
+    # get rid of the cells with low libsize
+    x <- x[,head(order(cs,decreasing=TRUE),
+                 min(mean(use.subset,ncol(x)),2L*use.subset))]
+    # if needed, sample randomly the remaining
+    if(ncol(x)>use.subset)
+      x <- x[,sample.int(ncol(x), use.subset, replace=FALSE)]
   }
-  if(use.TFIDF){
-    if(is(x,"SingleCellExperiment")) x <- counts(x)
-    x <- TFIDF(x)
-  }else{
-    if(is(x,"SingleCellExperiment")){
-      if("logcounts" %in% assayNames(x)) x <- scuttle::logNormCounts(x)
-      x <- logcounts(x)
-    }
-    x <- t(normalizeCounts(t(x)))
+  if(is(x,"SingleCellExperiment")) x <- counts(x)
+  
+  rs <- Matrix::rowSums(x)
+  xo <- xo[which(rs>0L),]
+  x <- x[which(rs>0L),]
+  
+  x <- norm.fn(x)
+
+  fc <- .clusterFeaturesStep(x, k=k, dims.use=dims.use, use.mbk=use.mbk,
+                             num_init=num_init, ...)
+
+  if(twoPass & use.subset<ncol(xo)){
+    message("Second iteration...")
+    x <- t(normalizeCounts(scuttle::sumCountsAcrossFeatures(xo, fc)))
+    cellclust <- kmeans(scale(x), min(1000,ceiling(use.subset/2)), iter.max=100, 
+                        nstart=num_init)$cluster
+    x <- sumCountsAcrossCells(xo, cellclust)
+    if(is(x,"SummarizedExperiment")) x <- assay(x)
+    x <- norm.fn(x)
+    fc <- .clusterFeaturesStep(x, k=k, dims.use=seq_len(max(dims.use)),
+                               use.mbk=use.mbk, num_init=num_init, ...)
   }
+
+  x <- scuttle::sumCountsAcrossFeatures(xo, fc)
+  row.names(x) <- paste0("feat",seq_len(nrow(x)))
+  if(is(xo,"SingleCellExperiment")){
+    x <- SingleCellExperiment(list(counts=x), colData=colData(xo),
+                              reducedDims=reducedDims(xo))
+  }
+  x
+}
+
+# used by aggregateFeatures
+.clusterFeaturesStep <- function(x, k, dims.use=2L:12L, use.mbk=NULL, 
+                                 num_init=3L, ...){
   pca <- runPCA(x, BSPARAM=IrlbaParam(), center=FALSE,
                 rank=max(dims.use))$x[,dims.use]
   if(is.null(use.mbk)) use.mbk <- nrow(x) > 30000
@@ -78,11 +115,5 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
   }else{
     fc <- kmeans(pca, k, nstart=num_init, iter.max=100)$cluster
   }
-  x <- scuttle::sumCountsAcrossFeatures(xo, fc)
-  row.names(x) <- paste0("feat",seq_len(nrow(x)))
-  if(is(xo,"SingleCellExperiment")){
-    x <- SingleCellExperiment(list(counts=x), colData=colData(xo),
-                              reducedDims=reducedDims(xo))
-  }
-  x
+  fc
 }

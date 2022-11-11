@@ -2,6 +2,7 @@
 
 export(TFIDF)
 export(addDoublets)
+export(aggregateFeatures)
 export(amulet)
 export(amuletFromCounts)
 export(clamulet)
