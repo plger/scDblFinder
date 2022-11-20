@@ -1,3 +1,9 @@
+Changes in version 1.13.3 (2022-11-20)
++ updated default parameters according to https://arxiv.org/abs/2211.00772
+
+Changes in version 1.13.2 (2022-11-11)
++ added two-pass mode for feature aggregation
+
 Changes in version 1.9.11 (2022-04-16)
 + fixed larger kNN size
 
