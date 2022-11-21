@@ -194,7 +194,7 @@ You will get this error if you have some cells that have zero reads (or a very l
 ### How can I make this reproducible?
 
 Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results.
-You can ensure reproducibility using `set.seed()`, however this will not be sufficient when processing multiple samples because `BiocParallel` is used.
+You can ensure reproducibility using `set.seed()`, however this will not be sufficient when processing multiple samples if multithreading is used.
 In such case, the seed needs to be passed to the BPPARAMs:
 
 ```
