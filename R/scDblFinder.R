@@ -279,7 +279,7 @@ scDblFinder <- function(
     })
     if(returnType=="counts"){
       ## aggregate the SCEs
-      for(s in names(d)) d[[s]]$sample <- d[[s]]
+      for(s in names(d)) d[[s]]$sample <- s
       return(do.call(cbind, d))
     }
     ## aggregate the property tables
