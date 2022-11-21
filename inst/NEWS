@@ -1,3 +1,6 @@
+Changes in version 1.13.4 (2022-11-21)
++ fixed bug in samples reporting in split mode (doesn't affect doublets scores)
+
 Changes in version 1.13.3 (2022-11-20)
 + updated default parameters according to https://arxiv.org/abs/2211.00772
 
