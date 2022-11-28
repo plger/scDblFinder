@@ -218,6 +218,7 @@ scDblFinder <- function(
     unident.th <- ifelse(is.null(clusters) || isFALSE(clusters), 0.2, 0)
   knownDoublets <- .checkColArg(sce, knownDoublets)
   samples <- .checkColArg(sce, samples)
+  if(!is.null(samples)) samples <- as.factor(samples)
   .checkPropArg(propMarkers)
   .checkPropArg(propRandom)
   .checkPropArg(dbr.sd)
@@ -261,7 +262,7 @@ scDblFinder <- function(
         knownDoublets <- knownDoublets[x]
         if(!any(knownDoublets)) knownDoublets <- NULL
       }
-      tryCatch(
+      out <- tryCatch(
         scDblFinder(sce[sel_features,x], clusters=clusters, dims=dims, dbr=dbr,
                     dbr.sd=dbr.sd, clustCor=clustCor, unident.th=unident.th,
                     knownDoublets=knownDoublets, knownUse=knownUse,
@@ -276,12 +277,11 @@ scDblFinder <- function(
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
+      if(!is.matrix(out)) out$sample <- n
+      out
     })
-    if(returnType=="counts"){
-      ## aggregate the SCEs
-      for(s in names(d)) d[[s]]$sample <- s
-      return(do.call(cbind, d))
-    }
+    if(returnType=="counts") return(do.call(cbind, d))
+
     ## aggregate the property tables
     d <- .aggResultsTable(d)
     if(multiSampleMode!="split"){
@@ -735,15 +735,13 @@ scDblFinder <- function(
   cn <- table(unlist(lapply(d, colnames)))
   cn <- c(names(cn)[cn==length(d)], "total.prop.real")
   if(!is.null(keep.col)) cn <- intersect(cn, keep.col)
-  ss <- factor(rep(seq_along(names(d)),vapply(d,nrow,integer(1))),
-               levels=seq_along(names(d)), labels=names(d))
   d <- do.call(rbind, lapply(d, FUN=function(x){
     x$total.prop.real <- sum(x$type=="real",na.rm=TRUE)/nrow(x)
     if(!is.null(x$cluster)) x$cluster <- as.character(x$cluster)
     x[,cn]
   }))
   if(!is.null(d$cluster)) d$cluster <- as.factor(d$cluster)
-  d$sample <- ss
+  if(!is.null(d$sample)) d$sample <- as.factor(d$sample)
   d
 }
 

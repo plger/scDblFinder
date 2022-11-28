@@ -480,7 +480,7 @@ propHomotypic <- function(clusters){
   }
   if(mode=="quantile"){
     .qscale <- function(x, by){
-      si <- split(seq_along(x),droplevels(by))
+      si <- split(seq_along(x),as.character(by))
       sf <- lapply(si, ecdf)
       for(s in names(si)) x[si[[s]]] <- sf[[s]](x[si[[s]]])
       x
