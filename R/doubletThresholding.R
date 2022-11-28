@@ -236,9 +236,11 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, stringency=0.5, p=0.1
 }
 
 .estimateHeterotypicDbRate <- function(d, dbr=NULL){
+  d <- as.data.frame(d)
   if(!is.null(d$sample)){
     sd <- split(d[,setdiff(colnames(d),"sample")],d$sample)
     if(length(dbr)==1) dbr <- rep(dbr,length(sd))
+    if(is.null(dbr)) dbr <- unlist(lapply(sd, FUN=.gdbr))
     return(unlist(mapply(d=sd, dbr=dbr, FUN=.estimateHeterotypicDbRate)))
   }
   dbr <- .gdbr(d, dbr=dbr)
