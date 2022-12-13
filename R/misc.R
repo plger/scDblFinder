@@ -445,6 +445,10 @@ propHomotypic <- function(clusters){
             "that these could trigger errors and might best be filtered out")
   if(is.null(colnames(sce)))
     colnames(sce) <- paste0("cell",seq_len(ncol(sce)))
+  if(any(duplicated(colnames(sce)))){
+    warning("Duplicated cell names found, names were appended a suffix.")
+    colnames(sce) <- make.unique(colnames(sce))
+  }
   if(is.null(row.names(sce)))
     row.names(sce) <- paste0("f",seq_len(nrow(sce)))
   sce
