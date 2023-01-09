@@ -36,7 +36,8 @@
 #' (they are used as positive doublets for training - usually leads to a mild
 #' decrease in accuracy due to the fact that known doublets typically include
 #' a sizeable fraction of homotypic doublets).
-#' @param nfeatures The number of top features to use (default 1000)
+#' @param nfeatures The number of top features to use. Alternatively, a 
+#'   character vectors of feature names (e.g. highly-variable genes) to use.
 #' @param dims The number of dimensions used.
 #' @param dbr The expected doublet rate. By default this is assumed to be 1\%
 #' per thousand cells captured (so 4\% among 4000 thousand cells), which is
@@ -231,13 +232,22 @@ scDblFinder <- function(
     on.exit(bpstop(BPPARAM))
   }
 
-  ## if clusters are given, it's more efficient to do feature selection before
-  ## eventually splitting the dataset
-  if(!is.null(clusters) && length(clusters)>1 && !aggregateFeatures){
-    sel_features <- selFeatures(sce, clusters, nfeatures=nfeatures,
-                                propMarkers=propMarkers)
+  if(length(nfeatures)>1){
+    if(!all(nfeatures %in% row.names(sce)))
+      stop("'nfeatures' has a length >1, which is interpreted as feature (i.e.",
+           " row) names to use, but not all of the features specified are ",
+           "found in the object. ")
+    sel_features <- nfeatures
+    nfeatures <- length(sel_features)
   }else{
-    sel_features <- row.names(sce)
+    ## if clusters are given, it's more efficient to do feature selection before
+    ## eventually splitting the dataset
+    if(!is.null(clusters) && length(clusters)>1 && !aggregateFeatures){
+      sel_features <- selFeatures(sce, clusters, nfeatures=nfeatures,
+                                  propMarkers=propMarkers)
+    }else{
+      sel_features <- row.names(sce)
+    }
   }
 
   if(!is.null(samples) && multiSampleMode=="asOne"){
