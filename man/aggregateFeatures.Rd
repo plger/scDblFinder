@@ -7,7 +7,7 @@
 aggregateFeatures(
   x,
   dims.use = seq(2L, 12L),
-  k = 100,
+  k = 1000,
   num_init = 3,
   use.mbk = NULL,
   use.subset = 5000,

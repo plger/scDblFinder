@@ -45,6 +45,7 @@ sce <- mockDoubletSCE(ngenes=300)
 sce <- scDblFinder(sce, artificialDoublets=1, aggregateFeatures=TRUE, nfeatures=25, processing="normFeatures")
 ```
 
+
 # Using the Amulet method
 
 The AMULET method from Thibodeau et al. (2021) is based on the assumption that, in a diploid cell, any given genomic region should be captured at most twice. Therefore, cells with loci covered by more than two fragments are indicative of the droplet being a doublet. Of note, this approach has the advantage of capturing homotypic doublets, which instead tend to be missed by other methods. Since it was only available in the form of a mixture of java and python scripts, we re-implemented the method in `scDblFinder` (see `?amulet`), leading to equal or superior results to the original implementation (Germain et al. 2021).

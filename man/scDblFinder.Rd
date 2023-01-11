@@ -14,11 +14,11 @@ scDblFinder(
   knownUse = c("discard", "positive"),
   dbr = NULL,
   dbr.sd = NULL,
-  nfeatures = 1000,
+  nfeatures = 1352,
   dims = 20,
   k = NULL,
   removeUnidentifiable = TRUE,
-  includePCs = 10,
+  includePCs = 19,
   propRandom = 0,
   propMarkers = 0,
   aggregateFeatures = FALSE,
@@ -94,7 +94,8 @@ rate will be calculated from these boundaries, and will be considered null
 within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
  disable.}
 
-\item{nfeatures}{The number of top features to use (default 1000)}
+\item{nfeatures}{The number of top features to use. Alternatively, a 
+character vectors of feature names (e.g. highly-variable genes) to use.}
 
 \item{dims}{The number of dimensions used.}
 

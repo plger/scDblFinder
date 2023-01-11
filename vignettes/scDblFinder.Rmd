@@ -179,7 +179,7 @@ The thresholding tries to minimize both the deviation from the expected number o
 
 ### Should I use the cluster-based doublet generation or not?
 
-Both approaches perform very similarly overall in benchmarks.
+Both approaches perform very similarly overall in benchmarks (see the [scDblFinder paper](https://f1000research.com/articles/10-979/)).
 If your data is very clearly segregated into clusters, or if you are interested in the origin of the doublets, the cluster-based approach is preferable. This will also enable a more accurate accounting of homotypic doublets, and therefore a slightly better thresholding.
 Otherwise, and especially if your data does not segregate very clearly into clusters, the random approach (e.g. `clusters=FALSE`, the default) is preferable.
 
@@ -209,8 +209,49 @@ Similarly, when processing the samples serially, use `SerialParam(RNGseed = seed
 ### Can I use this in combination with Seurat or other tools?
 
 If the input SCE already contains a `logcounts` assay or a `reducedDim` slot named 'PCA', scDblFinder will use them for the clustering step. In addition, a clustering can be manually given using the `clusters` argument of `scDblFinder()`. In this way, `r Githubpkg("satijalab.org/seurat")` clustering could for instance be used to create the artificial doublets (see `?Seurat::as.SingleCellExperiment.Seurat` for conversion to SCE).
+For example, assuming as `Seurat` object `se`, the following could be done:
 
-After artificial doublets generation, the counts of real and artificial cells must then be reprocessed (i.e. normalization and PCA) together, which is performed internally using `r Biocpkg("scater")`. If you wish this step to be performed differently, you may provide your own function for doing so (see the ``processing`` argument in `?scDblFinder`). We note, however, that the impact of variations of this step on doublet detection is rather mild. In fact, not performing any normalization at all for instance decreases doublet identification accuracy, but by rather little.
+```
+sce <- scDblFinder(GetAssayData(se, slot="counts"), clusters=Idents(se))
+# port the resulting scores back to the Seurat object:
+se$scDblFinder.score <- sce$scDblFinder.score
+```
+
+After artificial doublets generation, the counts of real and artificial cells must then be reprocessed (i.e. normalization and PCA) together, which is performed internally using `r Biocpkg("scater")`.
+If you wish this step to be performed differently, you may provide your own function for doing so (see the ``processing`` argument in `?scDblFinder`). We note, however, that the impact of variations of this step on doublet detection is rather mild.
+In fact, not performing any normalization at all for instance decreases doublet identification accuracy, but by rather little.
+
+For example, the following code would enable the internal use of [sctransform](https://github.com/satijalab/sctransform):
+
+```
+# assuming `x` is the count matrix:
+nfeatures <- 1000
+sce <- SingleCellExperiment(list(counts=x))
+# sctransform on real cells:
+vst1 <- sctransform::vst(counts(sce), n_cells=min(ncol(sce),5000), verbosity=0)
+sce <- sce[row.names(vst1$y),]
+logcounts(sce) <- vst1$y
+hvg <- row.names(sce)[head(order(vst1$gene_attr$residual_variance, decreasing=TRUE), nfeatures)]
+
+# define a processing function that scDblFinder will use on the real+artificial doublets;
+# the input should be a count matrix and the number of dimensions, and the output a PCA matrix
+  
+myfun <- function(e, dims){
+  # we use the thetas calculated from the first vst on real cells
+  e <- e[intersect(row.names(e), row.names(vst1$model_pars_fit[which(!is.na(vst1$model_pars_fit[,"theta"])),])),]
+  vst2 <- sctransform::vst(e, n_cells=min(ncol(e),5000), method="nb_theta_given", 
+                           theta_given=vst1$model_pars_fit[row.names(e),"theta"],
+                           min_cells=1L, verbosity=0)
+  scater::calculatePCA(vst2$y, ncomponents=dims)
+}
+  
+sce <- scDblFinder(sce, processing=myfun, nfeatures=hvg)
+```
+
+Note however that this did not generally lead to improved performance -- but rather decreased on most benchmark datasets, in fact (see [comparison](https://user-images.githubusercontent.com/9786697/211782249-804aa42f-cc08-4e36-b59e-3c00a2b6f363.png) in this [issue](https://github.com/plger/scDblFinder/issues/67#issuecomment-1378543321)).
+
+
+
 
 ### Can this be used with scATACseq data?
 
@@ -223,6 +264,12 @@ Further quality filtering should be performed _downstream_ of doublet detection,
 1. the default expected doublet rate is calculated on the basis of the cells given, and if you excluded a lot of cells as low quality, `scDblFinder` might think that the doublet rate should be lower than it is.
 2. kicking out all low quality cells first might hamper our ability to detect doublets that are formed by the combination of a good quality cell with a low-quality one.
 This being said, these are mostly theoretical grounds, and unless your QC filtering is very stringent (and it shouldn't be!), it's unlikely to make a big difference.
+
+### Can I combine this method with others?
+
+Of course it is always possible to run multiple methods and combine the results.
+In our benchmark, the combination of scDblFinder with DoubletFinder, for instance, did yield an improvement in most (though not all) datasets (see [the results here](https://github.com/plger/scDblFinder/issues/67#issuecomment-1353590091)), although of a small magnitude.
+The simplest way is to do an average of the scores (assuming that the scores are on a similar scale, and that a higher score has the same interpretation across methods), which for instance gave similar results to using a Fisher p-value combination on 1-score (interpreted as a probability).
 
 # Session information {-}
 

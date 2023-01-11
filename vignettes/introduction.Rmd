@@ -24,7 +24,7 @@ library(BiocStyle)
 # Introduction
 
 The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell sequencing data (i.e. multiple cells captured within the same droplet or reaction volume).
-This vignette provides a brief overview of the different approaches (which are each covered in their own vignettes) for single-cell RNA sequencing.
+This vignette provides a brief overview of the different approaches (which are each covered in their own vignettes) for single-cell RNA sequencing. 
 *For doublet detection in genomic data, see the [scATACseq vignette](scATAC.html)*. 
 For a more general introduction to the topic of doublets, refer to the [OCSA book](https://osca.bioconductor.org/doublet-detection.html).
 
@@ -69,6 +69,11 @@ BiocManager::install("scDblFinder")
 # or, to get that latest developments:
 BiocManager::install("plger/scDblFinder")
 ```
+
+# Which method to choose?
+
+A benchmark of the main methods available in the package is presented in the [scDblFinder paper](https://f1000research.com/articles/10-979/).
+While the different methods included here have their values, overall the `scDblFinder` method had the best performance (also superior to other methods not included in this package), and should be used by default.
 
 # Session information {-}
 

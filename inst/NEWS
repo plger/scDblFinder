@@ -1,3 +1,6 @@
+Changes in version 1.13.7 (2023-01-09)
++ added possibility to provide the genes/features to use, updated docs
+
 Changes in version 1.13.4 (2022-11-21)
 + fixed bug in samples reporting in split mode (doesn't affect doublets scores)
 
