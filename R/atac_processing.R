@@ -37,9 +37,9 @@ TFIDF <- function(x, sf=10000){
 #' \code{\link[mbkmeans]{mbkmeans}}). If NULL, the minibatch approach will be
 #' used if there are more than 30000 features.
 #' @param use.subset How many cells (columns) to use to cluster the features.
-#' @param use.TFIDF Logical; whether to use \link{TFIDF} normalization (instead
-#' of standard normalization) to assess the similarity between features.
-#' similarity
+#' @param norm.fn The normalization function to use on the un-clustered data (a
+#'   function taking a count matrix as a single argument and returning a matrix
+#'   of the same dimensions). \link{TFIDF} by default.
 #' @param twoPass Logical; whether to perform the procedure twice, so in the 
 #'   second round cells are aggregated based on the meta-features of the first 
 #'   round, before re-clustering the features. Ignored if the dataset has fewer
