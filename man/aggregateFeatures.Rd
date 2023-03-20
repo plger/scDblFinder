@@ -46,7 +46,9 @@ used to pass the `BPPARAM` argument for multithreading.}
 }
 \value{
 An aggregated version of `x` (either an array or a
-`SingleCellExperiment`, depending on the input).
+`SingleCellExperiment`, depending on the input). If `x` is a 
+`SingleCellExperiment`, the feature clusters will also be stored in 
+`metadata(x)$featureGroups`
 }
 \description{
 Aggregates similar features (rows).

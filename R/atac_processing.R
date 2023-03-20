@@ -49,7 +49,9 @@ TFIDF <- function(x, sf=10000){
 #' used to pass the `BPPARAM` argument for multithreading.
 #'
 #' @return An aggregated version of `x` (either an array or a
-#' `SingleCellExperiment`, depending on the input).
+#' `SingleCellExperiment`, depending on the input). If `x` is a 
+#' `SingleCellExperiment`, the feature clusters will also be stored in 
+#' `metadata(x)$featureGroups`
 #'
 #' @importFrom scuttle logNormCounts
 #' @importFrom BiocSingular runPCA IrlbaParam
@@ -94,12 +96,13 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
     fc <- .clusterFeaturesStep(x, k=k, dims.use=seq_len(max(dims.use)),
                                use.mbk=use.mbk, num_init=num_init, ...)
   }
-
+  fg <- setNames(fc, row.names(xo))
   x <- scuttle::sumCountsAcrossFeatures(xo, fc)
   row.names(x) <- paste0("feat",seq_len(nrow(x)))
   if(is(xo,"SingleCellExperiment")){
     x <- SingleCellExperiment(list(counts=x), colData=colData(xo),
                               reducedDims=reducedDims(xo))
+    metadata(x)$featureGroups <- fg
   }
   x
 }
