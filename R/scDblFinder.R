@@ -765,7 +765,6 @@ scDblFinder <- function(
     if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
   if(!is.null(sce$scDblFinder.class)){
-    print(table(known))
     if(!is.null(known)) sce$scDblFinder.class[known] <- "doublet"
     sce$scDblFinder.class <-
       relevel(as.factor(sce$scDblFinder.class),"singlet")
