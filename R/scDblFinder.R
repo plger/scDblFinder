@@ -305,7 +305,7 @@ scDblFinder <- function(
                        includeSamples=TRUE)
     }
     if(returnType=="table") return(d)
-    return(.scDblAddCD(sce, d))
+    return(.scDblAddCD(sce, d, known=knownDoublets))
   }
 
   ## Handling a single sample
