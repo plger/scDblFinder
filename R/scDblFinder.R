@@ -454,7 +454,7 @@ scDblFinder <- function(
   if(!is.null(clusters)) ex <- getExpectedDoublets(clusters, dbr)
 
   if(verbose) message("Evaluating kNN...")
-  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BPPARAM=BPPARAM)
+  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k)
 
   #if(characterize) knn <- d$knn   ## experimental
   d <- d$d
@@ -494,14 +494,12 @@ scDblFinder <- function(
     return(sce_out)
   }
   rowData(orig)$scDblFinder.selected <- row.names(orig) %in% sel_features
-  .scDblAddCD(orig, d)
+  .scDblAddCD(orig, d, known=knownDoublets)
 }
 
 #' @importFrom BiocNeighbors AnnoyParam
-.evaluateKNN <- function(pca, ctype, origins, expected=NULL, k,
-                         BPPARAM=SerialParam()){
-  knn <- suppressWarnings(findKNN(pca, max(k), BPPARAM=BPPARAM,
-                                  BNPARAM=AnnoyParam()))
+.evaluateKNN <- function(pca, ctype, origins, expected=NULL, k){
+  knn <- suppressWarnings(findKNN(pca, max(k), BNPARAM=AnnoyParam()))
   hasOrigins <- length(unique(origins))>1
   knn$type <- matrix(as.integer(ctype)[knn$index]-1L, nrow=nrow(knn$index))
   if(hasOrigins) knn$orig <- matrix(origins[knn$index], nrow=nrow(knn[[1]]))
@@ -757,7 +755,7 @@ scDblFinder <- function(
 
 # add the relevant fields of the scDblFinder results table to the SCE
 #' @importFrom stats relevel
-.scDblAddCD <- function(sce, d){
+.scDblAddCD <- function(sce, d, known=NULL){
   fields <- c("sample","cluster","class","score","ratio","weighted",
               "difficulty","cxds_score","mostLikelyOrigin","originAmbiguous",
               "origin.prob", "origin.call", "origin.2ndBest")
@@ -766,8 +764,12 @@ scDblFinder <- function(
   for(f in fields){
     if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
-  if(!is.null(sce$scDblFinder.class)) sce$scDblFinder.class <-
+  if(!is.null(sce$scDblFinder.class)){
+    print(table(known))
+    if(!is.null(known)) sce$scDblFinder.class[known] <- "doublet"
+    sce$scDblFinder.class <-
       relevel(as.factor(sce$scDblFinder.class),"singlet")
+  }
   if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
     metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
   sce
