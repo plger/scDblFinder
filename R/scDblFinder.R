@@ -777,7 +777,7 @@ scDblFinder <- function(
       relevel(as.factor(sce$scDblFinder.class),"singlet")
   if(is(d,"DataFrame")){
     if(!is.null(metadata(d)$scDblFinder.stats))
-      metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+      metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
     metadata(sce)$scDblFinder.threshold <- metadata(d)$scDblFinder.threshold
   }
   sce
