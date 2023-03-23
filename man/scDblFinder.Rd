@@ -78,10 +78,13 @@ through cell barcodes), or the name of a colData column of `sce` containing
 that information. The way these are used depends on the `knownUse` argument.}
 
 \item{knownUse}{The way to use known doublets, either 'discard' (they are
-discarded for the purpose of training, but counted as positive) or 'positive'
-(they are used as positive doublets for training - usually leads to a mild
-decrease in accuracy due to the fact that known doublets typically include
-a sizeable fraction of homotypic doublets).}
+discarded for the purpose of training, but counted as positive for 
+thresholding) or 'positive' (they are used as positive doublets for training 
+- usually leads to a mild decrease in accuracy due to the fact that known 
+doublets typically include a sizeable fraction of homotypic doublets). Note
+that `scDblFinder` does *not* enforce that the knownDoublets be necessarily
+called as doublets in the final classification, if they are not predicted as 
+such.}
 
 \item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
 per thousand cells captured (so 4\% among 4000 thousand cells), which is
