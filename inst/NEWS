@@ -1,6 +1,6 @@
 Changes in version 1.13.10 (2023-03-23)
 + fixed serializing error in multithreading large single samples
-+ enforced provided knownDoublets to also be classified as such even in discard mode (issue #70)
++ computed thresholds now reported in metadata
 
 Changes in version 1.13.7 (2023-01-09)
 + added possibility to provide the genes/features to use, updated docs

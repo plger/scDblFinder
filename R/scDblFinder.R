@@ -32,10 +32,13 @@
 #' through cell barcodes), or the name of a colData column of `sce` containing
 #' that information. The way these are used depends on the `knownUse` argument.
 #' @param knownUse The way to use known doublets, either 'discard' (they are
-#' discarded for the purpose of training, but counted as positive) or 'positive'
-#' (they are used as positive doublets for training - usually leads to a mild
-#' decrease in accuracy due to the fact that known doublets typically include
-#' a sizeable fraction of homotypic doublets).
+#' discarded for the purpose of training, but counted as positive for 
+#' thresholding) or 'positive' (they are used as positive doublets for training 
+#' - usually leads to a mild decrease in accuracy due to the fact that known 
+#' doublets typically include a sizeable fraction of homotypic doublets). Note
+#' that `scDblFinder` does *not* enforce that the knownDoublets be necessarily
+#' called as doublets in the final classification, if they are not predicted as 
+#' such.
 #' @param nfeatures The number of top features to use. Alternatively, a 
 #'   character vectors of feature names (e.g. highly-variable genes) to use.
 #' @param dims The number of dimensions used.
@@ -305,7 +308,7 @@ scDblFinder <- function(
                        includeSamples=TRUE)
     }
     if(returnType=="table") return(d)
-    return(.scDblAddCD(sce, d, known=knownDoublets))
+    return(.scDblAddCD(sce, d))
   }
 
   ## Handling a single sample
@@ -490,11 +493,11 @@ scDblFinder <- function(
       counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
     reducedDim(sce_out, "PCA") <- pca
     if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
-      metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+        metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
     return(sce_out)
   }
   rowData(orig)$scDblFinder.selected <- row.names(orig) %in% sel_features
-  .scDblAddCD(orig, d, known=knownDoublets)
+  .scDblAddCD(orig, d)
 }
 
 #' @importFrom BiocNeighbors AnnoyParam
@@ -740,6 +743,11 @@ scDblFinder <- function(
 }
 
 .aggResultsTable <- function(d, keep.col=NULL){
+  ths <- sapply(d, FUN=function(x){
+    if(!is(x,"DFrame") || is.null(th <- metadata(x)$scDblFinder.threshold))
+      return(NULL)
+    th
+  })
   cn <- table(unlist(lapply(d, colnames)))
   cn <- c(names(cn)[cn==length(d)], "total.prop.real")
   if(!is.null(keep.col)) cn <- intersect(cn, keep.col)
@@ -750,12 +758,13 @@ scDblFinder <- function(
   }))
   if(!is.null(d$cluster)) d$cluster <- as.factor(d$cluster)
   if(!is.null(d$sample)) d$sample <- as.factor(d$sample)
+  metadata(d)$scDblFinder.threshold <- ths
   d
 }
 
 # add the relevant fields of the scDblFinder results table to the SCE
 #' @importFrom stats relevel
-.scDblAddCD <- function(sce, d, known=NULL){
+.scDblAddCD <- function(sce, d){
   fields <- c("sample","cluster","class","score","ratio","weighted",
               "difficulty","cxds_score","mostLikelyOrigin","originAmbiguous",
               "origin.prob", "origin.call", "origin.2ndBest")
@@ -764,13 +773,13 @@ scDblFinder <- function(
   for(f in fields){
     if(!is.null(d[[f]])) sce[[paste0("scDblFinder.",f)]] <- d[[f]]
   }
-  if(!is.null(sce$scDblFinder.class)){
-    if(!is.null(known)) sce$scDblFinder.class[known] <- "doublet"
-    sce$scDblFinder.class <-
+  if(!is.null(sce$scDblFinder.class)) sce$scDblFinder.class <-
       relevel(as.factor(sce$scDblFinder.class),"singlet")
+  if(is(d,"DataFrame")){
+    if(!is.null(metadata(d)$scDblFinder.stats))
+      metadata(sce_out)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
+    metadata(sce)$scDblFinder.threshold <- metadata(d)$scDblFinder.threshold
   }
-  if(is(d,"DataFrame") && !is.null(metadata(d)$scDblFinder.stats))
-    metadata(sce)$scDblFinder.stats <- metadata(d)$scDblFinder.stats
   sce
 }
 
