@@ -1,12 +1,12 @@
-[![R build status](https://github.com/plger/scDblFinder/workflows/R-CMD-check/badge.svg)](https://github.com/plger/scDblFinder/actions)
-<img align="right" style="margin-left: 20px; margin-bottom: 10px;" src="inst/docs/sticker.svg"/>
+# scDblFinder <img align="right" style="margin-left: 20px; margin-bottom: 10px;" src="https://raw.githubusercontent.com/plger/scDblFinder/devel/inst/docs/sticker.svg"/>
 
-# scDblFinder
+[![R build status](https://github.com/plger/scDblFinder/workflows/R-CMD-check/badge.svg)](https://github.com/plger/scDblFinder/actions)
+
 
 The `scDblFinder` package gathers various methods for the detection and handling of doublets/multiplets in single-cell sequencing data (i.e. multiple cells captured within the same droplet or reaction volume), including the novel `scDblFinder` method.
 The methods included here are _complementary_ to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.
 
-For a brief overview of the methods, see the [introductory vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://f1000research.com/articles/10-979/). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
+For a brief overview of the methods, see the [introductory vignette](https://plger.github.io/scDblFinder/articles/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://doi.org/10.12688/f1000research.73600.2). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
 <br/><br/>
 
@@ -33,7 +33,7 @@ This will add a number of columns to the `colData` of `sce`, the most important 
 * `sce$scDblFinder.score` : the final doublet score (the higher the more likely that the cell is a doublet)
 * `sce$scDblFinder.class` : the classification (doublet or singlet)
 
-There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the [vignette](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html) (`vignette("scDblFinder")`).
+There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the [vignette](https://plger.github.io/scDblFinder/articles/scDblFinder.html) (`vignette("scDblFinder")`).
 
 ### Multiple samples
 
@@ -60,11 +60,7 @@ The expected proportion of doublets has little impact on the score, but a very s
 
 The `scDblFinder` method can be to single-cell ATACseq (on peak-level counts), however when doing so we recommend using the `aggregateFeatures=TRUE` parameter (see vignette).
 
-In addition, the package includes a reimplementation of the Amulet method from Thibodeau et al. (2021).
-
-<br/><br/>
-
-For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/packages/devel/bioc/vignettes/scDblFinder/inst/doc/scDblFinder.html).
+In addition, the package includes a reimplementation of the Amulet method from Thibodeau et al. (2021). For more information, see the [ATAC-related vignette](https://plger.github.io/scDblFinder/articles/scATAC.html).
 
 <br/><br/>
 
@@ -73,10 +69,10 @@ For more detail, please see [vignette("scDblFinder")](https://bioconductor.org/p
 `scDblFinder` was independently evaluated by Nan Miles Xi and Jingyi Jessica Li in the [addendum](https://arxiv.org/abs/2101.08860) to their excellent [benchmark](https://doi.org/10.1016/j.cels.2020.11.008), where they write that _"scDblFinder achieves the highest mean AUPRC and AUROC values, and it is also the top method in terms of the precision, recall, and TNR under the 10% identification rate."_ 
 
 The figure below compares some of the methods implemented in this package (in bold) with alternative methods (including the top alternative, `DoubletFinder`):
-<img src="inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods"/>
+<img src="https://raw.githubusercontent.com/plger/scDblFinder/devel/inst/docs/scDblFinder_comparison.png" alt="Benchmark of doublet detection methods"/>
 **Figure1:** Accuracy (area under the precision and recall curve) of doublet identification using alternative methods across 16 benchmark datasets from Xi and Li (2020). The colour of the dots indicates the relative ranking for the dataset, while the size and numbers indicate the actual area under the (PR) curve. For each dataset, the top method is circled in black. Methods with names in black are provided in the `scDblFinder` package. Running times are indicated on the left. On top the number of cells in each dataset is shown, and colored by the proportion of variance explained by the first two components (relative to that explained by the first 100), as a rough guide to dataset simplicity.
 
 
 <br/><br/>
 
-Rather a <b>python</b> person? You can have a look at [vaeda](https://www.biorxiv.org/content/10.1101/2022.04.15.488440v1.full), another doublet finding method which appears to have performances very close to those of scDblFinder.
+Rather a <b>python</b> person? You can have a look at [vaeda](https://doi.org/10.12688/f1000research.73600.2), another doublet finding method which appears to have performances close to those of scDblFinder.

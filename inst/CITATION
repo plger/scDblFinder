@@ -2,9 +2,10 @@ bibentry(bibtype = "Article",
          title = "Doublet identification in single-cell sequencing data using scDblFinder",
          author = c(person("Pierre-Luc", "Germain"),
                     person("Aaron", "Lun"),
+                    person("Carlos", "Garcia Meixide"),
                     person("Will", "Macnair"),
                     person("Mark D.", "Robinson")),
-         year = 2021,
+         year = 2022,
          journal = "f1000research",
-         doi = "10.12688/f1000research.73600.1"
+         doi = "10.12688/f1000research.73600.2"
          )
