@@ -135,86 +135,21 @@ distances rather than going through the SVD step (which can be triggered
 with the <code>processing</code> argument). Such an example would
 be:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/plger/scDblFinder" class="external-link">scDblFinder</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: SingleCellExperiment</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: SummarizedExperiment</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: MatrixGenerics</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: matrixStats</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'MatrixGenerics'</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:matrixStats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,</span></span>
-<span><span class="co">##     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,</span></span>
-<span><span class="co">##     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,</span></span>
-<span><span class="co">##     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,</span></span>
-<span><span class="co">##     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,</span></span>
-<span><span class="co">##     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,</span></span>
-<span><span class="co">##     colWeightedMeans, colWeightedMedians, colWeightedSds,</span></span>
-<span><span class="co">##     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,</span></span>
-<span><span class="co">##     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,</span></span>
-<span><span class="co">##     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,</span></span>
-<span><span class="co">##     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,</span></span>
-<span><span class="co">##     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,</span></span>
-<span><span class="co">##     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,</span></span>
-<span><span class="co">##     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,</span></span>
-<span><span class="co">##     rowWeightedSds, rowWeightedVars</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: GenomicRanges</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: stats4</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: BiocGenerics</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'BiocGenerics'</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     IQR, mad, sd, var, xtabs</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:base':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     anyDuplicated, aperm, append, as.data.frame, basename, cbind,</span></span>
-<span><span class="co">##     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,</span></span>
-<span><span class="co">##     get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,</span></span>
-<span><span class="co">##     match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,</span></span>
-<span><span class="co">##     Position, rank, rbind, Reduce, rownames, sapply, setdiff, sort,</span></span>
-<span><span class="co">##     table, tapply, union, unique, unsplit, which.max, which.min</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: S4Vectors</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'S4Vectors'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:utils':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     findMatches</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:base':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     expand.grid, I, unname</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: IRanges</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: GenomeInfoDb</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: Biobase</span></span></code></pre>
-<pre><code><span><span class="co">## Welcome to Bioconductor</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     Vignettes contain introductory material; view with</span></span>
-<span><span class="co">##     'browseVignettes()'. To cite Bioconductor, see</span></span>
-<span><span class="co">##     'citation("Biobase")', and for packages 'citation("pkgname")'.</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'Biobase'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:MatrixGenerics':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     rowMedians</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:matrixStats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     anyMissing, rowMedians</span></span></code></pre>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># we use a dummy SingleCellExperiment as example:</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/plger/scDblFinder" class="external-link">scDblFinder</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># we use a dummy SingleCellExperiment as example:</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span>ngenes<span class="op">=</span><span class="fl">300</span><span class="op">)</span></span>
 <span><span class="co"># setting low number of artificial doublets (same as ncells) just for speedup:</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scDblFinder.html">scDblFinder</a></span><span class="op">(</span><span class="va">sce</span>, artificialDoublets<span class="op">=</span><span class="fl">1</span>, aggregateFeatures<span class="op">=</span><span class="cn">TRUE</span>, nfeatures<span class="op">=</span><span class="fl">25</span>, processing<span class="op">=</span><span class="st">"normFeatures"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Aggregating features...</span></span></code></pre>
-<pre><code><span><span class="co">## Creating ~517 artificial doublets...</span></span></code></pre>
+<pre><code><span><span class="co">## Creating ~532 artificial doublets...</span></span></code></pre>
 <pre><code><span><span class="co">## Dimensional reduction</span></span></code></pre>
 <pre><code><span><span class="co">## Evaluating kNN...</span></span></code></pre>
 <pre><code><span><span class="co">## Training model...</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 17 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 30 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## iter=2, 34 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## Threshold found:0.35</span></span></code></pre>
-<pre><code><span><span class="co">## 18 (3.5%) doublets called</span></span></code></pre>
+<pre><code><span><span class="co">## iter=2, 38 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## Threshold found:0.764</span></span></code></pre>
+<pre><code><span><span class="co">## 22 (4.1%) doublets called</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="using-the-amulet-method">Using the Amulet method<a class="anchor" aria-label="anchor" href="#using-the-amulet-method"></a>
@@ -234,7 +169,7 @@ mitochondrial and sex chromosomes, as well as repetitive regions. This
 can be specified with the <code>regionsToExclude</code> argument (see
 the underlying <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOverlaps</a></code>). It can be used as
 follows:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># here we use a dummy fragment file for example:</span></span>
 <span><span class="va">fragfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_fragments.tsv.gz"</span>, package<span class="op">=</span><span class="st">"scDblFinder"</span><span class="op">)</span></span>
 <span></span>
@@ -249,9 +184,9 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:38 - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:38 - Obtaining overlaps...</span></span></code></pre>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## 06:37:24 - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:24 - Obtaining overlaps...</span></span></code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
 <span><span class="co">## barcode1    878       878       1             1 0.475069053 0.791781755</span></span>
@@ -312,44 +247,44 @@ methods (see below).</p>
 approach, and its usage includes a number of arguments from both the
 <code>scDblFinder</code> and <code>amulet</code> method (see in
 particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOverlaps</a></code>):</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># not run</span></span>
 <span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="st">"path/to/fragments.tsv.gz"</span><span class="op">)</span></span></code></pre></div>
 <p>Since our dummy fragment file is so small (5 barcodes), here we’ll
 have to adjust the arguments for an example to run:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 13:04:39 - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:25 - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:26 - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:26 - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 06:37:26 - Iterative training</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 13:04:40 Done!</span></span></code></pre>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## 06:37:26 Done!</span></span></code></pre>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
 <pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
-<span><span class="co">## barcode1    24       1             1 0.6295176      0.5                TRUE</span></span>
-<span><span class="co">## barcode2    18       0             0       NaN      0.5                TRUE</span></span>
-<span><span class="co">## barcode3    13       1             1 1.0000000      1.0                TRUE</span></span>
+<span><span class="co">## barcode1    22       1             1 0.6957524      0.5                TRUE</span></span>
+<span><span class="co">## barcode2    19       0             0       NaN      1.0                TRUE</span></span>
+<span><span class="co">## barcode3    11       1             1 0.4642123      0.5                TRUE</span></span>
 <span><span class="co">## barcode4    11       0             0       NaN      1.0                TRUE</span></span>
-<span><span class="co">## barcode5    28       6             6 1.0000000      1.0                TRUE</span></span>
+<span><span class="co">## barcode5    24       6             6 0.6398922      0.5                TRUE</span></span>
 <span><span class="co">##              score</span></span>
-<span><span class="co">## barcode1 0.4402863</span></span>
-<span><span class="co">## barcode2 0.4402863</span></span>
-<span><span class="co">## barcode3 0.4402863</span></span>
-<span><span class="co">## barcode4 0.4402863</span></span>
-<span><span class="co">## barcode5 0.4402863</span></span></code></pre>
+<span><span class="co">## barcode1 0.4174298</span></span>
+<span><span class="co">## barcode2 0.4174298</span></span>
+<span><span class="co">## barcode3 0.4174298</span></span>
+<span><span class="co">## barcode4 0.4174298</span></span>
+<span><span class="co">## barcode5 0.4174298</span></span></code></pre>
 <p>The score can then be interpreted as for <code>scDblFinder</code>. We
 however note that this method proved <em>inferior to
 alternatives</em>.</p>
@@ -362,7 +297,7 @@ treating them as p-values and aggregating them (here using Fisher’s
 method from the <em><a href="https://CRAN.R-project.org/package=aggregation" class="external-link">aggregation</a></em>
 package, but see also the <em><a href="https://CRAN.R-project.org/package=metap" class="external-link">metap</a></em>
 package):</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">scDblFinder.p</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>, <span class="st">"scDblFinder.score"</span><span class="op">]</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">res</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scDblFinder.p"</span>, <span class="st">"p.value"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">1</span>, FUN<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">x</span><span class="op">[</span><span class="va">x</span><span class="op">&lt;</span><span class="fl">0.001</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0.001</span> <span class="co"># prevent too much skew from very small or 0 p-values</span></span>
@@ -390,7 +325,7 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.3.0 (2023-04-21)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
