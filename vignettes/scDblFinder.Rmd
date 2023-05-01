@@ -47,7 +47,7 @@ Given an SCE object, `scDblFinder` (using the random approach) can be launched a
 
 ```{r, warning=FALSE}
 set.seed(123)
-library(scDblFinder)
+suppressPackageStartupMessages(library(scDblFinder))
 # we create a dummy dataset; since it's small we set a higher doublet rate
 sce <- mockDoubletSCE(dbl.rate=0.1, ngenes=300 )
 # we run scDblFinder (providing the unusually high doublet rate)

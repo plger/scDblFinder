@@ -38,7 +38,7 @@ The feature aggregation can be triggered using the `aggregateFeatures=TRUE` argu
 If the number of meta-features is low (which we recommend), the meta-features can be directly used to calculated distances rather than going through the SVD step (which can be triggered with the `processing` argument). Such an example would be:
 
 ```{r}
-library(scDblFinder)
+suppressPackageStartupMessages(library(scDblFinder))
 # we use a dummy SingleCellExperiment as example:
 sce <- mockDoubletSCE(ngenes=300)
 # setting low number of artificial doublets (same as ncells) just for speedup:
