@@ -3,6 +3,9 @@
 on:
   push:
     branches: [main, master, devel]
+    paths-ignore:
+      - 'README.md'
+      - '.github/**'
   pull_request:
     branches: [main, master, devel]
   release:
