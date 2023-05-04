@@ -17,4 +17,6 @@ Steps to reproduce the behavior, eventually with a dataset if it's dataset-speci
 If the issue triggers an R error (rather than, say, unexpected results), please provide the output of `traceback()` right after the error occurs. 
 
 **Session info**
-Provide the output of `sessionInfo()`
+Provide the output of `sessionInfo()`.
+
+Before posting your issue, please ensure that it is reproducible with a recent Bioconductor and `scDblFinder` version.
