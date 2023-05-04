@@ -12,6 +12,8 @@ For a brief overview of the methods, see the [introductory vignette](https://plg
 
 ## Getting started
 
+### Installation 
+
 You may install the pakage using:
 ```r
 BiocManager::install("scDblFinder")
@@ -20,6 +22,11 @@ Or, to get the very latest version,
 ```r
 BiocManager::install("plger/scDblFinder")
 ```
+The latest version will not be compatible with older Bioconductor versions.
+
+Note that, when not installing from git, Bioconductor does not install the latest version of packages, but (to ensure compatibility between packages) installs the version tied to your Bioconductor version. To ensure the best results, install the latest Bioconductor release. We recommend to avoid using scDblFinder from versions prior to Bioconductor 3.14, which give suboptimal results, and scATAC users will need scDblFinder version 1.13.2 or above.
+
+### Basic usage
 
 Given an object `sce` of class `SingleCellExperiment` (which does not contain any empty drops, but hasn't been further filtered), you can launch the doublet detection with:
 
