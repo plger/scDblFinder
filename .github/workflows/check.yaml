@@ -3,6 +3,8 @@ on:
   pull_request:
     branches:
       - devel
+    paths-ignore:
+      - 'README.md'
 
 name: R-CMD-check
 
