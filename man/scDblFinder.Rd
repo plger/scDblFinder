@@ -71,7 +71,7 @@ and used for correlation (se `clustCor=Inf` to use all available genes).}
 
 \item{artificialDoublets}{The approximate number of artificial doublets to
 create. If \code{NULL}, will be the maximum of the number of cells or
-\code{5*nbClusters^2}.}
+\code{5*nbClusters^2} (with a minimum of 1500).}
 
 \item{knownDoublets}{An optional logical vector of known doublets (e.g.
 through cell barcodes), or the name of a colData column of `sce` containing

@@ -8,7 +8,7 @@
 #' counts.
 #' @param artificialDoublets The approximate number of artificial doublets to
 #' create. If \code{NULL}, will be the maximum of the number of cells or
-#' \code{5*nbClusters^2}.
+#' \code{5*nbClusters^2} (with a minimum of 1500).
 #' @param clusters The optional cluster assignments. This is used to make
 #' doublets more efficiently. \code{clusters} should either be a vector of
 #' labels for each cell, or the name of a colData column of \code{sce}.
@@ -382,7 +382,7 @@ scDblFinder <- function(
 
   ## get the artificial doublets
   if(is.null(artificialDoublets))
-    artificialDoublets <- min( 25000, max(5000,
+    artificialDoublets <- min( 25000, max(1500,
                                           ceiling(ncol(sce)*0.8),
                                           10*length(unique(cl))^2 ) )
   if(artificialDoublets<=2)

@@ -165,6 +165,12 @@ In addition, two frameworks are offered for testing the significance of enrichme
 
 The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly. If you have unsure about the doublet rate, you might consider increasing `dbr.sd`, so that it is estimated mostl/purely from the misclassification error.
 
+### Number of artificial doublets
+
+The number of artificial doublets can be set through the `artificialDoublets` parameter. Using more artificial doublets leads to a better sampling of the possible mixtures of cells, but increases memory and runtime, and can skew the scores, in extreme cases leading to difficulties in setting a threshold for being called as a doublet (see [this issue](https://github.com/plger/scDblFinder/issues/79) for a discussion).
+
+By default, `scDblFinder` will generate roughly as many artificial doublets as there are cells, which is usually appropriate. However, for very small datasets this could represent an undersampling of the mixing space and hence lead to lower detection accuracy. For this reason, a hard minimum number of artificial doublet is set. This will tend to improve accuracy for small datasets, but the scores will be skewed towards 1, possibly making a separation difficult. If you are in such a situation and your histogram of scores does not show a bimodality, consider manually setting the `artificialDoublets` parameter to something closer to your actual number of cells.
+
 <br/><br/>
 
 ## Frequently-asked questions
