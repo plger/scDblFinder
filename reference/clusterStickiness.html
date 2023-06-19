@@ -16,7 +16,7 @@ the cluster labels match across samples."><!-- mathjax --><script src="https://c
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.13.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,24 +109,20 @@ NULL, will be used only if there is a significant trend with the enrichment.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">200</span>,<span class="fl">5</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="scDblFinder.html">scDblFinder</a></span><span class="op">(</span><span class="va">sce</span>, clusters<span class="op">=</span><span class="cn">TRUE</span>, artificialDoublets<span class="op">=</span><span class="fl">500</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Clustering cells...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 5 clusters</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Creating ~500 artificial doublets...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 39 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 40 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 39 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.62</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 42 (3.9%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 88 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 0 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 0 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.997</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 0 (0%) doublets called</span>
 <span class="r-in"><span><span class="fu">clusterStickiness</span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Estimate Std. Error    t value    p.value       FDR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.8055803  0.2717855  2.9640303 0.03137251 0.1568626</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.7087631  0.2781752  2.5479016 0.05139709 0.2055883</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -1.1540863  0.6769825 -1.7047505 0.14896172 0.4468852</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.6630410  0.4102464 -1.6162019 0.16697307 0.4468852</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -0.1326386  0.3084695 -0.4299893 0.68510498 0.6851050</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in family$linkfun(mustart):</span> Argument mu must be a nonempty numeric vector</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
