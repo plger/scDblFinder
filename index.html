@@ -38,7 +38,7 @@
     
     <a class="navbar-brand me-2" href="index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.13.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.13.14</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,12 +92,21 @@
 <div class="section level2">
 <h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
+<div class="section level3">
+<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h3>
 <p>You may install the pakage using:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scDblFinder"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"scDblFinder"</span><span class="op">)</span></span></code></pre></div>
 <p>Or, to get the very latest version,</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"plger/scDblFinder"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"plger/scDblFinder"</span><span class="op">)</span></span></code></pre></div>
+<p>The latest version will not be compatible with older Bioconductor versions.</p>
+<p>Note that, when not installing from git, Bioconductor does not install the latest version of packages, but (to ensure compatibility between packages) installs the version tied to your Bioconductor version. To ensure the best results, install the latest Bioconductor release. We recommend to avoid using scDblFinder from versions prior to Bioconductor 3.14, which give suboptimal results, and scATAC users will need scDblFinder version 1.13.2 or above.</p>
+</div>
+<div class="section level3">
+<h3 id="basic-usage">Basic usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+</h3>
 <p>Given an object <code>sce</code> of class <code>SingleCellExperiment</code> (which does not contain any empty drops, but hasn’t been further filtered), you can launch the doublet detection with:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/plger/scDblFinder" class="external-link">scDblFinder</a></span><span class="op">)</span></span>
@@ -110,6 +119,7 @@
 <code>sce$scDblFinder.class</code> : the classification (doublet or singlet)</li>
 </ul>
 <p>There are several additional columns containing further information (e.g. the most likely origin of the putative doublet), an overview of which is available in the <a href="https://plger.github.io/scDblFinder/articles/scDblFinder.html">vignette</a> (<code><a href="articles/scDblFinder.html">vignette("scDblFinder")</a></code>).</p>
+</div>
 <div class="section level3">
 <h3 id="multiple-samples">Multiple samples<a class="anchor" aria-label="anchor" href="#multiple-samples"></a>
 </h3>

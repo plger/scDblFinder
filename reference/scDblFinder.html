@@ -12,7 +12,7 @@ using cluster-based generation of artificial doublets."><!-- mathjax --><script 
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.13.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.13.14</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -142,7 +142,7 @@ and used for correlation (se `clustCor=Inf` to use all available genes).</p></dd
 <dt>artificialDoublets</dt>
 <dd><p>The approximate number of artificial doublets to
 create. If <code>NULL</code>, will be the maximum of the number of cells or
-<code>5*nbClusters^2</code>.</p></dd>
+<code>5*nbClusters^2</code> (with a minimum of 1500).</p></dd>
 
 
 <dt>knownDoublets</dt>
@@ -364,20 +364,20 @@ vignette for more detail.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">scDblFinder</span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating ~5000 artificial doublets...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating ~1500 artificial doublets...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 29 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 32 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 32 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.618</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 31 (5.9%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 20 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 15 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 15 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.763</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 16 (3%) doublets called</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>truth<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">type</span>, call<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">scDblFinder.class</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          call</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> truth     singlet doublet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   singlet     498       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   doublet       0      29</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   singlet     499       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   doublet      14      15</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
