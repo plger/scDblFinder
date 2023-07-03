@@ -58,7 +58,7 @@ TFIDF <- function(x, sf=10000){
 #' @importFrom BiocSingular runPCA IrlbaParam
 #' @export
 aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
-                              use.mbk=NULL, use.subset=20000, minCount=5L,
+                              use.mbk=NULL, use.subset=20000, minCount=1L,
                               norm.fn=TFIDF, twoPass=FALSE, ...){
   xo <- x
   
