@@ -95,7 +95,9 @@ performed on the given rate.}
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
 rate will be calculated from these boundaries, and will be considered null
 within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
- disable.}
+ disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
+ any expectation of the number of doublets (thus letting the thresholding be
+ entirely driven by the misclassification of artificial doublets).}
 
 \item{nfeatures}{The number of top features to use. Alternatively, a 
 character vectors of feature names (e.g. highly-variable genes) to use.}

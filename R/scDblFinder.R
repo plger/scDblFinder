@@ -50,7 +50,9 @@
 #' a +/- around `dbr`. During thresholding, deviation from the expected doublet
 #' rate will be calculated from these boundaries, and will be considered null
 #' within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
-#'  disable.
+#'  disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
+#'  any expectation of the number of doublets (thus letting the thresholding be
+#'  entirely driven by the misclassification of artificial doublets).
 #' @param k Number of nearest neighbors (for KNN graph). If more than one value
 #' is given, the doublet density will be calculated at each k (and other values
 #' at the highest k), and all the information will be used by the classifier.

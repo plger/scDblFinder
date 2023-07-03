@@ -11,7 +11,7 @@ aggregateFeatures(
   num_init = 3,
   use.mbk = NULL,
   use.subset = 20000,
-  minCount = 5L,
+  minCount = 1L,
   norm.fn = TFIDF,
   twoPass = FALSE,
   ...
