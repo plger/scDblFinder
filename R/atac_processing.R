@@ -33,6 +33,7 @@ TFIDF <- function(x, sf=10000){
 #' @param dims.use The PCA dimensions to use for clustering rows.
 #' @param k The approximate number of meta-features desired
 #' @param num_init The number of initializations used for k-means clustering.
+#' @param minCounts The minimum number of counts for a region to be included.
 #' @param use.mbk Logical; whether to use minibatch k-means (see
 #' \code{\link[mbkmeans]{mbkmeans}}). If NULL, the minibatch approach will be
 #' used if there are more than 30000 features.
@@ -57,7 +58,7 @@ TFIDF <- function(x, sf=10000){
 #' @importFrom BiocSingular runPCA IrlbaParam
 #' @export
 aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
-                              use.mbk=NULL, use.subset=5000, 
+                              use.mbk=NULL, use.subset=20000, minCount=5L,
                               norm.fn=TFIDF, twoPass=FALSE, ...){
   xo <- x
   
@@ -77,8 +78,8 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
   if(is(x,"SingleCellExperiment")) x <- counts(x)
   
   rs <- Matrix::rowSums(x)
-  xo <- xo[which(rs>0L),]
-  x <- x[which(rs>0L),]
+  xo <- xo[which(rs>=minCount),]
+  x <- x[which(rs>=minCount),]
   
   x <- norm.fn(x)
 

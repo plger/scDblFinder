@@ -10,7 +10,8 @@ aggregateFeatures(
   k = 1000,
   num_init = 3,
   use.mbk = NULL,
-  use.subset = 5000,
+  use.subset = 20000,
+  minCount = 5L,
   norm.fn = TFIDF,
   twoPass = FALSE,
   ...
@@ -43,6 +44,8 @@ than `use.subset` cells.}
 
 \item{...}{Passed to \code{\link[mbkmeans]{mbkmeans}}. Can for instance be
 used to pass the `BPPARAM` argument for multithreading.}
+
+\item{minCounts}{The minimum number of counts for a region to be included.}
 }
 \value{
 An aggregated version of `x` (either an array or a
