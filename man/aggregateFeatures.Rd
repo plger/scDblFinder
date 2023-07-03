@@ -33,6 +33,8 @@ used if there are more than 30000 features.}
 
 \item{use.subset}{How many cells (columns) to use to cluster the features.}
 
+\item{minCount}{The minimum number of counts for a region to be included.}
+
 \item{norm.fn}{The normalization function to use on the un-clustered data (a
 function taking a count matrix as a single argument and returning a matrix
 of the same dimensions). \link{TFIDF} by default.}
@@ -44,8 +46,6 @@ than `use.subset` cells.}
 
 \item{...}{Passed to \code{\link[mbkmeans]{mbkmeans}}. Can for instance be
 used to pass the `BPPARAM` argument for multithreading.}
-
-\item{minCounts}{The minimum number of counts for a region to be included.}
 }
 \value{
 An aggregated version of `x` (either an array or a

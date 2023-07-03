@@ -33,7 +33,7 @@ TFIDF <- function(x, sf=10000){
 #' @param dims.use The PCA dimensions to use for clustering rows.
 #' @param k The approximate number of meta-features desired
 #' @param num_init The number of initializations used for k-means clustering.
-#' @param minCounts The minimum number of counts for a region to be included.
+#' @param minCount The minimum number of counts for a region to be included.
 #' @param use.mbk Logical; whether to use minibatch k-means (see
 #' \code{\link[mbkmeans]{mbkmeans}}). If NULL, the minibatch approach will be
 #' used if there are more than 30000 features.
