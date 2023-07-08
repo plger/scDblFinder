@@ -45,6 +45,7 @@ sce <- mockDoubletSCE(ngenes=300)
 sce <- scDblFinder(sce, artificialDoublets=1, aggregateFeatures=TRUE, nfeatures=25, processing="normFeatures")
 ```
 
+If you encounter problems running the aggregation-based approach on large datasets, first make sure you have the `mbkmeans` package installed.
 
 # Using the Amulet method
 
@@ -85,7 +86,7 @@ The Amulet method tends to perform best with datasets that have homotypic double
 
 ## The Clamulet method
 
-The `clamulet` method (Classification-powered Amulet-like method) operates similarly to the `scDblFinder` method, but generates artificial doublets by operating on the fragment coverages. This has the advantage that the number of loci covered by more than two reads can be computed for artificial doublets, enabling the use of this feature (along with the kNN-based ones) in a classification scheme. It however has the disadvantage of being rather slow and memory hungry, and appears to be outperformed by a simple p-value combination of the two methods (see below).
+The `clamulet` method (Classification-powered Amulet-like method) operates similarly to the `scDblFinder` method, but generates artificial doublets by operating on the fragment coverages. This has the advantage that the number of loci covered by more than two reads can be computed for artificial doublets, enabling the use of this feature (along with the kNN-based ones) in a classification scheme. It however has the disadvantage of being rather slow and memory hungry, and appears to be outperformed by a simple p-value combination of the two methods (see below). We therefore _do not_ recommend its usage.
 
 The `clamulet` method uses the aforementioned aggregation approach, and its usage includes a number of arguments from both the `scDblFinder` and `amulet` method (see in particular `?getFragmentOverlaps`):
 
