@@ -16,7 +16,7 @@ the cluster labels match across samples."><!-- mathjax --><script src="https://c
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,13 +116,18 @@ NULL, will be used only if there is a significant trend with the enrichment.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 88 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 0 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 0 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.997</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 0 (0%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 39 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 38 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 40 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.687</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 45 (4.1%) doublets called</span>
 <span class="r-in"><span><span class="fu">clusterStickiness</span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in family$linkfun(mustart):</span> Argument mu must be a nonempty numeric vector</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Estimate Std. Error    t value    p.value        FDR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.87217357  0.2529181  3.4484421 0.01826829 0.09134144</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -0.49252675  0.3896313 -1.2640841 0.26192487 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -0.18550210  0.3285507 -0.5646073 0.59672899 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.08368346  0.2847642  0.2938693 0.78066573 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.04671161  0.3019028 -0.1547240 0.88309068 1.00000000</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
