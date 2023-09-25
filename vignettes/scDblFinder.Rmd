@@ -197,6 +197,14 @@ If you ran `scDblFinder` on a multi-sample dataset and did not provide the clust
 
 You will get this error if you have some cells that have zero reads (or a very low read count, leading to zero after feature selection). After filtering out these cells the error should go away.
 
+### Identifying homotypic doublets
+
+
+
+Like other similar tools, scDblFinder focuses on identifying heterotypic doublets (formed by different cell types), and has only a low performance in identifying homotypic doublets (see [this preprint](https://doi.org/10.1101/2023.08.04.552078)). This can lead to disagreements with doublets called using cell hashes or SNPs in multiplexed samples, which capture both types of doublets similarly (and can miss intra-sample heterotypic doublets, especially if the multiplexing is low). This is why we treat these approaches as complementary.
+
+However, should you for some reason try to identify also homotypic doublets with scDblFinder, be sure to not to use the cluster-based approach, and to set `removeUnidentifiable=FALSE`. Otherwise, scDblFinder removes artificial doublets likely to be homotypic from training, therefore focusing the task on heterotypic doublets, but at the expense ot homotypic ones (which are typically deemed relatively harmless).
+
 ### How can I make this reproducible?
 
 Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results.
