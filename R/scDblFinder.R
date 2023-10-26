@@ -245,6 +245,7 @@ scDblFinder <- function(
     sel_features <- nfeatures
     nfeatures <- length(sel_features)
   }else{
+    stopifnot(nfeatures %% 1 == 0 && nfeatures>1)
     ## if clusters are given, it's more efficient to do feature selection before
     ## eventually splitting the dataset
     if(!is.null(clusters) && length(clusters)>1 && !aggregateFeatures){
