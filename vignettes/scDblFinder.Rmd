@@ -106,7 +106,9 @@ Wrapped in the `scDblFinder` function are the following steps:
 
 ### Splitting captures
 
-Doublets can only arise within a given sample or capture, and for this reason are better sought independently for each sample, which also speeds up the analysis. If the `samples` argument is given, `scDblFinder` will use it to split the cells into samples/captures, and process each of them in parallel if the `BPPARAM` argument is given. The classifier will be trained globally, but thresholds will be optimized on a per-sample basis. If your samples are multiplexed, i.e. the different samples are mixed in different batches, then the batches should be what you provide to this argument.
+Doublets can only arise within a given sample or capture, and for this reason are better sought independently for each sample, which also speeds up the analysis. If the `samples` argument is given, `scDblFinder` will use it to split the cells into samples/captures, and process each of them in parallel if the `BPPARAM` argument is given. Depending on the `multiSampleMode` argument, the classifier can be trained globally, with thresholds optimized on a per-sample basis; however we did not see an improvement in doing so, and therefore by default each sample is treated separately to maximize robustness to technical differences.
+
+If your samples are multiplexed, i.e. the different samples are mixed in different batches, then the batches should be what you provide to this argument.
 
 ### Reducing and clustering the data
 
@@ -273,11 +275,19 @@ Yes, see the [scATAC vignette](scATAC.html) specifically on this topic.
 
 ### Should I run QC cell filtering before or after doublet detection?
 
-The input to `scDblFinder` should not include empty droplets, and it might be necessary to remove cells with a very low coverage (e.g. <200 reads) to avoid errors.
+The input to `scDblFinder` should not include empty droplets, and it might be necessary to remove cells with a very low coverage (e.g. <200 or 500 reads) to avoid errors.
 Further quality filtering should be performed _downstream_ of doublet detection, for two reasons:
 1. the default expected doublet rate is calculated on the basis of the cells given, and if you excluded a lot of cells as low quality, `scDblFinder` might think that the doublet rate should be lower than it is.
 2. kicking out all low quality cells first might hamper our ability to detect doublets that are formed by the combination of a good quality cell with a low-quality one.
 This being said, these are mostly theoretical grounds, and unless your QC filtering is very stringent (and it shouldn't be!), it's unlikely to make a big difference.
+
+#### What about ambiant RNA decontamination?
+
+Contamination by ambiant RNA has emerged as an important confounder in single-cell (and especially single-nuclei) RNAseq data, which prompts the question of whether that should be run prior or after doublet detection. 
+Unfortunately, we do not currently have good evidence pointing in either direction, and arguments can be made for both.
+Low-quality doublets, or doublets from an experiment with a large dominant celltype, can easily look like contamination, and likewise a high amount of contamination can easily look like a doublet because it includes RNA from other cell types.
+There is a possibility that a decontamination package sees an actual doublet as contamination, and attempts to clean it, which it will necessarily do imperfectly (because while the decontamination is a mixture of all cells, a doublet isn't), but perhaps sufficiently so that it can't be accurately detected as a doublet anymore. This would therefore be an argument for running doublet calling first. 
+However, it's also possible that decontamination, because it makes the cells cleaner, makes the doublet detection task easier.
 
 ### Can I combine this method with others?
 
