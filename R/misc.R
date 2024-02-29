@@ -428,18 +428,21 @@ propHomotypic <- function(clusters){
 }
 
 .checkSCE <- function(sce){
+  msg <- paste(
+    "`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
+    "or an array (i.e. matrix, sparse matric, etc.) of counts.")
   if(is(sce, "SummarizedExperiment")){
     sce <- as(sce, "SingleCellExperiment")
   }else if(!is(sce, "SingleCellExperiment")){
-    if(is.null(dim(sce)) || any(sce<0))
-      stop("`sce` should be a SingleCellExperiment, a SummarizedExperiment, ",
-           "or an array (i.e. matrix, sparse matric, etc.) of counts.")
+    if(is.null(dim(sce)) || any(sce<0)) stop(msg)
     message("Assuming the input to be a matrix of counts or expected counts.")
     sce <- SingleCellExperiment(list(counts=sce))
   }
   if( !("counts" %in% assayNames(sce)) )
     stop("`sce` should have an assay named 'counts'")
   counts(sce) <- as(counts(sce),"CsparseMatrix")
+  if(any(counts(sce)<0))
+    stop(msg, "\n", "The data contains negative counts!")
   if(min(colSums(counts(sce)))<200)
     warning("Some cells in `sce` have an extremely low read counts; note ",
             "that these could trigger errors and might best be filtered out")
