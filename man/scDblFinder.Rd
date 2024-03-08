@@ -57,7 +57,7 @@ sample is understood as being processed independently. If omitted, doublets
 will be searched for with all cells together. If given, doublets will be
 searched for independently for each sample, which is preferable if they
 represent different captures. If your samples were multiplexed using cell
-hashes, want you want to give here are the different batches/wells (i.e.
+hashes, what you want to give here are the different batches/wells (i.e.
 independent captures, since doublets cannot arise across them) rather
 than biological samples.}
 

@@ -22,7 +22,7 @@
 #' will be searched for with all cells together. If given, doublets will be
 #' searched for independently for each sample, which is preferable if they
 #' represent different captures. If your samples were multiplexed using cell
-#' hashes, want you want to give here are the different batches/wells (i.e.
+#' hashes, what you want to give here are the different batches/wells (i.e.
 #' independent captures, since doublets cannot arise across them) rather
 #' than biological samples.
 #' @param multiSampleMode Either "split" (recommended if there is
@@ -206,6 +206,13 @@ scDblFinder <- function(
   multiSampleMode <- match.arg(multiSampleMode)
 
   ## check arguments
+  if(!is(sce, "SingleCellExperiment") && 
+     ( (!is.null(clusters) && is.character(clusters) && length(clusters)==1) ||
+       (!is.null(samples) && is.character(samples) && length(samples)==1) ) ){
+    stop("Passing a column name to the `samples` or `clusters` argument only",
+         " works if `sce` is a SingleCellExperiment.\n",
+         "Please pass the vector of labels.")
+  }
   sce <- .checkSCE(sce)
   score <- match.arg(score)
   knownUse <- match.arg(knownUse)
