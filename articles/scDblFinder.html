@@ -8,8 +8,8 @@
 <meta name="description" content="scDblFinder">
 <title>scDblFinder • scDblFinder</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="scDblFinder">
 <meta property="og:description" content="scDblFinder">
@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.17.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -117,7 +117,7 @@ more complex datasets.</p>
 <h3 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h3>
 <p>The input of <code>scDblFinder</code> is an object <code>sce</code>
-of class <em><a href="https://bioconductor.org/packages/3.17/SingleCellExperiment" class="external-link">SingleCellExperiment</a></em>
+of class <em><a href="https://bioconductor.org/packages/3.18/SingleCellExperiment" class="external-link">SingleCellExperiment</a></em>
 (empty drops having already been removed) containing at least the counts
 (assay ‘counts’). Alternatively, a simple count matrix can also be
 provided.</p>
@@ -230,11 +230,15 @@ this reason are better sought independently for each sample, which also
 speeds up the analysis. If the <code>samples</code> argument is given,
 <code>scDblFinder</code> will use it to split the cells into
 samples/captures, and process each of them in parallel if the
-<code>BPPARAM</code> argument is given. The classifier will be trained
-globally, but thresholds will be optimized on a per-sample basis. If
-your samples are multiplexed, i.e. the different samples are mixed in
-different batches, then the batches should be what you provide to this
-argument.</p>
+<code>BPPARAM</code> argument is given. Depending on the
+<code>multiSampleMode</code> argument, the classifier can be trained
+globally, with thresholds optimized on a per-sample basis; however we
+did not see an improvement in doing so, and therefore by default each
+sample is treated separately to maximize robustness to technical
+differences.</p>
+<p>If your samples are multiplexed, i.e. the different samples are mixed
+in different batches, then the batches should be what you provide to
+this argument.</p>
 </div>
 <div class="section level4">
 <h4 id="reducing-and-clustering-the-data">Reducing and clustering the data<a class="anchor" aria-label="anchor" href="#reducing-and-clustering-the-data"></a>
@@ -298,7 +302,7 @@ trees trained on the kNN-derived properties along with a few additional
 features (e.g. library size, number of non-zero features, and an
 estimate of the difficultly of detecting artificial doublets in the
 cell’s neighborhood, a variant of the <code>cxds</code> score from the
-<em><a href="https://bioconductor.org/packages/3.17/scds/vignettes/scds" class="external-link">scds</a></em>,
+<em><a href="https://bioconductor.org/packages/3.18/scds/vignettes/scds" class="external-link">scds</a></em>,
 etc.) to distinguish doublets (either artificial or given) from other
 cells, and assigns a score on this basis.</p>
 <p>One problem of using a classifier for this task is that some of the
@@ -536,7 +540,7 @@ to SCE). For example, assuming as <code>Seurat</code> object
 <span><span class="va">se</span><span class="op">$</span><span class="va">scDblFinder.score</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">scDblFinder.score</span></span></code></pre>
 <p>After artificial doublets generation, the counts of real and
 artificial cells must then be reprocessed (i.e. normalization and PCA)
-together, which is performed internally using <em><a href="https://bioconductor.org/packages/3.17/scater" class="external-link">scater</a></em>. If
+together, which is performed internally using <em><a href="https://bioconductor.org/packages/3.18/scater" class="external-link">scater</a></em>. If
 you wish this step to be performed differently, you may provide your own
 function for doing so (see the <code>processing</code> argument in
 <code><a href="../reference/scDblFinder.html">?scDblFinder</a></code>). We note, however, that the impact of
@@ -582,17 +586,37 @@ detection?<a class="anchor" aria-label="anchor" href="#should-i-run-qc-cell-filt
 </h4>
 <p>The input to <code>scDblFinder</code> should not include empty
 droplets, and it might be necessary to remove cells with a very low
-coverage (e.g. &lt;200 reads) to avoid errors. Further quality filtering
-should be performed <em>downstream</em> of doublet detection, for two
-reasons: 1. the default expected doublet rate is calculated on the basis
-of the cells given, and if you excluded a lot of cells as low quality,
-<code>scDblFinder</code> might think that the doublet rate should be
-lower than it is. 2. kicking out all low quality cells first might
-hamper our ability to detect doublets that are formed by the combination
-of a good quality cell with a low-quality one. This being said, these
-are mostly theoretical grounds, and unless your QC filtering is very
-stringent (and it shouldn’t be!), it’s unlikely to make a big
+coverage (e.g. &lt;200 or 500 reads) to avoid errors. Further quality
+filtering should be performed <em>downstream</em> of doublet detection,
+for two reasons: 1. the default expected doublet rate is calculated on
+the basis of the cells given, and if you excluded a lot of cells as low
+quality, <code>scDblFinder</code> might think that the doublet rate
+should be lower than it is. 2. kicking out all low quality cells first
+might hamper our ability to detect doublets that are formed by the
+combination of a good quality cell with a low-quality one. This being
+said, these are mostly theoretical grounds, and unless your QC filtering
+is very stringent (and it shouldn’t be!), it’s unlikely to make a big
 difference.</p>
+<div class="section level5">
+<h5 id="what-about-ambiant-rna-decontamination">What about ambiant RNA decontamination?<a class="anchor" aria-label="anchor" href="#what-about-ambiant-rna-decontamination"></a>
+</h5>
+<p>Contamination by ambiant RNA has emerged as an important confounder
+in single-cell (and especially single-nuclei) RNAseq data, which prompts
+the question of whether that should be run prior or after doublet
+detection. Unfortunately, we do not currently have good evidence
+pointing in either direction, and arguments can be made for both.
+Low-quality doublets, or doublets from an experiment with a large
+dominant celltype, can easily look like contamination, and likewise a
+high amount of contamination can easily look like a doublet because it
+includes RNA from other cell types. There is a possibility that a
+decontamination package sees an actual doublet as contamination, and
+attempts to clean it, which it will necessarily do imperfectly (because
+while the decontamination is a mixture of all cells, a doublet isn’t),
+but perhaps sufficiently so that it can’t be accurately detected as a
+doublet anymore. This would therefore be an argument for running doublet
+calling first. However, it’s also possible that decontamination, because
+it makes the cells cleaner, makes the doublet detection task easier.</p>
+</div>
 </div>
 <div class="section level4">
 <h4 id="can-i-combine-this-method-with-others">Can I combine this method with others?<a class="anchor" aria-label="anchor" href="#can-i-combine-this-method-with-others"></a>
@@ -614,9 +638,9 @@ p-value combination on 1-score (interpreted as a probability).</p>
 </h2>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.3.1 (2023-06-16)</span></span>
+<pre><code><span><span class="co">## R version 4.3.3 (2024-02-29)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
-<span><span class="co">## Running under: Ubuntu 22.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 22.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -636,65 +660,64 @@ p-value combination on 1-score (interpreted as a probability).</p>
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.15.4          SingleCellExperiment_1.22.0</span></span>
-<span><span class="co">##  [3] SummarizedExperiment_1.30.2 Biobase_2.60.0             </span></span>
-<span><span class="co">##  [5] GenomicRanges_1.52.1        GenomeInfoDb_1.36.4        </span></span>
-<span><span class="co">##  [7] IRanges_2.34.1              S4Vectors_0.38.2           </span></span>
-<span><span class="co">##  [9] BiocGenerics_0.46.0         MatrixGenerics_1.12.3      </span></span>
-<span><span class="co">## [11] matrixStats_1.0.0           BiocStyle_2.28.1           </span></span>
+<span><span class="co">##  [1] scDblFinder_1.17.2          SingleCellExperiment_1.24.0</span></span>
+<span><span class="co">##  [3] SummarizedExperiment_1.32.0 Biobase_2.62.0             </span></span>
+<span><span class="co">##  [5] GenomicRanges_1.54.1        GenomeInfoDb_1.38.7        </span></span>
+<span><span class="co">##  [7] IRanges_2.36.0              S4Vectors_0.40.2           </span></span>
+<span><span class="co">##  [9] BiocGenerics_0.48.1         MatrixGenerics_1.14.0      </span></span>
+<span><span class="co">## [11] matrixStats_1.2.0           BiocStyle_2.30.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] bitops_1.0-7              gridExtra_2.3            </span></span>
-<span><span class="co">##   [3] rlang_1.1.1               magrittr_2.0.3           </span></span>
-<span><span class="co">##   [5] scater_1.28.0             compiler_4.3.1           </span></span>
-<span><span class="co">##   [7] DelayedMatrixStats_1.22.6 systemfonts_1.0.5        </span></span>
-<span><span class="co">##   [9] vctrs_0.6.4               stringr_1.5.0            </span></span>
-<span><span class="co">##  [11] pkgconfig_2.0.3           crayon_1.5.2             </span></span>
-<span><span class="co">##  [13] fastmap_1.1.1             XVector_0.40.0           </span></span>
-<span><span class="co">##  [15] scuttle_1.10.3            utf8_1.2.4               </span></span>
-<span><span class="co">##  [17] Rsamtools_2.16.0          rmarkdown_2.25           </span></span>
-<span><span class="co">##  [19] ggbeeswarm_0.7.2          ragg_1.2.6               </span></span>
-<span><span class="co">##  [21] purrr_1.0.2               xfun_0.40                </span></span>
-<span><span class="co">##  [23] bluster_1.10.0            zlibbioc_1.46.0          </span></span>
-<span><span class="co">##  [25] cachem_1.0.8              beachmat_2.16.0          </span></span>
-<span><span class="co">##  [27] jsonlite_1.8.7            DelayedArray_0.26.7      </span></span>
-<span><span class="co">##  [29] BiocParallel_1.34.2       irlba_2.3.5.1            </span></span>
-<span><span class="co">##  [31] parallel_4.3.1            cluster_2.1.4            </span></span>
-<span><span class="co">##  [33] R6_2.5.1                  bslib_0.5.1              </span></span>
-<span><span class="co">##  [35] stringi_1.7.12            limma_3.56.2             </span></span>
-<span><span class="co">##  [37] rtracklayer_1.60.1        xgboost_1.7.5.1          </span></span>
-<span><span class="co">##  [39] jquerylib_0.1.4           Rcpp_1.0.11              </span></span>
-<span><span class="co">##  [41] bookdown_0.36             knitr_1.44               </span></span>
-<span><span class="co">##  [43] Matrix_1.5-4.1            igraph_1.5.1             </span></span>
-<span><span class="co">##  [45] tidyselect_1.2.0          abind_1.4-5              </span></span>
-<span><span class="co">##  [47] yaml_2.3.7                viridis_0.6.4            </span></span>
-<span><span class="co">##  [49] codetools_0.2-19          lattice_0.21-8           </span></span>
-<span><span class="co">##  [51] tibble_3.2.1              evaluate_0.22            </span></span>
-<span><span class="co">##  [53] desc_1.4.2                Biostrings_2.68.1        </span></span>
-<span><span class="co">##  [55] pillar_1.9.0              BiocManager_1.30.22      </span></span>
-<span><span class="co">##  [57] generics_0.1.3            rprojroot_2.0.3          </span></span>
-<span><span class="co">##  [59] RCurl_1.98-1.12           ggplot2_3.4.4            </span></span>
-<span><span class="co">##  [61] sparseMatrixStats_1.12.2  munsell_0.5.0            </span></span>
-<span><span class="co">##  [63] scales_1.2.1              glue_1.6.2               </span></span>
-<span><span class="co">##  [65] metapod_1.8.0             tools_4.3.1              </span></span>
-<span><span class="co">##  [67] BiocIO_1.10.0             data.table_1.14.8        </span></span>
-<span><span class="co">##  [69] BiocNeighbors_1.18.0      ScaledMatrix_1.8.1       </span></span>
-<span><span class="co">##  [71] locfit_1.5-9.8            GenomicAlignments_1.36.0 </span></span>
-<span><span class="co">##  [73] fs_1.6.3                  scran_1.28.2             </span></span>
-<span><span class="co">##  [75] XML_3.99-0.14             grid_4.3.1               </span></span>
-<span><span class="co">##  [77] edgeR_3.42.4              colorspace_2.1-0         </span></span>
-<span><span class="co">##  [79] GenomeInfoDbData_1.2.10   beeswarm_0.4.0           </span></span>
-<span><span class="co">##  [81] BiocSingular_1.16.0       restfulr_0.0.15          </span></span>
-<span><span class="co">##  [83] vipor_0.4.5               cli_3.6.1                </span></span>
-<span><span class="co">##  [85] rsvd_1.0.5                textshaping_0.3.7        </span></span>
-<span><span class="co">##  [87] fansi_1.0.5               S4Arrays_1.0.6           </span></span>
-<span><span class="co">##  [89] viridisLite_0.4.2         dplyr_1.1.3              </span></span>
-<span><span class="co">##  [91] gtable_0.3.4              sass_0.4.7               </span></span>
-<span><span class="co">##  [93] digest_0.6.33             ggrepel_0.9.4            </span></span>
-<span><span class="co">##  [95] dqrng_0.3.1               rjson_0.2.21             </span></span>
-<span><span class="co">##  [97] memoise_2.0.1             htmltools_0.5.6.1        </span></span>
-<span><span class="co">##  [99] pkgdown_2.0.7             lifecycle_1.0.3          </span></span>
-<span><span class="co">## [101] statmod_1.5.0             MASS_7.3-60</span></span></code></pre>
+<span><span class="co">##   [3] rlang_1.1.3               magrittr_2.0.3           </span></span>
+<span><span class="co">##   [5] scater_1.30.1             compiler_4.3.3           </span></span>
+<span><span class="co">##   [7] DelayedMatrixStats_1.24.0 systemfonts_1.0.5        </span></span>
+<span><span class="co">##   [9] vctrs_0.6.5               pkgconfig_2.0.3          </span></span>
+<span><span class="co">##  [11] crayon_1.5.2              fastmap_1.1.1            </span></span>
+<span><span class="co">##  [13] XVector_0.42.0            scuttle_1.12.0           </span></span>
+<span><span class="co">##  [15] utf8_1.2.4                Rsamtools_2.18.0         </span></span>
+<span><span class="co">##  [17] rmarkdown_2.26            ggbeeswarm_0.7.2         </span></span>
+<span><span class="co">##  [19] ragg_1.2.7                purrr_1.0.2              </span></span>
+<span><span class="co">##  [21] xfun_0.42                 bluster_1.12.0           </span></span>
+<span><span class="co">##  [23] zlibbioc_1.48.0           cachem_1.0.8             </span></span>
+<span><span class="co">##  [25] beachmat_2.18.1           jsonlite_1.8.8           </span></span>
+<span><span class="co">##  [27] DelayedArray_0.28.0       BiocParallel_1.36.0      </span></span>
+<span><span class="co">##  [29] irlba_2.3.5.1             parallel_4.3.3           </span></span>
+<span><span class="co">##  [31] cluster_2.1.6             R6_2.5.1                 </span></span>
+<span><span class="co">##  [33] bslib_0.6.1               limma_3.58.1             </span></span>
+<span><span class="co">##  [35] rtracklayer_1.62.0        xgboost_1.7.7.1          </span></span>
+<span><span class="co">##  [37] jquerylib_0.1.4           Rcpp_1.0.12              </span></span>
+<span><span class="co">##  [39] bookdown_0.38             knitr_1.45               </span></span>
+<span><span class="co">##  [41] Matrix_1.6-5              igraph_2.0.2             </span></span>
+<span><span class="co">##  [43] tidyselect_1.2.0          abind_1.4-5              </span></span>
+<span><span class="co">##  [45] yaml_2.3.8                viridis_0.6.5            </span></span>
+<span><span class="co">##  [47] codetools_0.2-19          lattice_0.22-5           </span></span>
+<span><span class="co">##  [49] tibble_3.2.1              evaluate_0.23            </span></span>
+<span><span class="co">##  [51] desc_1.4.3                Biostrings_2.70.2        </span></span>
+<span><span class="co">##  [53] pillar_1.9.0              BiocManager_1.30.22      </span></span>
+<span><span class="co">##  [55] generics_0.1.3            RCurl_1.98-1.14          </span></span>
+<span><span class="co">##  [57] ggplot2_3.5.0             sparseMatrixStats_1.14.0 </span></span>
+<span><span class="co">##  [59] munsell_0.5.0             scales_1.3.0             </span></span>
+<span><span class="co">##  [61] glue_1.7.0                metapod_1.10.1           </span></span>
+<span><span class="co">##  [63] tools_4.3.3               BiocIO_1.12.0            </span></span>
+<span><span class="co">##  [65] data.table_1.15.2         BiocNeighbors_1.20.2     </span></span>
+<span><span class="co">##  [67] ScaledMatrix_1.10.0       locfit_1.5-9.9           </span></span>
+<span><span class="co">##  [69] GenomicAlignments_1.38.2  fs_1.6.3                 </span></span>
+<span><span class="co">##  [71] scran_1.30.2              XML_3.99-0.16.1          </span></span>
+<span><span class="co">##  [73] grid_4.3.3                edgeR_4.0.16             </span></span>
+<span><span class="co">##  [75] colorspace_2.1-0          GenomeInfoDbData_1.2.11  </span></span>
+<span><span class="co">##  [77] beeswarm_0.4.0            BiocSingular_1.18.0      </span></span>
+<span><span class="co">##  [79] restfulr_0.0.15           vipor_0.4.7              </span></span>
+<span><span class="co">##  [81] cli_3.6.2                 rsvd_1.0.5               </span></span>
+<span><span class="co">##  [83] textshaping_0.3.7         fansi_1.0.6              </span></span>
+<span><span class="co">##  [85] S4Arrays_1.2.1            viridisLite_0.4.2        </span></span>
+<span><span class="co">##  [87] dplyr_1.1.4               gtable_0.3.4             </span></span>
+<span><span class="co">##  [89] sass_0.4.8                digest_0.6.34            </span></span>
+<span><span class="co">##  [91] SparseArray_1.2.4         ggrepel_0.9.5            </span></span>
+<span><span class="co">##  [93] dqrng_0.3.2               rjson_0.2.21             </span></span>
+<span><span class="co">##  [95] memoise_2.0.1             htmltools_0.5.7          </span></span>
+<span><span class="co">##  [97] pkgdown_2.0.7             lifecycle_1.0.4          </span></span>
+<span><span class="co">##  [99] statmod_1.5.0             MASS_7.3-60.0.1</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

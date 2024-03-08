@@ -1,4 +1,4 @@
-pandoc: 2.19.2
+pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
@@ -8,7 +8,7 @@ articles:
   recoverDoublets: recoverDoublets.html
   scATAC: scATAC.html
   scDblFinder: scDblFinder.html
-last_built: 2023-10-26T07:50Z
+last_built: 2024-03-08T07:53Z
 urls:
   reference: https://plger.github.io/scDblFinder/reference
   article: https://plger.github.io/scDblFinder/articles

@@ -8,8 +8,8 @@
 <meta name="description" content="scDblFinder">
 <title>Recovering intra-sample doublets • scDblFinder</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Recovering intra-sample doublets">
 <meta property="og:description" content="scDblFinder">
@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.17.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                   <a class="author_email" href="mailto:#"></a><a href="mailto:infinite.monkeys.with.keyboards@gmail.com" class="email">infinite.monkeys.with.keyboards@gmail.com</a>
       
                   
-            <h4 data-toc-skip class="date">2023-10-26</h4>
+            <h4 data-toc-skip class="date">2024-03-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/plger/scDblFinder/blob/HEAD/vignettes/recoverDoublets.Rmd" class="external-link"><code>vignettes/recoverDoublets.Rmd</code></a></small>
       <div class="d-none name"><code>recoverDoublets.Rmd</code></div>
@@ -181,9 +181,9 @@ that multiplexed samples include technical or biological replicates.</p>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.3.1 (2023-06-16)</span></span>
+<pre><code><span><span class="co">## R version 4.3.3 (2024-02-29)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
-<span><span class="co">## Running under: Ubuntu 22.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 22.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -202,21 +202,20 @@ that multiplexed samples include technical or biological replicates.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] BiocStyle_2.28.1</span></span>
+<span><span class="co">## [1] BiocStyle_2.30.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] vctrs_0.6.4         cli_3.6.1           knitr_1.44         </span></span>
-<span><span class="co">##  [4] rlang_1.1.1         xfun_0.40           stringi_1.7.12     </span></span>
-<span><span class="co">##  [7] purrr_1.0.2         textshaping_0.3.7   jsonlite_1.8.7     </span></span>
-<span><span class="co">## [10] glue_1.6.2          rprojroot_2.0.3     htmltools_0.5.6.1  </span></span>
-<span><span class="co">## [13] ragg_1.2.6          sass_0.4.7          rmarkdown_2.25     </span></span>
-<span><span class="co">## [16] evaluate_0.22       jquerylib_0.1.4     fastmap_1.1.1      </span></span>
-<span><span class="co">## [19] lifecycle_1.0.3     yaml_2.3.7          memoise_2.0.1      </span></span>
-<span><span class="co">## [22] bookdown_0.36       BiocManager_1.30.22 stringr_1.5.0      </span></span>
-<span><span class="co">## [25] compiler_4.3.1      fs_1.6.3            systemfonts_1.0.5  </span></span>
-<span><span class="co">## [28] digest_0.6.33       R6_2.5.1            magrittr_2.0.3     </span></span>
-<span><span class="co">## [31] bslib_0.5.1         tools_4.3.1         pkgdown_2.0.7      </span></span>
-<span><span class="co">## [34] cachem_1.0.8        desc_1.4.2</span></span></code></pre>
+<span><span class="co">##  [1] vctrs_0.6.5         cli_3.6.2           knitr_1.45         </span></span>
+<span><span class="co">##  [4] rlang_1.1.3         xfun_0.42           purrr_1.0.2        </span></span>
+<span><span class="co">##  [7] textshaping_0.3.7   jsonlite_1.8.8      htmltools_0.5.7    </span></span>
+<span><span class="co">## [10] ragg_1.2.7          sass_0.4.8          rmarkdown_2.26     </span></span>
+<span><span class="co">## [13] evaluate_0.23       jquerylib_0.1.4     fastmap_1.1.1      </span></span>
+<span><span class="co">## [16] yaml_2.3.8          lifecycle_1.0.4     memoise_2.0.1      </span></span>
+<span><span class="co">## [19] bookdown_0.38       BiocManager_1.30.22 compiler_4.3.3     </span></span>
+<span><span class="co">## [22] fs_1.6.3            systemfonts_1.0.5   digest_0.6.34      </span></span>
+<span><span class="co">## [25] R6_2.5.1            magrittr_2.0.3      bslib_0.6.1        </span></span>
+<span><span class="co">## [28] tools_4.3.3         pkgdown_2.0.7       cachem_1.0.8       </span></span>
+<span><span class="co">## [31] desc_1.4.3</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
