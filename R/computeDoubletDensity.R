@@ -143,6 +143,9 @@ NULL
     # Computing densities, using a distance computed from the kth nearest neighbor.
     pre.pcs <- buildIndex(pcs, BNPARAM=BNPARAM)
     self.dist <- findKNN(BNINDEX=pre.pcs, k=k, BPPARAM=BPPARAM, last=1, get.index=FALSE, warn.ties=FALSE)$distance
+    if(any(self.dist == 0))
+        stop("Duplicate cells detected. These are probably low-quality cells ",
+             "that have very few reads, and should be filtered out.")
 
     sim.n <- queryNeighbors(sim.pcs, query=pcs, 
         threshold=self.dist * 1.00000001, # bump it up to avoid issues with numerical precision during tests.
