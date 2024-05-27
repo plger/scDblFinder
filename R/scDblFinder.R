@@ -201,7 +201,7 @@ scDblFinder <- function(
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
-  threshold=TRUE, verbose=is.null(samples), BPPARAM=SerialParam(), ...){
+  threshold=TRUE, verbose=TRUE, BPPARAM=SerialParam(progressbar=verbose), ...){
 
   multiSampleMode <- match.arg(multiSampleMode)
 
@@ -279,6 +279,7 @@ scDblFinder <- function(
     names(nn) <- nn <- names(cs)
     ## run scDblFinder individually
     d <- bplapply(nn, BPPARAM=BPPARAM, FUN=function(n){
+      #if(bpnworkers(BPPARAM)==1) message("Sample ", n)
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
       if(!is.null(knownDoublets) && length(knownDoublets)>1){
