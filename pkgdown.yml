@@ -1,5 +1,5 @@
 pandoc: 3.1.11
-pkgdown: 2.0.7
+pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   computeDoubletDensity: computeDoubletDensity.html
@@ -8,7 +8,7 @@ articles:
   recoverDoublets: recoverDoublets.html
   scATAC: scATAC.html
   scDblFinder: scDblFinder.html
-last_built: 2024-03-08T07:53Z
+last_built: 2024-05-27T11:26Z
 urls:
   reference: https://plger.github.io/scDblFinder/reference
   article: https://plger.github.io/scDblFinder/articles
