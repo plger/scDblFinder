@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -187,8 +187,8 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:20 - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:20 - Obtaining overlaps...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:07 - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:07 - Obtaining overlaps...</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
@@ -258,23 +258,23 @@ particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOve
 have to adjust the arguments for an example to run:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 17:29:21 - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:21 - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:21 - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:21 - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:21 - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:08 - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 - Iterative training</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 17:29:22 Done!</span></span></code></pre>
+<pre><code><span><span class="co">## 10:47:09 Done!</span></span></code></pre>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
 <pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
@@ -331,7 +331,7 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 </h2>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.4.0 (2024-04-24)</span></span>
+<pre><code><span><span class="co">## R version 4.4.1 (2024-06-14)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">## Running under: Ubuntu 22.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
@@ -353,17 +353,17 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.19.0          SingleCellExperiment_1.26.0</span></span>
+<span><span class="co">##  [1] scDblFinder_1.19.1          SingleCellExperiment_1.26.0</span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.34.0 Biobase_2.64.0             </span></span>
-<span><span class="co">##  [5] GenomicRanges_1.56.0        GenomeInfoDb_1.40.1        </span></span>
+<span><span class="co">##  [5] GenomicRanges_1.56.1        GenomeInfoDb_1.40.1        </span></span>
 <span><span class="co">##  [7] IRanges_2.38.0              S4Vectors_0.42.0           </span></span>
 <span><span class="co">##  [9] BiocGenerics_0.50.0         MatrixGenerics_1.16.0      </span></span>
-<span><span class="co">## [11] matrixStats_1.3.0           BiocStyle_2.32.0           </span></span>
+<span><span class="co">## [11] matrixStats_1.3.0           BiocStyle_2.32.1           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] bitops_1.0-7              gridExtra_2.3            </span></span>
 <span><span class="co">##   [3] rlang_1.1.4               magrittr_2.0.3           </span></span>
-<span><span class="co">##   [5] scater_1.32.0             compiler_4.4.0           </span></span>
+<span><span class="co">##   [5] scater_1.32.0             compiler_4.4.1           </span></span>
 <span><span class="co">##   [7] DelayedMatrixStats_1.26.0 systemfonts_1.1.0        </span></span>
 <span><span class="co">##   [9] vctrs_0.6.5               pkgconfig_2.0.3          </span></span>
 <span><span class="co">##  [11] crayon_1.5.2              fastmap_1.2.0            </span></span>
@@ -371,14 +371,14 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">##  [15] utf8_1.2.4                Rsamtools_2.20.0         </span></span>
 <span><span class="co">##  [17] rmarkdown_2.27            UCSC.utils_1.0.0         </span></span>
 <span><span class="co">##  [19] ggbeeswarm_0.7.2          ragg_1.3.2               </span></span>
-<span><span class="co">##  [21] purrr_1.0.2               xfun_0.44                </span></span>
+<span><span class="co">##  [21] purrr_1.0.2               xfun_0.45                </span></span>
 <span><span class="co">##  [23] bluster_1.14.0            zlibbioc_1.50.0          </span></span>
 <span><span class="co">##  [25] cachem_1.1.0              beachmat_2.20.0          </span></span>
 <span><span class="co">##  [27] jsonlite_1.8.8            DelayedArray_0.30.1      </span></span>
 <span><span class="co">##  [29] BiocParallel_1.38.0       irlba_2.3.5.1            </span></span>
-<span><span class="co">##  [31] parallel_4.4.0            cluster_2.1.6            </span></span>
+<span><span class="co">##  [31] parallel_4.4.1            cluster_2.1.6            </span></span>
 <span><span class="co">##  [33] R6_2.5.1                  bslib_0.7.0              </span></span>
-<span><span class="co">##  [35] limma_3.60.2              rtracklayer_1.64.0       </span></span>
+<span><span class="co">##  [35] limma_3.60.3              rtracklayer_1.64.0       </span></span>
 <span><span class="co">##  [37] xgboost_1.7.7.1           jquerylib_0.1.4          </span></span>
 <span><span class="co">##  [39] Rcpp_1.0.12               bookdown_0.39            </span></span>
 <span><span class="co">##  [41] knitr_1.47                Matrix_1.7-0             </span></span>
@@ -393,12 +393,12 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">##  [59] ggplot2_3.5.1             sparseMatrixStats_1.16.0 </span></span>
 <span><span class="co">##  [61] munsell_0.5.1             scales_1.3.0             </span></span>
 <span><span class="co">##  [63] glue_1.7.0                metapod_1.12.0           </span></span>
-<span><span class="co">##  [65] tools_4.4.0               BiocIO_1.14.0            </span></span>
+<span><span class="co">##  [65] tools_4.4.1               BiocIO_1.14.0            </span></span>
 <span><span class="co">##  [67] data.table_1.15.4         BiocNeighbors_1.22.0     </span></span>
 <span><span class="co">##  [69] ScaledMatrix_1.12.0       locfit_1.5-9.9           </span></span>
 <span><span class="co">##  [71] GenomicAlignments_1.40.0  fs_1.6.4                 </span></span>
 <span><span class="co">##  [73] scran_1.32.0              XML_3.99-0.16.1          </span></span>
-<span><span class="co">##  [75] grid_4.4.0                edgeR_4.2.0              </span></span>
+<span><span class="co">##  [75] grid_4.4.1                edgeR_4.2.0              </span></span>
 <span><span class="co">##  [77] colorspace_2.1-0          GenomeInfoDbData_1.2.12  </span></span>
 <span><span class="co">##  [79] beeswarm_0.4.0            BiocSingular_1.20.0      </span></span>
 <span><span class="co">##  [81] restfulr_0.0.15           vipor_0.4.7              </span></span>
