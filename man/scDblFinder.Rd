@@ -33,8 +33,8 @@ scDblFinder(
   unident.th = NULL,
   multiSampleMode = c("split", "singleModel", "singleModelSplitThres", "asOne"),
   threshold = TRUE,
-  verbose = is.null(samples),
-  BPPARAM = SerialParam(),
+  verbose = TRUE,
+  BPPARAM = SerialParam(progressbar = verbose),
   ...
 )
 }
