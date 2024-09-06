@@ -1,117 +1,41 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://plger.github.io/scDblFinder/404.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/computeDoubletDensity.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/findDoubletClusters.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/introduction.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/recoverDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/scATAC.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/articles/scDblFinder.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/index.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/TFIDF.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/addDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/aggregateFeatures.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/amulet.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/amuletFromCounts.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/clamulet.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/clusterStickiness.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/computeDoubletDensity.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/createDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/cxds2.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/directDblClassification.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/doubletPairwiseEnrichment.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/doubletThresholding.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/fastcluster.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/findDoubletClusters.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/getArtificialDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/getCellPairs.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/getExpectedDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/getFragmentOverlaps.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/mockDoubletSCE.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/plotDoubletMap.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/plotThresholds.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/propHomotypic.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/recoverDoublets.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/scDblFinder.html</loc>
-  </url>
-  <url>
-    <loc>https://plger.github.io/scDblFinder/reference/selFeatures.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://plger.github.io/scDblFinder/404.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/LICENSE-text.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/computeDoubletDensity.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/findDoubletClusters.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/index.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/introduction.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/recoverDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/scATAC.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/articles/scDblFinder.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/authors.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/index.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/TFIDF.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/addDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/aggregateFeatures.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/amulet.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/amuletFromCounts.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/clamulet.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/clusterStickiness.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/computeDoubletDensity.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/createDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/cxds2.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/directDblClassification.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/doubletPairwiseEnrichment.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/doubletThresholding.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/fastcluster.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/findDoubletClusters.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/getArtificialDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/getCellPairs.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/getExpectedDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/getFragmentOverlaps.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/index.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/mockDoubletSCE.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/plotDoubletMap.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/plotThresholds.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/propHomotypic.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/recoverDoublets.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/scDblFinder.html</loc></url>
+<url><loc>https://plger.github.io/scDblFinder/reference/selFeatures.html</loc></url>
 </urlset>
+

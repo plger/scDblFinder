@@ -5,68 +5,52 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="scDblFinder">
 <title>Recovering intra-sample doublets • scDblFinder</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js" integrity="sha512-7O5pXpc0oCRrxk8RUfDYFgn0nO1t+jLuIOQdOMRp4APB7uZ4vSjspzp5y6YDtDs4VzUSTbWzBFZ/LKJhnyFOKw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Recovering intra-sample doublets">
-<meta property="og:description" content="scDblFinder">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Recovering intra-sample doublets">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
-    
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-dark" data-bs-theme="dark"><div class="container">
-    
+
+    <nav class="navbar navbar-expand-lg fixed-top bg-dark" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.2</small>
 
-    
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item">
-  <a class="nav-link" href="../articles/scDblFinder.html">Get started</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link" href="../reference/index.html">Reference</a>
-</li>
+<li class="nav-item"><a class="nav-link" href="../articles/scDblFinder.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
-  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/computeDoubletDensity.html">Scoring potential doublets from simulated densities</a>
-    <a class="dropdown-item" href="../articles/findDoubletClusters.html">Detecting clusters of doublet cells with DE analyses</a>
-    <a class="dropdown-item" href="../articles/introduction.html">Introduction to the scDblFinder package</a>
-    <a class="dropdown-item" href="../articles/recoverDoublets.html">Recovering intra-sample doublets</a>
-    <a class="dropdown-item" href="../articles/scATAC.html">Doublet identifiation in single-cell ATAC-seq</a>
-  </div>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/computeDoubletDensity.html">Scoring potential doublets from simulated densities</a></li>
+    <li><a class="dropdown-item" href="../articles/findDoubletClusters.html">Detecting clusters of doublet cells with DE analyses</a></li>
+    <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to the scDblFinder package</a></li>
+    <li><a class="dropdown-item" href="../articles/recoverDoublets.html">Recovering intra-sample doublets</a></li>
+    <li><a class="dropdown-item" href="../articles/scATAC.html">Doublet identifiation in single-cell ATAC-seq</a></li>
+  </ul>
 </li>
       </ul>
-<form class="form-inline my-2 my-lg-0" role="search">
-        <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off">
-</form>
-
-      <ul class="navbar-nav">
-<li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/plger/scDblFinder/" aria-label="github">
-    <span class="fab fa fab fa-github fa-lg"></span>
-     
-  </a>
-</li>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/plger/scDblFinder/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
-    
+
   </div>
 </nav><div class="container template-article">
 
@@ -75,14 +59,15 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="" class="logo" alt=""><h1>Recovering intra-sample doublets</h1>
+
+      <h1>Recovering intra-sample doublets</h1>
                         <h4 data-toc-skip class="author">Aaron Lun</h4>
                   <a class="author_email" href="mailto:#"></a><a href="mailto:infinite.monkeys.with.keyboards@gmail.com" class="email">infinite.monkeys.with.keyboards@gmail.com</a>
       
                   
-            <h4 data-toc-skip class="date">2024-06-19</h4>
+            <h4 data-toc-skip class="date">2024-09-06</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/plger/scDblFinder/blob/HEAD/vignettes/recoverDoublets.Rmd" class="external-link"><code>vignettes/recoverDoublets.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/plger/scDblFinder/blob/devel/vignettes/recoverDoublets.Rmd" class="external-link"><code>vignettes/recoverDoublets.Rmd</code></a></small>
       <div class="d-none name"><code>recoverDoublets.Rmd</code></div>
     </div>
 
@@ -99,22 +84,58 @@ in action on real data. A toy example is also provided in
 <div class="section level2">
 <h2 id="mathematical-background">Mathematical background<a class="anchor" aria-label="anchor" href="#mathematical-background"></a>
 </h2>
-<p>Consider any two cell states <span class="math inline">\(C_1\)</span>
-and <span class="math inline">\(C_2\)</span> forming a doublet
-population <span class="math inline">\(D_{12}\)</span>. We will focus on
-the relative frequency of inter-sample to intra-sample doublets in <span class="math inline">\(D_{12}\)</span>. Given a vector <span class="math inline">\(\vec p_X\)</span> containing the proportion of
-cells from each sample in state <span class="math inline">\(X\)</span>,
+<p>Consider any two cell states
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>2</mn></msub><annotation encoding="application/x-tex">C_2</annotation></semantics></math>
+forming a doublet population
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>.
+We will focus on the relative frequency of inter-sample to intra-sample
+doublets in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>.
+Given a vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><mi>X</mi></msub><annotation encoding="application/x-tex">\vec p_X</annotation></semantics></math>
+containing the proportion of cells from each sample in state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
 and assuming that doublets form randomly between pairs of samples, the
-expected proportion of intra-sample doublets in <span class="math inline">\(D_{12}\)</span> is <span class="math inline">\(\vec p_{C_1} \cdot \vec p_{C_2}\)</span>.
+expected proportion of intra-sample doublets in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><msub><mi>C</mi><mn>1</mn></msub></msub><mo>⋅</mo><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><msub><mi>C</mi><mn>2</mn></msub></msub></mrow><annotation encoding="application/x-tex">\vec p_{C_1} \cdot \vec p_{C_2}</annotation></semantics></math>.
 Subtracting this from 1 gives us the expected proportion of inter-sample
-doublets <span class="math inline">\(q_{D_{12}}\)</span>. Similarly, the
-expected proportion of inter-sample doublets in <span class="math inline">\(C_1\)</span> is just <span class="math inline">\(q_{C_1} =1 - \| \vec p_{C_1} \|_2^2\)</span>.</p>
-<p>Now, let’s consider the observed proportion of events <span class="math inline">\(r_X\)</span> in each state <span class="math inline">\(X\)</span> that are known doublets. We have <span class="math inline">\(r_{D_{12}} = q_{D_{12}}\)</span> as there are no
-other events in <span class="math inline">\(D_{12}\)</span> beyond
-actual doublets. On the other hand, we expect that <span class="math inline">\(r_{C_1} \ll q_{C_1}\)</span> due to presence of a
-large majority of non-doublet cells in <span class="math inline">\(C_1\)</span> (same for <span class="math inline">\(C_2\)</span>). If we assume that <span class="math inline">\(q_{D_{12}} \ge q_{C_1}\)</span> and <span class="math inline">\(q_{C_2}\)</span>, the observed proportion <span class="math inline">\(r_{D_{12}}\)</span> should be larger than <span class="math inline">\(r_{C_1}\)</span> and <span class="math inline">\(r_{C_2}\)</span>. (The last assumption is not
-always true but the <span class="math inline">\(\ll\)</span> should give
-us enough wiggle room to be robust to violations.)</p>
+doublets
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><msub><mi>D</mi><mn>12</mn></msub></msub><annotation encoding="application/x-tex">q_{D_{12}}</annotation></semantics></math>.
+Similarly, the expected proportion of inter-sample doublets in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+is just
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><msub><mi>C</mi><mn>1</mn></msub></msub><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false" form="postfix">∥</mo><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><msub><mi>C</mi><mn>1</mn></msub></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">q_{C_1} =1 - \| \vec p_{C_1} \|_2^2</annotation></semantics></math>.</p>
+<p>Now, let’s consider the observed proportion of events
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>X</mi></msub><annotation encoding="application/x-tex">r_X</annotation></semantics></math>
+in each state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+that are known doublets. We have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><msub><mi>D</mi><mn>12</mn></msub></msub><mo>=</mo><msub><mi>q</mi><msub><mi>D</mi><mn>12</mn></msub></msub></mrow><annotation encoding="application/x-tex">r_{D_{12}} = q_{D_{12}}</annotation></semantics></math>
+as there are no other events in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>
+beyond actual doublets. On the other hand, we expect that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><msub><mi>C</mi><mn>1</mn></msub></msub><mo>≪</mo><msub><mi>q</mi><msub><mi>C</mi><mn>1</mn></msub></msub></mrow><annotation encoding="application/x-tex">r_{C_1} \ll q_{C_1}</annotation></semantics></math>
+due to presence of a large majority of non-doublet cells in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+(same for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>2</mn></msub><annotation encoding="application/x-tex">C_2</annotation></semantics></math>).
+If we assume that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><msub><mi>D</mi><mn>12</mn></msub></msub><mo>≥</mo><msub><mi>q</mi><msub><mi>C</mi><mn>1</mn></msub></msub></mrow><annotation encoding="application/x-tex">q_{D_{12}} \ge q_{C_1}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><msub><mi>C</mi><mn>2</mn></msub></msub><annotation encoding="application/x-tex">q_{C_2}</annotation></semantics></math>,
+the observed proportion
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>D</mi><mn>12</mn></msub></msub><annotation encoding="application/x-tex">r_{D_{12}}</annotation></semantics></math>
+should be larger than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>C</mi><mn>1</mn></msub></msub><annotation encoding="application/x-tex">r_{C_1}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>C</mi><mn>2</mn></msub></msub><annotation encoding="application/x-tex">r_{C_2}</annotation></semantics></math>.
+(The last assumption is not always true but the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≪</mo><annotation encoding="application/x-tex">\ll</annotation></semantics></math>
+should give us enough wiggle room to be robust to violations.)</p>
 <!--
 Counterexample for the assumption:
 
@@ -128,53 +149,75 @@ q_{D_{12}} = 1 - 0.6 = 0.4
 doublet neighbors as a “doublet score” to identify events that are most
 likely to be themselves doublets. <code><a href="../reference/recoverDoublets.html">recoverDoublets()</a></code>
 computes the proportion of known doublet neighbors for each cell by
-performing a <span class="math inline">\(k\)</span>-nearest neighbor
-search against all other cells in the dataset. It is then
+performing a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-nearest
+neighbor search against all other cells in the dataset. It is then
 straightforward to calculate the proportion of neighboring cells that
-are marked as known doublets, representing our estimate of <span class="math inline">\(r_X\)</span> for each cell.</p>
+are marked as known doublets, representing our estimate of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>X</mi></msub><annotation encoding="application/x-tex">r_X</annotation></semantics></math>
+for each cell.</p>
 </div>
 <div class="section level2">
 <h2 id="obtaining-explicit-calls">Obtaining explicit calls<a class="anchor" aria-label="anchor" href="#obtaining-explicit-calls"></a>
 </h2>
 <p>While the proportions are informative, there comes a time when we
 need to convert these into explicit doublet calls. This is achieved with
-<span class="math inline">\(\vec S\)</span>, the vector of the
-proportion of cells from each sample across the entire dataset (i.e.,
-<code>samples</code>). We assume that all cell states contributing to
-doublet states have proportion vectors equal to <span class="math inline">\(\vec S\)</span>, such that the expected proportion
-of doublets that occur between cells from the same sample is <span class="math inline">\(\| \vec S\|_2^2\)</span>. We then solve</p>
-<p><span class="math display">\[
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>S</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec S</annotation></semantics></math>,
+the vector of the proportion of cells from each sample across the entire
+dataset (i.e., <code>samples</code>). We assume that all cell states
+contributing to doublet states have proportion vectors equal to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>S</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec S</annotation></semantics></math>,
+such that the expected proportion of doublets that occur between cells
+from the same sample is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="postfix">∥</mo><mover><mi>S</mi><mo accent="true">→</mo></mover><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\| \vec S\|_2^2</annotation></semantics></math>.
+We then solve</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>a</mi></mrow></msub><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>a</mi></mrow></msub><mo>+</mo><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>e</mi><mi>r</mi></mrow></msub></mrow></mfrac><mo>=</mo><mo stretchy="false" form="postfix">∥</mo><mover><mi>S</mi><mo accent="true">→</mo></mover><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">
 \frac{N_{intra}}{(N_{intra} + N_{inter}} = \| \vec S\|_2^2
-\]</span></p>
-<p>for <span class="math inline">\(N_{intra}\)</span>, where <span class="math inline">\(N_{inter}\)</span> is the number of observed
-inter-sample doublets. The top <span class="math inline">\(N_{intra}\)</span> events with the highest scores
-(and, obviously, are not already inter-sample doublets) are marked as
-putative intra-sample doublets.</p>
+</annotation></semantics></math></p>
+<p>for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>a</mi></mrow></msub><annotation encoding="application/x-tex">N_{intra}</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>e</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">N_{inter}</annotation></semantics></math>
+is the number of observed inter-sample doublets. The top
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>a</mi></mrow></msub><annotation encoding="application/x-tex">N_{intra}</annotation></semantics></math>
+events with the highest scores (and, obviously, are not already
+inter-sample doublets) are marked as putative intra-sample doublets.</p>
 </div>
 <div class="section level2">
 <h2 id="discussion">Discussion<a class="anchor" aria-label="anchor" href="#discussion"></a>
 </h2>
 <p>The rate and manner of doublet formation is (mostly) irrelevant as we
-condition on the number of events in <span class="math inline">\(D_{12}\)</span>. This means that we do not have to
-make any assumptions about the relative likelihood of doublets forming
-between pairs of cell types, especially when cell types have different
-levels of “stickiness” (or worse, stick specifically to certain other
-cell types). Such convenience is only possible because of the known
-doublet calls that allow us to focus on the inter- to intra-sample
-ratio.</p>
-<p>The most problematic assumption is that required to obtain <span class="math inline">\(N_{intra}\)</span> from <span class="math inline">\(\vec S\)</span>. Obtaining a better estimate would
-require, at least, the knowledge of the two parent states for each
-doublet population. This can be determined with some simulation-based
-heuristics but it is likely to be more trouble than it is worth.</p>
+condition on the number of events in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>.
+This means that we do not have to make any assumptions about the
+relative likelihood of doublets forming between pairs of cell types,
+especially when cell types have different levels of “stickiness” (or
+worse, stick specifically to certain other cell types). Such convenience
+is only possible because of the known doublet calls that allow us to
+focus on the inter- to intra-sample ratio.</p>
+<p>The most problematic assumption is that required to obtain
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mrow><mi>i</mi><mi>n</mi><mi>t</mi><mi>r</mi><mi>a</mi></mrow></msub><annotation encoding="application/x-tex">N_{intra}</annotation></semantics></math>
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>S</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec S</annotation></semantics></math>.
+Obtaining a better estimate would require, at least, the knowledge of
+the two parent states for each doublet population. This can be
+determined with some simulation-based heuristics but it is likely to be
+more trouble than it is worth.</p>
 <p>In this theoretical framework, we can easily spot a case where our
-method fails. If both <span class="math inline">\(C_1\)</span> and <span class="math inline">\(C_2\)</span> are unique to a given sample, all
-events in <span class="math inline">\(D_{12}\)</span> will be
-intra-sample doublets. This means that no events in <span class="math inline">\(D_{12}\)</span> will ever be detected as
-inter-sample doublets, which precludes their detection as intra-sample
-doublets by <code>recoverDoublets</code>. The computational remedy is to
-augment the predictions with simulation-based methods (e.g.,
-<code><a href="../reference/scDblFinder.html">scDblFinder()</a></code>) while the experimental remedy is to ensure
-that multiplexed samples include technical or biological replicates.</p>
+method fails. If both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>2</mn></msub><annotation encoding="application/x-tex">C_2</annotation></semantics></math>
+are unique to a given sample, all events in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>
+will be intra-sample doublets. This means that no events in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>12</mn></msub><annotation encoding="application/x-tex">D_{12}</annotation></semantics></math>
+will ever be detected as inter-sample doublets, which precludes their
+detection as intra-sample doublets by <code>recoverDoublets</code>. The
+computational remedy is to augment the predictions with simulation-based
+methods (e.g., <code><a href="../reference/scDblFinder.html">scDblFinder()</a></code>) while the experimental remedy
+is to ensure that multiplexed samples include technical or biological
+replicates.</p>
 </div>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
@@ -205,19 +248,17 @@ that multiplexed samples include technical or biological replicates.</p>
 <span><span class="co">## [1] BiocStyle_2.32.1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] vctrs_0.6.5         cli_3.6.2           knitr_1.47         </span></span>
-<span><span class="co">##  [4] rlang_1.1.4         xfun_0.45           purrr_1.0.2        </span></span>
-<span><span class="co">##  [7] textshaping_0.4.0   jsonlite_1.8.8      htmltools_0.5.8.1  </span></span>
-<span><span class="co">## [10] ragg_1.3.2          sass_0.4.9          rmarkdown_2.27     </span></span>
-<span><span class="co">## [13] evaluate_0.24.0     jquerylib_0.1.4     fastmap_1.2.0      </span></span>
-<span><span class="co">## [16] yaml_2.3.8          lifecycle_1.0.4     memoise_2.0.1      </span></span>
-<span><span class="co">## [19] bookdown_0.39       BiocManager_1.30.23 compiler_4.4.1     </span></span>
-<span><span class="co">## [22] fs_1.6.4            systemfonts_1.1.0   digest_0.6.35      </span></span>
-<span><span class="co">## [25] R6_2.5.1            magrittr_2.0.3      bslib_0.7.0        </span></span>
-<span><span class="co">## [28] tools_4.4.1         pkgdown_2.0.9       cachem_1.1.0       </span></span>
-<span><span class="co">## [31] desc_1.4.3</span></span></code></pre>
+<span><span class="co">##  [1] digest_0.6.37       desc_1.4.3          R6_2.5.1           </span></span>
+<span><span class="co">##  [4] bookdown_0.40       fastmap_1.2.0       xfun_0.47          </span></span>
+<span><span class="co">##  [7] cachem_1.1.0        knitr_1.48          htmltools_0.5.8.1  </span></span>
+<span><span class="co">## [10] rmarkdown_2.28      lifecycle_1.0.4     cli_3.6.3          </span></span>
+<span><span class="co">## [13] sass_0.4.9          pkgdown_2.1.0       textshaping_0.4.0  </span></span>
+<span><span class="co">## [16] jquerylib_0.1.4     systemfonts_1.1.0   compiler_4.4.1     </span></span>
+<span><span class="co">## [19] tools_4.4.1         ragg_1.3.2          bslib_0.8.0        </span></span>
+<span><span class="co">## [22] evaluate_0.24.0     yaml_2.3.10         BiocManager_1.30.25</span></span>
+<span><span class="co">## [25] jsonlite_1.8.8      rlang_1.1.4         fs_1.6.4</span></span></code></pre>
 </div>
-  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 
@@ -228,15 +269,15 @@ that multiplexed samples include technical or biological replicates.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
     </footer>
 </div>
 
-  
 
-  
+
+
 
   </body>
 </html>
