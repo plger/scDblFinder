@@ -331,6 +331,10 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
     stats::pbinom(as.matrix(obs) - 1, prob = prb, size=ncol(Bp),
         lower.tail=FALSE, log.p=TRUE)
   })
+  if(all(S==0)){
+    # genes too correlated to each other, nothing to work with, return 0
+    return(rep(0L,ncol(x)))
+  }
   if(any(w <- is.infinite(S))){
     smin <- min(S[!is.infinite(S)])
     S[S<smin] <- smin
