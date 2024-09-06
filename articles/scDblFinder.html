@@ -507,6 +507,14 @@ to be passed to the BPPARAMs:</p>
 addition to explicitly start the cluster before the run using
 <code>bpstart(bp)</code>, and then <code>bpstop(bp)</code> after
 <code>scDblFinder</code>.)</p>
+<p>As a final note: when running <code>scDblFinder</code> twice on the
+same data with different random seeds, the scores will be highly
+correlated, but some cells will be called as doublets (with a high
+score) in only one of the runs (e.g. see <a href="https://github.com/plger/scDblFinder/issues/106" class="external-link">this issue</a>).
+There are good reasons to believe that these are
+<code>homotypic doublets</code> (if doublets at all), and if you worry
+chiefly about hetertypic doublets, you may concentrate on those that are
+reprocibly called across runs.</p>
 </div>
 <div class="section level4">
 <h4 id="can-i-use-this-in-combination-with-seurat-or-other-tools">Can I use this in combination with Seurat or other tools?<a class="anchor" aria-label="anchor" href="#can-i-use-this-in-combination-with-seurat-or-other-tools"></a>
