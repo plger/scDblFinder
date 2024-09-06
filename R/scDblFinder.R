@@ -648,12 +648,23 @@ scDblFinder <- function(
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
       # as well as unidentifiable artificial doublets
-        w <- which( (d$type=="real" &
-          doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
-                              perSample=perSample,
-                              returnType="call")=="doublet") |
-            (d$type=="doublet" & d$score<unident.th & filterUnidentifiable) |
-            !d$include.in.training )
+      w1 <- which(d$type=="real" &
+                  doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
+                                       perSample=perSample,
+                                       returnType="call")=="doublet")
+      if(length(w1) > sum(d$type=="real")/3){
+        # enforce max prop excluded
+        w1 <- head(order(d$type!="real", -d$score),
+                   floor(0.2*sum(d$type=="real")))
+      }
+      w2 <- which(d$type=="doublet" & d$score<unident.th & filterUnidentifiable)
+      if(filterUnidentifiable && length(w2) > sum(d$type=="doublet")/4){
+        # enforce max prop excluded
+        w2 <- head(order(d$type=="real", d$score),
+                   floor(0.1*sum(d$type!="real")))
+      }
+      w <- unique(c(w1,w2,which(!d$include.in.training)))
+
       if(verbose) message("iter=",max.iter-iter,", ", length(w),
                           " cells excluded from training.")
       d$score <- tryCatch({
