@@ -513,7 +513,7 @@ scDblFinder <- function(
 
 #' @importFrom BiocNeighbors AnnoyParam
 .evaluateKNN <- function(pca, ctype, origins, expected=NULL, k){
-  knn <- suppressWarnings(findKNN(pca, max(k), BNPARAM=AnnoyParam()))
+  knn <- suppressWarnings(findKNN(as.matrix(pca), max(k), BNPARAM=AnnoyParam()))
   hasOrigins <- length(unique(origins))>1
   knn$type <- matrix(as.integer(ctype)[knn$index]-1L, nrow=nrow(knn$index))
   if(hasOrigins) knn$orig <- matrix(origins[knn$index], nrow=nrow(knn[[1]]))

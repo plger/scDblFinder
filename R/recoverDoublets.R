@@ -102,7 +102,7 @@ NULL
     is.doublet <- logical(nrow(x))
     is.doublet[.subset2index(doublets, x, byrow=TRUE)] <- TRUE
 
-    fout <- findKNN(x, k=k, BNPARAM=BNPARAM, BPPARAM=BPPARAM)
+    fout <- findKNN(as.matrix(x), k=k, BNPARAM=BNPARAM, BPPARAM=BPPARAM)
     neighbors <- fout$index
     neighbors[] <- is.doublet[neighbors]
     P <- rowMeans(neighbors)

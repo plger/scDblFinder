@@ -56,7 +56,7 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=50,
     k <- seq_len(nrow(x))
   }
   if(verbose) message("Building KNN graph and clustering")
-  x <- makeKNNGraph(x, k=min(max(2,floor(sqrt(length(unique(k))))-1),10))
+  x <- makeKNNGraph(as.matrix(x), k=min(max(2,floor(sqrt(length(unique(k))))-1),10))
   if(returnType=="graph") return(list(k=k, graph=x))
   cl <- membership(cluster_louvain(x))
   cl[k]

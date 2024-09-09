@@ -141,7 +141,7 @@ NULL
     sim.pcs <- .spawn_doublet_pcs(x, size.factors.norm, V=pc.out$rotation, centers=rowMeans(y), niters=niters, block=block)
 
     # Computing densities, using a distance computed from the kth nearest neighbor.
-    pre.pcs <- buildIndex(pcs, BNPARAM=BNPARAM)
+    pre.pcs <- buildIndex(as.matrix(pcs), BNPARAM=BNPARAM)
     self.dist <- findKNN(BNINDEX=pre.pcs, k=k, BPPARAM=BPPARAM, last=1, get.index=FALSE, warn.ties=FALSE)$distance
     if(any(self.dist == 0))
         stop("Duplicate cells detected. These are probably low-quality cells ",
