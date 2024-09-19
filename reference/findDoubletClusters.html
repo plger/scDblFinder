@@ -9,7 +9,7 @@ i.e., their profiles lie between two other &amp;#8220;source&amp;#8221; clusters
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -199,16 +199,16 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 <span class="r-in"><span><span class="va">dbl</span> <span class="op">&lt;-</span> <span class="fu">findDoubletClusters</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="va">sce</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dbl</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 3 rows and 9 columns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              source1     source2    num.de median.de        best      p.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;character&gt;    &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2        90        90      gene12  4.73777e-94</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        90        90     gene171 1.11151e-101</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1       112       112      gene27  3.50989e-74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              source1     source2    num.de median.de        best     p.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;character&gt;   &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2        91        91      gene58 2.11462e-77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        97        97      gene96 3.59691e-78</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1       104       104     gene187 6.59923e-62</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          lib.size1 lib.size2      prop</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1  1.096267  1.064833  0.308311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2  1.029520  0.939114  0.423592</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3  0.971326  0.912186  0.268097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1  0.969466  0.938931  0.298913</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2  1.032520  1.065041  0.429348</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3  0.968504  1.031496  0.271739</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Narrow this down to clusters with very low 'N':</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span></span>
@@ -217,12 +217,12 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "outlier.filter" "logical"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"thresholds")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  lower higher </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     90    Inf </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    lower   higher </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73.01847      Inf </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Get help from "lib.size" below 1.</span></span></span>
 <span class="r-in"><span><span class="va">dbl</span><span class="op">$</span><span class="va">lib.size1</span> <span class="op">&lt;</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">dbl</span><span class="op">$</span><span class="va">lib.size2</span> <span class="op">&lt;</span> <span class="fl">1</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE FALSE  TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  TRUE FALSE FALSE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

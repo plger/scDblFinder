@@ -9,7 +9,7 @@ using cluster-based generation of artificial doublets."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,7 @@ using cluster-based generation of artificial doublets.</p>
 <span>  knownUse <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"discard"</span>, <span class="st">"positive"</span><span class="op">)</span>,</span>
 <span>  dbr <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  dbr.sd <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  dbr.per1k <span class="op">=</span> <span class="fl">0.08</span>,</span>
 <span>  nfeatures <span class="op">=</span> <span class="fl">1352</span>,</span>
 <span>  dims <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  k <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -151,10 +152,9 @@ such.</p></dd>
 
 
 <dt id="arg-dbr">dbr<a class="anchor" aria-label="anchor" href="#arg-dbr"></a></dt>
-<dd><p>The expected doublet rate. By default this is assumed to be 1%
-per thousand cells captured (so 4% among 4000 thousand cells), which is
-appropriate for 10x datasets. Corrections for homeotypic doublets will be
-performed on the given rate.</p></dd>
+<dd><p>The expected doublet rate, i.e. the proportion of the cells
+expected to be doublets. If omitted, will be calculated automatically based
+on the `dbr.per1k` argument and the number of cells.</p></dd>
 
 
 <dt id="arg-dbr-sd">dbr.sd<a class="anchor" aria-label="anchor" href="#arg-dbr-sd"></a></dt>
@@ -165,6 +165,14 @@ within these boundaries. If NULL, will be 40% of `dbr`. Set to `dbr.sd=0` to
  disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
  any expectation of the number of doublets (thus letting the thresholding be
  entirely driven by the misclassification of artificial doublets).</p></dd>
+
+
+<dt id="arg-dbr-per-k">dbr.per1k<a class="anchor" aria-label="anchor" href="#arg-dbr-per-k"></a></dt>
+<dd><p>This is an alternative way of providing the expected doublet
+rate as a fraction of the number of (the thousands of) cells captured. The
+default, 0.008 (e.g. 3.2% doublets among 4000 cells), is appropriate for
+standard 10X chips. For High Throughput (HT) 10X chips, use half, i.e.
+0.004. (Some more recent chips might have this rate even lower).</p></dd>
 
 
 <dt id="arg-nfeatures">nfeatures<a class="anchor" aria-label="anchor" href="#arg-nfeatures"></a></dt>
@@ -356,16 +364,16 @@ vignette for more detail.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 20 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 15 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 15 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.763</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 16 (3%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 34 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 32 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 33 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.364</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 32 (6%) doublets called</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>truth<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">type</span>, call<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">scDblFinder.class</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          call</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> truth     singlet doublet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   singlet     499       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   doublet      14      15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   singlet     497       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   doublet       0      29</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

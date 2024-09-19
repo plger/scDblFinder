@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.19.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,7 +125,9 @@ approach) can be launched as follows :</p>
 <pre><code><span><span class="co">## Threshold found:0.326</span></span></code></pre>
 <pre><code><span><span class="co">## 28 (5.3%) doublets called</span></span></code></pre>
 <p>For 10x data, it is usually safe to leave the <code>dbr</code> empty,
-and it will be automatically estimated.</p>
+and it will be automatically estimated. (If using a chip other than the
+standard 10X, you might have to adjust it or the related
+<code>dbr.per1k</code> argument.</p>
 <p><code>scDblFinder</code> will add a number of columns to the colData
 of <code>sce</code> prefixed with ‘scDblFinder’, the most important of
 which are:</p>
@@ -154,15 +156,15 @@ additionally provide the <code>clusters</code> argument:</p>
 <pre><code><span><span class="co">## Training model...</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 24 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 24 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## iter=2, 19 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## Threshold found:0.764</span></span></code></pre>
-<pre><code><span><span class="co">## 19 (3.6%) doublets called</span></span></code></pre>
+<pre><code><span><span class="co">## iter=2, 24 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## Threshold found:0.998</span></span></code></pre>
+<pre><code><span><span class="co">## 24 (4.6%) doublets called</span></span></code></pre>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span>truth<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">type</span>, call<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">scDblFinder.class</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          call</span></span>
 <span><span class="co">## truth     singlet doublet</span></span>
 <span><span class="co">##   singlet     500       0</span></span>
-<span><span class="co">##   doublet       5      19</span></span></code></pre>
+<span><span class="co">##   doublet       0      24</span></span></code></pre>
 <p>The <code>clusters</code> argument can be either a vector of cluster
 labels for each column of <code>sce</code>, a colData column of
 <code>sce</code> containing such labels, or <code>TRUE</code>. If
@@ -309,11 +311,8 @@ for all samples.</p>
 <code>scDblFinder</code> uses the expected number of doublets in
 combination to the misclassification rate to establish a threshold.
 Unless it is manually given through the <code>dbr</code> argument, the
-expected doublet rate is first estimated using the empirical rule of
-thumb applicable to 10X data, namely roughly 1% per 1000 cells captured
-(so with 5000 cells, (0.01*5)*5000 = 250 doublets, and the more cells
-you capture the higher the chance of creating a doublet). If samples
-were specified, and if the <code>dbr</code> is automatically calculated,
+expected doublet rate is first estimated (see below). If samples were
+specified, and if the <code>dbr</code> is automatically calculated,
 thresholding is performed separately across samples.</p>
 <p>Thresholding then tries to simultaneously minimize: 1) the
 classification error (in terms of the proportion of known doublets below
@@ -367,18 +366,34 @@ important ones.</p>
 <p>The expected proportion of doublets has no impact on the density of
 artificial doublets in the neighborhood, but impacts the classifier’s
 score and, especially, where the cutoff will be placed. It is specified
-through the <code>dbr</code> parameter and the <code>dbr.sd</code>
-parameter (the latter specifies a +/- range around <code>dbr</code>
-within which the deviation from <code>dbr</code> will be considered
-null). For 10x data, the more cells you capture the higher the chance of
-creating a doublet, and Chromium documentation indicates a doublet rate
-of roughly 1% per 1000 cells captures (so with 5000 cells, (0.01*5)*5000
-= 250 doublets), and the default expected doublet rate will be set to
-this value (with a default standard deviation of 0.015). Note however
-that different protocols may create considerably more doublets, and that
-this should be updated accordingly. If you have unsure about the doublet
-rate, you might consider increasing <code>dbr.sd</code>, so that it is
-estimated mostl/purely from the misclassification error.</p>
+through the <code>dbr</code> parameter, as well as the
+<code>dbr.per1k</code> (specifies, if <code>dbr</code> is omitted, the
+rate per thousands cells from which to estimate it) and
+<code>dbr.sd</code> parameters (the latter specifies a +/- range around
+<code>dbr</code> within which the deviation from <code>dbr</code> will
+be considered null).</p>
+<p>For most platforms, the more cells you capture the higher the chance
+of creating a doublet. For standard 10X data, the 10X documentation
+indicates a doublet rate of roughly 0.8% per 1000 cells captured, which
+is the default value of <code>dbr.per1k</code>. This means that unless
+<code>dbr</code> is manually set, with 5000 cells, (0.008*5)*5000 = 200
+doublets are expected, and the default expected doublet rate will be set
+to this value (with a default standard deviation of 0.015). Note however
+that different protocols may vary in the expected proportion of
+doublets. For example, the high-throughput (HT) 10X kit has an expected
+doublet rate of half the standard, i.e. 0.4% per 1000 cells, so if using
+that kit, set <code>dbr.per1k=0.004</code>.</p>
+<p>Also note that strictly speaking, the proportion of doublets depends
+more on the number of cells inputted than that recovered. If your
+recovery rate was lower than expected, you might observe a higher
+doublet rate (see the <a href="#toomany">too-many doublets</a> section
+below).</p>
+<p>The impact of the expected doublet rate on the thresholding will
+depend on how hard the classification task is: if it is easy, the called
+doublets will not depend much on the expected rate. If you have unsure
+about the doublet rate, you might consider increasing
+<code>dbr.sd</code>, so that it is estimated mostly (or even purely)
+from the misclassification error.</p>
 </div>
 <div class="section level4">
 <h4 id="number-of-artificial-doublets">Number of artificial doublets<a class="anchor" aria-label="anchor" href="#number-of-artificial-doublets"></a>
@@ -408,7 +423,7 @@ actual number of cells.</p>
 <h3 id="frequently-asked-questions">Frequently-asked questions<a class="anchor" aria-label="anchor" href="#frequently-asked-questions"></a>
 </h3>
 <div class="section level4">
-<h4 id="im-getting-way-too-many-doublets-called---whats-going-on">I’m getting way too many doublets called - what’s going on?<a class="anchor" aria-label="anchor" href="#im-getting-way-too-many-doublets-called---whats-going-on"></a>
+<h4 id="toomany">I’m getting way too many doublets called - what’s going on?<a class="anchor" aria-label="anchor" href="#toomany"></a>
 </h4>
 <p>Then you most likely have a wrong doublet rate. If you did not
 provide it (<code>dbr</code> argument), the doublet rate will be
@@ -653,7 +668,7 @@ p-value combination on 1-score (interpreted as a probability).</p>
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.19.4          SingleCellExperiment_1.26.0</span></span>
+<span><span class="co">##  [1] scDblFinder_1.19.6          SingleCellExperiment_1.26.0</span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.34.0 Biobase_2.64.0             </span></span>
 <span><span class="co">##  [5] GenomicRanges_1.56.1        GenomeInfoDb_1.40.1        </span></span>
 <span><span class="co">##  [7] IRanges_2.38.1              S4Vectors_0.42.1           </span></span>
