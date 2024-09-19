@@ -8,6 +8,7 @@ doubletThresholding(
   d,
   dbr = NULL,
   dbr.sd = NULL,
+  dbr.per1k = 0.008,
   stringency = 0.5,
   p = 0.1,
   method = c("auto", "optim", "dbr", "griffiths"),
@@ -25,6 +26,8 @@ doublet rate will be adjusted for homotypic doublets.}
 
 \item{dbr.sd}{The standard deviation of the doublet rate, representing the
 uncertainty in the estimate. Ignored if `method!="optim"`.}
+
+\item{dbr.per1k}{The expected proportion of doublets per 1000 cells.}
 
 \item{stringency}{A numeric value >0 and <1 which controls the relative weight of false
 positives (i.e. real cells) and false negatives (artificial doublets) in setting the

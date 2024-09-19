@@ -55,6 +55,7 @@ sce <- scDblFinder(sce, dbr=0.1)
 ```
 
 For 10x data, it is usually safe to leave the `dbr` empty, and it will be automatically estimated.
+(If using a chip other than the standard 10X, you might have to adjust it or the related `dbr.per1k` argument.
 
 `scDblFinder` will add a number of columns to the colData of `sce` prefixed with 'scDblFinder', the most important of which are:
 
@@ -141,7 +142,7 @@ This score is available in the output, in the `scDblFinder.score` colData column
 
 ### Thresholding
 
-Rather than thresholding on some arbitrary cutoff of the score, `scDblFinder` uses the expected number of doublets in combination to the misclassification rate to establish a threshold. Unless it is manually given through the `dbr` argument, the expected doublet rate is first estimated using the empirical rule of thumb applicable to 10X data, namely roughly 1\% per 1000 cells captured (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets, and the more cells you capture the higher the chance of creating a doublet). If samples were specified, and if the `dbr` is automatically calculated, thresholding is performed separately across samples.
+Rather than thresholding on some arbitrary cutoff of the score, `scDblFinder` uses the expected number of doublets in combination to the misclassification rate to establish a threshold. Unless it is manually given through the `dbr` argument, the expected doublet rate is first estimated (see below). If samples were specified, and if the `dbr` is automatically calculated, thresholding is performed separately across samples.
 
 Thresholding then tries to simultaneously minimize: 1) the classification error (in terms of the proportion of known doublets below the threshold) and 2) the deviation from the expected number of doublets among real cells (as a ratio of the total number of expected doublets within the range determined by `dbr.sd`, and adjusted for homotypic doublets). This means that, if you have no idea about the doublet rate, setting `dbr.sd=1` will make the threshold depend entirely on the misclassification rate.
 
@@ -165,7 +166,14 @@ In addition, two frameworks are offered for testing the significance of enrichme
 
 ### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly. If you have unsure about the doublet rate, you might consider increasing `dbr.sd`, so that it is estimated mostl/purely from the misclassification error.
+The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter, as well as the `dbr.per1k` (specifies, if `dbr` is omitted, the rate per thousands cells from which to estimate it) and `dbr.sd` parameters (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null).
+
+For most platforms, the more cells you capture the higher the chance of creating a doublet.
+For standard 10X data, the 10X documentation indicates a doublet rate of roughly 0.8\% per 1000 cells captured, which is the default value of `dbr.per1k`. This means that unless `dbr` is manually set, with 5000 cells, (0.008\*5)\*5000 = 200 doublets are expected, and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may vary in the expected proportion of doublets. For example, the high-throughput (HT) 10X kit has an expected doublet rate of half the standard, i.e. 0.4\% per 1000 cells, so if using that kit, set `dbr.per1k=0.004`.
+
+Also note that strictly speaking, the proportion of doublets depends more on the number of cells inputted than that recovered. If your recovery rate was lower than expected, you might observe a higher doublet rate (see the [too-many doublets](#toomany) section below).
+
+The impact of the expected doublet rate on the thresholding will depend on how hard the classification task is: if it is easy, the called doublets will not depend much on the expected rate. If you have unsure about the doublet rate, you might consider increasing `dbr.sd`, so that it is estimated mostly (or even purely) from the misclassification error.
 
 ### Number of artificial doublets
 
@@ -177,7 +185,7 @@ By default, `scDblFinder` will generate roughly as many artificial doublets as t
 
 ## Frequently-asked questions
 
-### I'm getting way too many doublets called - what's going on?
+### I'm getting way too many doublets called - what's going on? {#toomany}
 
 Then you most likely have a wrong doublet rate. If you did not provide it (`dbr` argument), the doublet rate will be calculated automatically using expected doublet rates from 10x, meaning that the more cells captured, the higher the doublet rates. If you have reasons to think that this is not applicable to your data, set the `dbr` manually.
 
@@ -200,8 +208,6 @@ If you ran `scDblFinder` on a multi-sample dataset and did not provide the clust
 You will get this error if you have some cells that have zero reads (or a very low read count, leading to zero after feature selection). After filtering out these cells the error should go away.
 
 ### Identifying homotypic doublets
-
-
 
 Like other similar tools, scDblFinder focuses on identifying heterotypic doublets (formed by different cell types), and has only a low performance in identifying homotypic doublets (see [this preprint](https://doi.org/10.1101/2023.08.04.552078)). This can lead to disagreements with doublets called using cell hashes or SNPs in multiplexed samples, which capture both types of doublets similarly (and can miss intra-sample heterotypic doublets, especially if the multiplexing is low). This is why we treat these approaches as complementary.
 

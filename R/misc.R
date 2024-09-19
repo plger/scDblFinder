@@ -35,6 +35,7 @@
 #' @param dbr The expected doublet rate.
 #' @param only.heterotypic Logical; whether to return expectations only for
 #' heterotypic doublets
+#' @param dbr.per1k The expected proportion of doublets per 1000 cells.
 #'
 #' @return The expected number of doublets of each combination of clusters
 #'
@@ -43,7 +44,8 @@
 #' cl <- sample(head(LETTERS,4), size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
 #' getExpectedDoublets(cl)
 #' @export
-getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
+getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE,
+                                dbr.per1k=0.008){
   if(is(x,"SingleCellExperiment")){
     clusters <- x$scDblFinder.clusters
   }else{
@@ -54,7 +56,7 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE){
   if(all(grepl("^[0-9]*$",lvls))) lvls <- as.integer(lvls)
   clusters <- as.integer(clusters)
   ncells <- length(clusters)
-  if(is.null(dbr)) dbr <- (0.01*ncells/1000)
+  if(is.null(dbr)) dbr <- (dbr.per1k*ncells/1000)
   if(length(unique(clusters))==1) return(ncells*dbr)
 
   cs <- table(clusters)/ncells
@@ -371,7 +373,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
 }
 
 # gets a global doublet rate from samples' doublet rates
-.gdbr <- function(d, dbr=NULL){
+.gdbr <- function(d, dbr=NULL, dbr.per1k=0.008){
   if(!is.null(dbr)){
     if(length(dbr)==1) return(dbr)
     stopifnot(!is.null(d$sample))
@@ -384,7 +386,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
     ## estimate a global doublet rate
     sl <- as.numeric(table(d$sample, d$src=="real")[,2])
   }
-  dbr <- (0.01*sl/1000)
+  dbr <- (dbr.per1k*sl/1000)
   sum(dbr*sl)/sum(sl)
 }
 

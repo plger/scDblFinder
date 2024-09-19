@@ -14,6 +14,7 @@ scDblFinder(
   knownUse = c("discard", "positive"),
   dbr = NULL,
   dbr.sd = NULL,
+  dbr.per1k = 0.08,
   nfeatures = 1352,
   dims = 20,
   k = NULL,
@@ -86,10 +87,9 @@ that `scDblFinder` does *not* enforce that the knownDoublets be necessarily
 called as doublets in the final classification, if they are not predicted as 
 such.}
 
-\item{dbr}{The expected doublet rate. By default this is assumed to be 1\%
-per thousand cells captured (so 4\% among 4000 thousand cells), which is
-appropriate for 10x datasets. Corrections for homeotypic doublets will be
-performed on the given rate.}
+\item{dbr}{The expected doublet rate, i.e. the proportion of the cells 
+expected to be doublets. If omitted, will be calculated automatically based
+on the `dbr.per1k` argument and the number of cells.}
 
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
@@ -98,6 +98,12 @@ within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
  disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
  any expectation of the number of doublets (thus letting the thresholding be
  entirely driven by the misclassification of artificial doublets).}
+
+\item{dbr.per1k}{This is an alternative way of providing the expected doublet
+rate as a fraction of the number of (the thousands of) cells captured. The 
+default, 0.008 (e.g. 3.2\% doublets among 4000 cells), is appropriate for 
+standard 10X chips. For High Throughput (HT) 10X chips, use half, i.e. 
+0.004. (Some more recent chips might have this rate even lower).}
 
 \item{nfeatures}{The number of top features to use. Alternatively, a 
 character vectors of feature names (e.g. highly-variable genes) to use.}

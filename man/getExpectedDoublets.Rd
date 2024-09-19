@@ -4,7 +4,7 @@
 \alias{getExpectedDoublets}
 \title{getExpectedDoublets}
 \usage{
-getExpectedDoublets(x, dbr = NULL, only.heterotypic = TRUE)
+getExpectedDoublets(x, dbr = NULL, only.heterotypic = TRUE, dbr.per1k = 0.008)
 }
 \arguments{
 \item{x}{A vector of cluster labels for each cell}
@@ -13,6 +13,8 @@ getExpectedDoublets(x, dbr = NULL, only.heterotypic = TRUE)
 
 \item{only.heterotypic}{Logical; whether to return expectations only for
 heterotypic doublets}
+
+\item{dbr.per1k}{The expected proportion of doublets per 1000 cells.}
 }
 \value{
 The expected number of doublets of each combination of clusters

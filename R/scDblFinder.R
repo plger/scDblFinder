@@ -42,10 +42,9 @@
 #' @param nfeatures The number of top features to use. Alternatively, a 
 #'   character vectors of feature names (e.g. highly-variable genes) to use.
 #' @param dims The number of dimensions used.
-#' @param dbr The expected doublet rate. By default this is assumed to be 1\%
-#' per thousand cells captured (so 4\% among 4000 thousand cells), which is
-#' appropriate for 10x datasets. Corrections for homeotypic doublets will be
-#' performed on the given rate.
+#' @param dbr The expected doublet rate, i.e. the proportion of the cells 
+#' expected to be doublets. If omitted, will be calculated automatically based
+#' on the `dbr.per1k` argument and the number of cells.
 #' @param dbr.sd The uncertainty range in the doublet rate, interpreted as
 #' a +/- around `dbr`. During thresholding, deviation from the expected doublet
 #' rate will be calculated from these boundaries, and will be considered null
@@ -53,6 +52,11 @@
 #'  disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
 #'  any expectation of the number of doublets (thus letting the thresholding be
 #'  entirely driven by the misclassification of artificial doublets).
+#' @param dbr.per1k This is an alternative way of providing the expected doublet
+#'  rate as a fraction of the number of (the thousands of) cells captured. The 
+#'  default, 0.008 (e.g. 3.2\% doublets among 4000 cells), is appropriate for 
+#'  standard 10X chips. For High Throughput (HT) 10X chips, use half, i.e. 
+#'  0.004. (Some more recent chips might have this rate even lower).
 #' @param k Number of nearest neighbors (for KNN graph). If more than one value
 #' is given, the doublet density will be calculated at each k (and other values
 #' at the highest k), and all the information will be used by the classifier.
@@ -195,8 +199,8 @@
 scDblFinder <- function(
   sce, clusters=NULL, samples=NULL, clustCor=NULL, artificialDoublets=NULL,
   knownDoublets=NULL, knownUse=c("discard","positive"), dbr=NULL, dbr.sd=NULL, 
-  nfeatures=1352, dims=20, k=NULL, removeUnidentifiable=TRUE, includePCs=19, 
-  propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
+  dbr.per1k=0.08, nfeatures=1352, dims=20, k=NULL, removeUnidentifiable=TRUE,
+  includePCs=19, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
   returnType=c("sce","table","full","counts"),
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
@@ -235,6 +239,7 @@ scDblFinder <- function(
   .checkPropArg(propMarkers)
   .checkPropArg(propRandom)
   .checkPropArg(dbr.sd)
+  .checkPropArg(dbr.per1k)
   .checkPropArg(dbr, acceptNull=TRUE)
   processing <- .checkProcArg(processing)
 
@@ -288,10 +293,10 @@ scDblFinder <- function(
       }
       out <- tryCatch(
         scDblFinder(sce[sel_features,x], clusters=clusters, dims=dims, dbr=dbr,
-                    dbr.sd=dbr.sd, clustCor=clustCor, unident.th=unident.th,
-                    knownDoublets=knownDoublets, knownUse=knownUse,
-                    artificialDoublets=artificialDoublets, k=k,
-                    processing=processing, nfeatures=nfeatures,
+                    dbr.sd=dbr.sd, dbr.per1k=dbr.per1k, clustCor=clustCor,
+                    unident.th=unident.th, knownDoublets=knownDoublets,
+                    knownUse=knownUse, artificialDoublets=artificialDoublets,
+                    k=k, processing=processing, nfeatures=nfeatures,
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers, trainingFeatures=trainingFeatures,
                     returnType=ifelse(returnType=="counts","counts","table"),
@@ -311,12 +316,12 @@ scDblFinder <- function(
     if(multiSampleMode!="split"){
       ## score and thresholding
       d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
-                       dbr.sd=dbr.sd, max_depth=max_depth, nrounds=nrounds,
-                       iter=iter, BPPARAM=BPPARAM, verbose=verbose,
+                       dbr.sd=dbr.sd, dbr.per1k=dbr.per1k, max_depth=max_depth,
+                       nrounds=nrounds, iter=iter, BPPARAM=BPPARAM, 
                        features=trainingFeatures, unident.th=unident.th,
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
-                       includeSamples=TRUE)
+                       includeSamples=TRUE, verbose=verbose)
     }
     if(returnType=="table") return(d)
     return(.scDblAddCD(sce, d))
@@ -465,7 +470,8 @@ scDblFinder <- function(
   }
 
   ex <- NULL
-  if(!is.null(clusters)) ex <- getExpectedDoublets(clusters, dbr)
+  if(!is.null(clusters)) ex <- getExpectedDoublets(clusters, dbr,
+                                                   dbr.per1k=dbr.per1k)
 
   if(verbose) message("Evaluating kNN...")
   d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k)
@@ -492,10 +498,10 @@ scDblFinder <- function(
   includePCs <- includePCs[includePCs<ncol(pca)]
   d <- .scDblscore(d, scoreType=score, addVals=pca[,includePCs,drop=FALSE],
                    threshold=threshold, dbr=dbr, dbr.sd=dbr.sd, nrounds=nrounds,
-                   max_depth=max_depth, iter=iter, BPPARAM=BPPARAM,
+                   dbr.per1k=dbr.per1k, max_depth=max_depth, iter=iter,
                    features=trainingFeatures, verbose=verbose, metric=metric,
                    filterUnidentifiable=removeUnidentifiable,
-                   unident.th=unident.th)
+                   unident.th=unident.th, BPPARAM=BPPARAM)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
   if(returnType=="table") return(d)
@@ -590,10 +596,11 @@ scDblFinder <- function(
 #' @importFrom stats predict quantile
 .scDblscore <- function(d, scoreType="xgb", nrounds=NULL, max_depth=5, iter=2,
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
-                        features=NULL, filterUnidentifiable=TRUE, addVals=NULL,
-                        metric="logloss", eta=0.3, BPPARAM=SerialParam(),
-                        includeSamples=FALSE, perSample=TRUE, unident.th=0.1, ...){
-  gdbr <- .gdbr(d, dbr)
+                        dbr.per1k=dbr.per1k, features=NULL, addVals=NULL,
+                        filterUnidentifiable=TRUE, metric="logloss", eta=0.3,
+                        BPPARAM=SerialParam(), includeSamples=FALSE, 
+                        perSample=TRUE, unident.th=0.1, ...){
+  gdbr <- .gdbr(d, dbr, dbr.per1k=dbr.per1k)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
   if(is.null(dbr.sd)) dbr.sd <- 0.3*gdbr+0.025
   if(scoreType=="xgb"){
@@ -650,8 +657,8 @@ scDblFinder <- function(
       # as well as unidentifiable artificial doublets
       w1 <- which(d$type=="real" &
                   doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
-                                       perSample=perSample,
-                                       returnType="call")=="doublet")
+                                      dbr.per1k=dbr.per1k, perSample=perSample,
+                                      returnType="call")=="doublet")
       if(length(w1) > sum(d$type=="real")/3){
         # enforce max prop excluded
         w1 <- head(order(d$type!="real", -d$score),
@@ -700,8 +707,8 @@ scDblFinder <- function(
   }
   d <- DataFrame(d)
   if(threshold){
-    th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, perSample=perSample,
-                               ... )
+    th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, dbr.per1k=dbr.per1k,
+                               perSample=perSample, ... )
     if(!is.null(d$sample) && length(th)>1){
       d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
     }else{
@@ -711,7 +718,7 @@ scDblFinder <- function(
     ## set class of known (i.e. inputted) doublets:
     d$class[d$src=="real" & d$type=="doublet"] <- "doublet"
     if(!is.null(d$mostLikelyOrigin)){
-      th.stats <- .getDoubletStats(d, th, dbr, dbr.sd)
+      th.stats <- .getDoubletStats(d, th, dbr, dbr.sd, dbr.per1k=dbr.per1k)
       metadata(d)$scDblFinder.stats <- th.stats
     }
     metadata(d)$scDblFinder.threshold <- th

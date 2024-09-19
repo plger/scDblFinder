@@ -10,6 +10,7 @@
 #' doublet rate will be adjusted for homotypic doublets.
 #' @param dbr.sd The standard deviation of the doublet rate, representing the
 #' uncertainty in the estimate. Ignored if `method!="optim"`.
+#' @param dbr.per1k The expected proportion of doublets per 1000 cells.
 #' @param stringency A numeric value >0 and <1 which controls the relative weight of false
 #'  positives (i.e. real cells) and false negatives (artificial doublets) in setting the
 #'  threshold. A value of 0.5 gives equal weight to both; a higher value (e.g. 0.7) gives
@@ -38,7 +39,8 @@
 #'
 #' @importFrom stats mad qnorm setNames
 #' @export
-doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, stringency=0.5, p=0.1,
+doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, dbr.per1k=0.008,
+                                 stringency=0.5, p=0.1,
                                  method=c("auto","optim","dbr","griffiths"),
                                  perSample=TRUE, returnType=c("threshold","call")){
   method <- match.arg(method)
@@ -192,7 +194,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, stringency=0.5, p=0.1
   d
 }
 
-.getDoubletStats <- function( d, th, dbr=NULL, dbr.sd=0.015 ){
+.getDoubletStats <- function( d, th, dbr=NULL, dbr.sd=0.015, dbr.per1k=0.008 ){
   # check that we have all necessary fields:
   fields <- c("cluster","src","type","score","mostLikelyOrigin", "originAmbiguous","difficulty")
   if(!all(fields %in% colnames(d))) stop("Input misses some columns.")
@@ -200,7 +202,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, stringency=0.5, p=0.1
     return(dplyr::bind_rows(lapply(split(seq_len(nrow(d)), d$sample), FUN=function(i){
       .getDoubletStats(d[i,fields], th, dbr=dbr, dbr.sd=dbr.sd)
     }), .id="sample"))
-  if(is.null(dbr)) dbr <- 0.01*sum(d$src=="real",na.rm=TRUE)/1000
+  if(is.null(dbr)) dbr <- dbr.per1k*sum(d$src=="real",na.rm=TRUE)/1000
   o <- d$mostLikelyOrigin[d$type=="real" & d$score>=th]
   expected <- getExpectedDoublets(d$cluster[d$src=="real"], dbr=dbr)
   stats <- .compareToExpectedDoublets(o, dbr=dbr, expected=expected)
