@@ -147,7 +147,7 @@ NULL
         stop("Duplicate cells detected. These are probably low-quality cells ",
              "that have very few reads, and should be filtered out.")
 
-    sim.n <- queryNeighbors(sim.pcs, query=pcs, 
+    sim.n <- queryNeighbors(as.matrix(sim.pcs), query=as.matrix(pcs), 
         threshold=self.dist * 1.00000001, # bump it up to avoid issues with numerical precision during tests.
         BNPARAM=BNPARAM, BPPARAM=BPPARAM, 
         get.distance=FALSE, get.index=FALSE)
