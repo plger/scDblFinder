@@ -1,3 +1,8 @@
+Changes in version 1.19.6 (2024-09-19)
++ added a dbr.per1k parameter to set doublet rates per thousands of cells, updated the default from 1 to 0.8\%
++ fixed some issues stemming from the cxds score in some corner cases (absence of inverse correlation between genes)
++ updated documentation
+
 Changes in version 1.13.14 (2023-06-19)
 + reduced the default minimum number of artificial doublets to improve call robustness in very small datasets.
 
