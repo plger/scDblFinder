@@ -56,7 +56,7 @@ This is orthogonal to the values in \code{size.factors.norm}, see Details.}
 \item{dims}{An integer scalar specifying the number of components to retain after the PCA.}
 
 \item{BNPARAM}{A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
-This should be an algorithm supported by \code{\link{findNeighbors}}.}
+This should be an algorithm supported by \code{\link{queryNeighbors}}.}
 
 \item{BSPARAM}{A \linkS4class{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.}
 

@@ -19,7 +19,7 @@
 #' @param block An integer scalar controlling the rate of doublet generation, to keep memory usage low.
 #' @param dims An integer scalar specifying the number of components to retain after the PCA.
 #' @param BNPARAM A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
-#' This should be an algorithm supported by \code{\link{findNeighbors}}.
+#' This should be an algorithm supported by \code{\link{queryNeighbors}}.
 #' @param BSPARAM A \linkS4class{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether the neighbour searches should be parallelized.
 #' @param ... For the generic, additional arguments to pass to specific methods.
@@ -98,7 +98,7 @@ NULL
 #' @importFrom BiocParallel SerialParam bpmapply bpstart bpstop
 #' @importFrom Matrix rowMeans
 #' @importFrom stats median
-#' @importFrom BiocNeighbors findKNN findNeighbors queryNeighbors queryKNN buildIndex
+#' @importFrom BiocNeighbors findKNN findDistance queryNeighbors
 #' @importFrom BiocSingular runPCA bsparam
 #' @importFrom methods is
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
@@ -137,17 +137,16 @@ NULL
 
     # Running the PCA.
     pc.out <- runPCA(t(y), center=TRUE, BSPARAM=BSPARAM, rank=dims, BPPARAM=BPPARAM)
-    pcs <- pc.out$x
+    pcs <- as.matrix(pc.out$x)
     sim.pcs <- .spawn_doublet_pcs(x, size.factors.norm, V=pc.out$rotation, centers=rowMeans(y), niters=niters, block=block)
 
     # Computing densities, using a distance computed from the kth nearest neighbor.
-    pre.pcs <- buildIndex(as.matrix(pcs), BNPARAM=BNPARAM)
-    self.dist <- findKNN(BNINDEX=pre.pcs, k=k, BPPARAM=BPPARAM, last=1, get.index=FALSE, warn.ties=FALSE)$distance
+    self.dist <- findDistance(pcs, k=k, BNPARAM=BNPARAM, BPPARAM=BPPARAM)
     if(any(self.dist == 0))
         stop("Duplicate cells detected. These are probably low-quality cells ",
              "that have very few reads, and should be filtered out.")
 
-    sim.n <- queryNeighbors(as.matrix(sim.pcs), query=as.matrix(pcs), 
+    sim.n <- queryNeighbors(as.matrix(sim.pcs), query=pcs,
         threshold=self.dist * 1.00000001, # bump it up to avoid issues with numerical precision during tests.
         BNPARAM=BNPARAM, BPPARAM=BPPARAM, 
         get.distance=FALSE, get.index=FALSE)
