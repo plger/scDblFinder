@@ -213,6 +213,16 @@ Like other similar tools, scDblFinder focuses on identifying heterotypic doublet
 
 However, should you for some reason try to identify also homotypic doublets with scDblFinder, be sure to not to use the cluster-based approach, and to set `removeUnidentifiable=FALSE`. Otherwise, scDblFinder removes artificial doublets likely to be homotypic from training, therefore focusing the task on heterotypic doublets, but at the expense ot homotypic ones (which are typically deemed relatively harmless).
 
+### What is a sample exactly? Usage with barcoded and 10X Flex data.
+
+As indicated above, the `samples` argument should be used to indicate different captures.
+For multiplexed samples, this is expected to be the batch of cells processed together, rather than the actual samples.
+
+In highly multiplexed datasets such as produced by the 10X Flex kit (especially 16-plex), this can cause two kinds of problems.
+First, the whole logic of the Flex approach is that inter-sample doublets can be resolved into separate cells, and while a large number of unresolvable intra-sample doublets will remain (see [Howitt et al., 2024](https://www.biorxiv.org/content/10.1101/2024.10.03.616596v2)), the expected remaining doublet rate will not be the same as for classical 10X experiment. For this reason, we recommend to set a higher `dbr.sd` in such circumstances, e.g. `dbr.sd=1` to base the thresholding entirely on the classification accuracy.
+
+Another, more practical problem is that, with such kits, the very large number of cells in a single capture might translante into very large computational demands when running `scDblFinder`. To circumvent such problem, one can split a batch of cells into more decently-sized chunks and process the chunks separately, so long as each chunk is representative of the whole batch in terms of cell heterogeneity.
+
 ### How can I make this reproducible?
 
 Because it relies on the partly random generation of artificial doublets, running scDblFinder multiple times on the same data will yield slightly different results.
