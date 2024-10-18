@@ -19,7 +19,7 @@ name: pkgdown
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    #container: plger/scdblfinder:latest
+    container: plger/scdblfinder:latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -32,9 +32,9 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
+      #- uses: r-lib/actions/setup-r@v2
+       # with:
+        #  use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
