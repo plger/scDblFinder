@@ -19,7 +19,7 @@ name: pkgdown
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    container: plger/scdblfinder:latest
+    #container: plger/scdblfinder:latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -28,7 +28,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
 
