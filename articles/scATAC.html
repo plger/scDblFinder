@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.20.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -172,8 +172,8 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:09 PM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:09 PM - Obtaining overlaps...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:03 AM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:03 AM - Obtaining overlaps...</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
@@ -243,23 +243,23 @@ particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOve
 have to adjust the arguments for an example to run:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 12:24:10 PM - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:10 PM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:10 PM - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:10 PM - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM - Iterative training</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 12:24:11 PM Done!</span></span></code></pre>
+<pre><code><span><span class="co">## 10:04:04 AM Done!</span></span></code></pre>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
 <pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
@@ -340,44 +340,44 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.21.2          SingleCellExperiment_1.29.1</span></span>
+<span><span class="co">##  [1] scDblFinder_1.20.2          SingleCellExperiment_1.29.1</span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.37.0 Biobase_2.67.0             </span></span>
-<span><span class="co">##  [5] GenomicRanges_1.59.1        GenomeInfoDb_1.43.2        </span></span>
+<span><span class="co">##  [5] GenomicRanges_1.59.1        GenomeInfoDb_1.43.4        </span></span>
 <span><span class="co">##  [7] IRanges_2.41.2              S4Vectors_0.45.2           </span></span>
-<span><span class="co">##  [9] BiocGenerics_0.53.3         generics_0.1.3             </span></span>
-<span><span class="co">## [11] MatrixGenerics_1.19.0       matrixStats_1.5.0          </span></span>
+<span><span class="co">##  [9] BiocGenerics_0.53.6         generics_0.1.3             </span></span>
+<span><span class="co">## [11] MatrixGenerics_1.19.1       matrixStats_1.5.0          </span></span>
 <span><span class="co">## [13] BiocStyle_2.35.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] bitops_1.0-9             gridExtra_2.3            rlang_1.1.4             </span></span>
-<span><span class="co">##  [4] magrittr_2.0.3           scater_1.35.0            compiler_4.5.0          </span></span>
-<span><span class="co">##  [7] systemfonts_1.1.0        vctrs_0.6.5              pkgconfig_2.0.3         </span></span>
-<span><span class="co">## [10] crayon_1.5.3             fastmap_1.2.0            XVector_0.47.1          </span></span>
+<span><span class="co">##  [1] bitops_1.0-9             gridExtra_2.3            rlang_1.1.5             </span></span>
+<span><span class="co">##  [4] magrittr_2.0.3           scater_1.35.1            compiler_4.5.0          </span></span>
+<span><span class="co">##  [7] systemfonts_1.2.1        vctrs_0.6.5              pkgconfig_2.0.3         </span></span>
+<span><span class="co">## [10] crayon_1.5.3             fastmap_1.2.0            XVector_0.47.2          </span></span>
 <span><span class="co">## [13] scuttle_1.17.0           Rsamtools_2.23.1         rmarkdown_2.29          </span></span>
-<span><span class="co">## [16] UCSC.utils_1.3.0         ggbeeswarm_0.7.2         ragg_1.3.3              </span></span>
+<span><span class="co">## [16] UCSC.utils_1.3.1         ggbeeswarm_0.7.2         ragg_1.3.3              </span></span>
 <span><span class="co">## [19] xfun_0.50                bluster_1.17.0           zlibbioc_1.53.0         </span></span>
 <span><span class="co">## [22] cachem_1.1.0             beachmat_2.23.6          jsonlite_1.8.9          </span></span>
-<span><span class="co">## [25] DelayedArray_0.33.3      BiocParallel_1.41.0      irlba_2.3.5.1           </span></span>
+<span><span class="co">## [25] DelayedArray_0.33.5      BiocParallel_1.41.0      irlba_2.3.5.1           </span></span>
 <span><span class="co">## [28] parallel_4.5.0           cluster_2.1.8            R6_2.5.1                </span></span>
-<span><span class="co">## [31] bslib_0.8.0              limma_3.63.2             rtracklayer_1.67.0      </span></span>
-<span><span class="co">## [34] xgboost_1.7.8.1          jquerylib_0.1.4          Rcpp_1.0.13-1           </span></span>
+<span><span class="co">## [31] bslib_0.9.0              limma_3.63.3             rtracklayer_1.67.0      </span></span>
+<span><span class="co">## [34] xgboost_1.7.8.1          jquerylib_0.1.4          Rcpp_1.0.14             </span></span>
 <span><span class="co">## [37] bookdown_0.42            knitr_1.49               Matrix_1.7-1            </span></span>
-<span><span class="co">## [40] igraph_2.1.3             tidyselect_1.2.1         abind_1.4-8             </span></span>
+<span><span class="co">## [40] igraph_2.1.4             tidyselect_1.2.1         abind_1.4-8             </span></span>
 <span><span class="co">## [43] yaml_2.3.10              viridis_0.6.5            codetools_0.2-20        </span></span>
-<span><span class="co">## [46] curl_6.1.0               lattice_0.22-6           tibble_3.2.1            </span></span>
-<span><span class="co">## [49] evaluate_1.0.1           desc_1.4.3               Biostrings_2.75.3       </span></span>
+<span><span class="co">## [46] curl_6.2.0               lattice_0.22-6           tibble_3.2.1            </span></span>
+<span><span class="co">## [49] evaluate_1.0.3           desc_1.4.3               Biostrings_2.75.3       </span></span>
 <span><span class="co">## [52] pillar_1.10.1            BiocManager_1.30.25      RCurl_1.98-1.16         </span></span>
 <span><span class="co">## [55] ggplot2_3.5.1            munsell_0.5.1            scales_1.3.0            </span></span>
 <span><span class="co">## [58] glue_1.8.0               metapod_1.15.0           tools_4.5.0             </span></span>
 <span><span class="co">## [61] BiocIO_1.17.1            data.table_1.16.4        BiocNeighbors_2.1.2     </span></span>
-<span><span class="co">## [64] ScaledMatrix_1.15.0      locfit_1.5-9.10          GenomicAlignments_1.43.0</span></span>
+<span><span class="co">## [64] ScaledMatrix_1.15.0      locfit_1.5-9.11          GenomicAlignments_1.43.0</span></span>
 <span><span class="co">## [67] fs_1.6.5                 scran_1.35.0             XML_3.99-0.18           </span></span>
-<span><span class="co">## [70] grid_4.5.0               edgeR_4.5.1              colorspace_2.1-1        </span></span>
+<span><span class="co">## [70] grid_4.5.0               edgeR_4.5.2              colorspace_2.1-1        </span></span>
 <span><span class="co">## [73] GenomeInfoDbData_1.2.13  beeswarm_0.4.0           BiocSingular_1.23.0     </span></span>
 <span><span class="co">## [76] restfulr_0.0.15          vipor_0.4.7              cli_3.6.3               </span></span>
-<span><span class="co">## [79] rsvd_1.0.5               textshaping_0.4.1        S4Arrays_1.7.1          </span></span>
+<span><span class="co">## [79] rsvd_1.0.5               textshaping_1.0.0        S4Arrays_1.7.2          </span></span>
 <span><span class="co">## [82] viridisLite_0.4.2        dplyr_1.1.4              gtable_0.3.6            </span></span>
-<span><span class="co">## [85] sass_0.4.9               digest_0.6.37            SparseArray_1.7.2       </span></span>
+<span><span class="co">## [85] sass_0.4.9               digest_0.6.37            SparseArray_1.7.5       </span></span>
 <span><span class="co">## [88] ggrepel_0.9.6            dqrng_0.4.1              rjson_0.2.23            </span></span>
 <span><span class="co">## [91] htmlwidgets_1.6.4        htmltools_0.5.8.1        pkgdown_2.1.1           </span></span>
 <span><span class="co">## [94] lifecycle_1.0.4          httr_1.4.7               statmod_1.5.0           </span></span>
