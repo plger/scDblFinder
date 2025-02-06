@@ -193,6 +193,8 @@ The most common cause for an unexpectedly large proportion of doublets is if you
 
 Also note that, although 10X-like data tends to have roughly 1\% per 1000 cells captured, the determining factor for doublet formation is the number of cells inserted into the machine. If for some reason your recovery rate is lower than expected, you might have a higher doublet rate than you'd expect from the captured and called cells (in other words, it would be preferable to say that the doublet rate is roughly 0.6\% per 1000 cells put into the machine, where 0.6 is the recovery rate). In such circumstances, `scDblFinder` typically sets the thresholds correctly nevertheless. This is because the thresholding tries to minimize both the deviation from the expected number of doublets and the misclassification (i.e. of artificial doublets), meaning that the effective (i.e. final) doublet rate will differ from the given one. `scDblFinder` also considers false positives to be less problematic than false negatives. You can reduce to some degree the deviation from the input doublet rate by setting `dbr.sd=0`.
 
+Finally, note that version (1.20.0) initially shipped with the current Bioconductor release (3.20) version included a wrong default doublet rate (`dbr.per1k`) argument (it was 0.08 instead of 0.008). This was subsequently fixed in version 1.20.2, but if you installed before that you might need to update the package.
+
 ### Should I use the cluster-based doublet generation or not?
 
 Both approaches perform very similarly overall in benchmarks (see the [scDblFinder paper](https://f1000research.com/articles/10-979/)).
