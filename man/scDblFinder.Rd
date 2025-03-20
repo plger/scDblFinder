@@ -23,7 +23,7 @@ scDblFinder(
   propRandom = 0,
   propMarkers = 0,
   aggregateFeatures = FALSE,
-  returnType = c("sce", "table", "full", "counts"),
+  returnType = c("sce", "table", "full", "counts", "scores"),
   score = c("xgb", "weighted", "ratio"),
   processing = "default",
   metric = "logloss",
@@ -134,8 +134,10 @@ for ATAC). Can also be a positive integer, in which case this will indicate
 the number of components to use for feature aggregation (if TRUE, `dims`
 will be used.)}
 
-\item{returnType}{Either "sce" (default), "table" (to return the table of
-cell attributes including artificial doublets), or "full" (returns an SCE
+\item{returnType}{Either "sce" (default, returns a SingleCellExperiment with
+additional colData columns), "scores" (returns a data.frame of scores and
+doublet calls for each barcode), "table" (to return the table of cell 
+attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells).}
 
 \item{score}{Score to use for final classification.}

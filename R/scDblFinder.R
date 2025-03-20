@@ -90,8 +90,10 @@
 #' custom function with (at least) arguments `e` (the matrix of counts) and
 #' `dims` (the desired number of dimensions), returning a named matrix with
 #' cells as rows and components as columns.
-#' @param returnType Either "sce" (default), "table" (to return the table of
-#' cell attributes including artificial doublets), or "full" (returns an SCE
+#' @param returnType Either "sce" (default, returns a SingleCellExperiment with
+#' additional colData columns), "scores" (returns a data.frame of scores and
+#' doublet calls for each barcode), "table" (to return the table of cell 
+#' attributes including artificial doublets), or "full" (returns an SCE
 #' object containing both the real and artificial cells).
 #' @param score Score to use for final classification.
 #' @param metric Error metric to optimize during training (e.g. 'merror',
@@ -201,7 +203,7 @@ scDblFinder <- function(
   knownDoublets=NULL, knownUse=c("discard","positive"), dbr=NULL, dbr.sd=NULL, 
   dbr.per1k=0.008, nfeatures=1352, dims=20, k=NULL, removeUnidentifiable=TRUE,
   includePCs=19, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
-  returnType=c("sce","table","full","counts"),
+  returnType=c("sce","table","full","counts","scores"),
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
@@ -325,6 +327,8 @@ scDblFinder <- function(
                        includeSamples=TRUE, verbose=verbose)
     }
     if(returnType=="table") return(d)
+    if(returnType=="scores")
+      return(d[which(d$type=="real"),c("score","class")])
     return(.scDblAddCD(sce, d))
   }
 
@@ -506,6 +510,8 @@ scDblFinder <- function(
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
   if(returnType=="table") return(d)
+  if(returnType=="scores")
+    return(d[which(d$type=="real"),c("score","class")])
   if(returnType=="full"){
     sce_out <- SingleCellExperiment(list(
       counts=cbind(counts(sce), ad[row.names(sce),])), colData=d)
