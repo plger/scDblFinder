@@ -86,4 +86,4 @@ The figure below compares some of the methods implemented in this package (in bo
 
 <br/><br/>
 
-Rather a <b>python</b> person? You can have a look at [vaeda](https://github.com/kostkalab/vaeda), another doublet finding method which appears to have performances close to those of scDblFinder.
+Rather a <b>python</b> person? You can have a look at [vaeda](https://github.com/kostkalab/vaeda), another doublet finding method which appears to have performances close to those of scDblFinder. Alternatively, run scDblFinder [from the command line](https://plger.github.io/scDblFinder/articles/scDblFinder.html#how-can-i-call-scdblfinder-from-the-command-line).
