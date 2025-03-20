@@ -166,14 +166,14 @@ In addition, two frameworks are offered for testing the significance of enrichme
 
 ### Expected proportion of doublets
 
-The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter, as well as the `dbr.per1k` (specifies, if `dbr` is omitted, the rate per thousands cells from which to estimate it) and `dbr.sd` parameters (the latter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null).
+The expected proportion of doublets has no impact on the density of artificial doublets in the neighborhood, but impacts the classifier's score and, especially, where the cutoff will be placed. It is specified through the `dbr` parameter, as well as `dbr.per1k` (which specifies, if `dbr` is omitted, the rate per thousands cells from which to estimate it). In addition, the `dbr.sd` parameter specifies a +/- range around `dbr` within which the deviation from `dbr` will be considered null.
 
 For most platforms, the more cells you capture the higher the chance of creating a doublet.
 For standard 10X data, the 10X documentation indicates a doublet rate of roughly 0.8\% per 1000 cells captured, which is the default value of `dbr.per1k`. This means that unless `dbr` is manually set, with 5000 cells, (0.008\*5)\*5000 = 200 doublets are expected, and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may vary in the expected proportion of doublets. For example, the high-throughput (HT) 10X kit has an expected doublet rate of half the standard, i.e. 0.4\% per 1000 cells, so if using that kit, set `dbr.per1k=0.004`.
 
 Also note that strictly speaking, the proportion of doublets depends more on the number of cells inputted than that recovered. If your recovery rate was lower than expected, you might observe a higher doublet rate (see the [too-many doublets](#toomany) section below).
 
-The impact of the expected doublet rate on the thresholding will depend on how hard the classification task is: if it is easy, the called doublets will not depend much on the expected rate. If you have unsure about the doublet rate, you might consider increasing `dbr.sd`, so that it is estimated mostly (or even purely) from the misclassification error.
+The impact of the expected doublet rate on the thresholding will depend on how hard the classification task is: if it is easy, the called doublets will not depend much on the expected rate. **If you are unsure about the doublet rate, you might consider increasing `dbr.sd`**: with a high value (e.g. 1), the thresholding will be entirely based on the misclassification error (without any assumption about an expected doublet rate).
 
 ### Number of artificial doublets
 
@@ -287,6 +287,22 @@ sce <- scDblFinder(sce, processing=myfun, nfeatures=hvg)
 Note however that this did not generally lead to improved performance -- but rather decreased on most benchmark datasets, in fact (see [comparison](https://user-images.githubusercontent.com/9786697/211782249-804aa42f-cc08-4e36-b59e-3c00a2b6f363.png) in this [issue](https://github.com/plger/scDblFinder/issues/67#issuecomment-1378543321)).
 
 
+### How can I call scDblFinder from the command line?
+
+Here would be an example of how to call scDblFinder (in cluster mode) from the command line and save the results to a csv:
+
+```
+Rscript -e '
+library(scDblFinder)
+set.seed(123) # for reproducibility
+e <- Matrix::readMM("matrix.mtx.gz")
+colnames(e) <- readLines("barcodes.tsv.gz")
+res <- scDblFinder(e, cluster=TRUE)
+res <- cbind(barcode=colnames(res),
+             colData(res)[,grep("scDblFinder",colnames(colData(res)))])
+write.table(res, "output.csv", row.names=FALSE, quote=FALSE)
+'
+```
 
 
 ### Can this be used with scATACseq data?
