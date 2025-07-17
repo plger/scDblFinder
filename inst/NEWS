@@ -1,3 +1,6 @@
+Changes in version 1.23.1 (2025-07-17)
++ fixed compatibility issues with xgboost version>=3
+
 Changes in version 1.19.9 (2025-01-07)
 + fixed the default dbr.per1k value in the top-level function
 + slight memory improvements (gc and not coercing DelayedArray before sample split)
