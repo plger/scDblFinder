@@ -750,8 +750,7 @@ scDblFinder <- function(
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5, eta=1,
                       tree_method="exact", subsample=0.75, nthreads=1,
                       metric="logloss", ...){
-  if(!is.integer(ctype)) ctype <- as.integer(ctype)-1
-  DM <- 
+  if(!is.integer(ctype)) ctype <- as.integer(ctype)-1L
   if(is.null(nrounds)) nrounds <- 0L
   if(!is.numeric(nrounds) || nrounds<0)
     stop("If given, `nrounds` must be a positive number!")
@@ -762,7 +761,7 @@ scDblFinder <- function(
       nthread=nthreads, subsample=subsample, eval_metric=metric,
       tree_method=tree_method, verbosity = 0)
     res <- xgb.cv(data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
-                  params=params, nrounds=200, nfold=nfold,
+                  params=params, nrounds=200, nfold=nfold, 
                   early_stopping_rounds=2, verbose=FALSE, ...)
     e <- res$evaluation_log
     testm <- grep("test.+mean",colnames(e))
@@ -775,7 +774,7 @@ scDblFinder <- function(
     }
     #message("Best iteration: ", best, "; selected nrounds: ", nrounds)
   }
-  xgboost( as.matrix(d2), ctype, nrounds=nrounds, eval_metric=metric,
+  xgboost( as.matrix(d2), as.logical(ctype), nrounds=nrounds, eval_metric=metric,
            objective="binary:logistic", tree_method=tree_method,
            max_depth=max_depth, early_stopping_rounds=2, verbosity = 0,
            nthread=nthreads, learning_rate=eta, ... )

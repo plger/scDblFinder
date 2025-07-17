@@ -7,7 +7,10 @@ The methods included here are _complementary_ to doublets detection via cell has
 
 For a brief overview of the methods, see the [introductory vignette](https://plger.github.io/scDblFinder/articles/introduction.html) (`vignette("introduction", package="scDblFinder")`). For the detailed study including comparison with alternative methods, see the [paper](https://doi.org/10.12688/f1000research.73600.2). Here, we will showcase doublet detection using the fast and comprehensive `scDblFinder` method.
 
-***Important update*: the scDblFinder version (1.20) initially shipped with Bioconductor 3.20 (current) had a wrong default doublet rate argument. This has been fixed in Bioconductor, but you should update your package.**
+### Important notes/updates
+
+- **if you are using xgboost version 3 or higher, make sure that you are using scDblFinder version 1.23.1 or later (available either from github or bioconductor devel)**
+- **the scDblFinder version (1.20) initially shipped with Bioconductor 3.20 (current) had a wrong default doublet rate argument. This has been fixed in Bioconductor, but you should update your package.**
 
 <br/><br/>
 
