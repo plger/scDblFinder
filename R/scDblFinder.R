@@ -756,7 +756,7 @@ scDblFinder <- function(
     stop("If given, `nrounds` must be a positive number!")
   if(nrounds<=1){
     # use cross-validation
-    if(packageVersion("xgboost")>=3){
+    if(packageVersion("xgboost")>="3"){
       params <- xgboost::xgb.params(
         objective="binary:logistic", learning_rate=eta, max_depth=max_depth,
         nthread=nthreads, subsample=subsample, eval_metric=metric,
@@ -766,15 +766,12 @@ scDblFinder <- function(
                     early_stopping_rounds=2, verbose=FALSE, ...)
     }else{
       res <- xgb.cv(data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
-                    params=params, nrounds=200, nfold=nfold, 
-                    early_stopping_rounds=2, verbose=FALSE, max_depth=max_depth,
+                    nrounds=200, nfold=nfold, early_stopping_rounds=2, 
+                    verbose=FALSE, max_depth=max_depth,
                     objective="binary:logistic", learning_rate=eta, 
                     nthread=nthreads, subsample=subsample, eval_metric=metric,
                     tree_method=tree_method, ...)
     }
-    res <- xgb.cv(data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
-                  params=params, nrounds=200, nfold=nfold, 
-                  early_stopping_rounds=2, verbose=FALSE, ...)
     e <- res$evaluation_log
     testm <- grep("test.+mean",colnames(e))
     best <- which.min(e[,testm])
