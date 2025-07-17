@@ -13,7 +13,7 @@ the cluster labels match across samples."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,18 +102,67 @@ NULL, will be used only if there is a significant trend with the enrichment.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 38 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 37 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 43 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.65</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 44 (3.8%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 40 cells excluded from training.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.483407 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.367011 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.290226 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.239844 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.205233 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.178721 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.158414 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.143553 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.130555 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.121255 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.111889 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.106096 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.101165 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14]	train-logloss:0.097118 </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 41 cells excluded from training.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.479777 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.360963 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.283414 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.231641 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.196290 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.170174 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.149762 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.135257 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.122788 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.113626 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.105343 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.097164 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.087985 </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 37 cells excluded from training.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.478560 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.358259 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.281206 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.229549 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.192304 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.166348 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.143987 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.129045 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.117298 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.108595 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.101043 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.094268 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.088426 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14]	train-logloss:0.084311 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15]	train-logloss:0.080233 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16]	train-logloss:0.074582 </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.618</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 47 (4%) doublets called</span>
 <span class="r-in"><span><span class="fu">clusterStickiness</span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Estimate Std. Error      t value   p.value       FDR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.748613444  0.4344829 -1.722998529 0.1454986 0.7274930</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.412332379  0.2940423  1.402289438 0.2197603 0.8790414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.419660739  0.3022530  1.388442100 0.2236800 0.8790414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.154153478  0.3322079  0.464027066 0.6621300 1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -0.002330167  0.3771950 -0.006177618 0.9953099 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Estimate Std. Error    t value    p.value       FDR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.44502070  0.1776299  2.5053260 0.05413636 0.2706818</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.38092041  0.1775950  2.1448829 0.08479195 0.3391678</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -0.62182785  0.3284316 -1.8933253 0.11686013 0.3505804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.27224554  0.2282615 -1.1926914 0.28649854 0.5729971</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.02637134  0.2118960  0.1244542 0.90580434 0.9058043</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -125,7 +174,7 @@ NULL, will be used only if there is a significant trend with the enrichment.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

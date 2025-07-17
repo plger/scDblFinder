@@ -9,7 +9,7 @@ i.e., their profiles lie between two other &amp;#8220;source&amp;#8221; clusters
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -201,14 +201,14 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 <span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 3 rows and 9 columns</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              source1     source2    num.de median.de        best      p.value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;character&gt;    &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        88        88       gene8  3.07368e-86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1       106       106     gene179 4.63585e-129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2       113       113     gene195  2.86657e-93</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        92        92      gene65  1.88411e-93</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1       102       102     gene100 3.96346e-118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2       115       115      gene88 6.35909e-119</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          lib.size1 lib.size2      prop</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2  0.948617  1.094862  0.426649</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3  1.054167  1.154167  0.269179</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1  0.866426  0.913357  0.304172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2   1.00000   1.01158  0.430481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3   1.00000   1.01158  0.267380</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1   0.98855   0.98855  0.302139</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Narrow this down to clusters with very low 'N':</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span></span>
@@ -218,7 +218,7 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "outlier.filter" "logical"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"thresholds")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    lower   higher </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 79.75887      Inf </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64.45904      Inf </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Get help from "lib.size" below 1.</span></span></span>
 <span class="r-in"><span><span class="va">dbl</span><span class="op">$</span><span class="va">lib.size1</span> <span class="op">&lt;</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">dbl</span><span class="op">$</span><span class="va">lib.size2</span> <span class="op">&lt;</span> <span class="fl">1</span></span></span>
@@ -235,7 +235,7 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

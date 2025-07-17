@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,8 +131,48 @@ be:</p>
 <pre><code><span><span class="co">## Evaluating kNN...</span></span></code></pre>
 <pre><code><span><span class="co">## Training model...</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 17 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## [1]  train-logloss:0.512488 </span></span>
+<span><span class="co">## Will train until train_logloss hasn't improved in 2 rounds.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## [2]  train-logloss:0.411194 </span></span>
+<span><span class="co">## [3]  train-logloss:0.337679 </span></span>
+<span><span class="co">## [4]  train-logloss:0.288052 </span></span>
+<span><span class="co">## [5]  train-logloss:0.255679 </span></span>
+<span><span class="co">## [6]  train-logloss:0.223324 </span></span>
+<span><span class="co">## [7]  train-logloss:0.198471 </span></span>
+<span><span class="co">## [8]  train-logloss:0.179780 </span></span>
+<span><span class="co">## [9]  train-logloss:0.166650</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 34 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## [1]  train-logloss:0.499631 </span></span>
+<span><span class="co">## Will train until train_logloss hasn't improved in 2 rounds.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## [2]  train-logloss:0.386201 </span></span>
+<span><span class="co">## [3]  train-logloss:0.306095 </span></span>
+<span><span class="co">## [4]  train-logloss:0.254653 </span></span>
+<span><span class="co">## [5]  train-logloss:0.215107 </span></span>
+<span><span class="co">## [6]  train-logloss:0.182420 </span></span>
+<span><span class="co">## [7]  train-logloss:0.157607 </span></span>
+<span><span class="co">## [8]  train-logloss:0.141462 </span></span>
+<span><span class="co">## [9]  train-logloss:0.127913 </span></span>
+<span><span class="co">## [10] train-logloss:0.115342 </span></span>
+<span><span class="co">## [11] train-logloss:0.106104 </span></span>
+<span><span class="co">## [12] train-logloss:0.095148 </span></span>
+<span><span class="co">## [13] train-logloss:0.086151</span></span></code></pre>
 <pre><code><span><span class="co">## iter=2, 36 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## [1]  train-logloss:0.497931 </span></span>
+<span><span class="co">## Will train until train_logloss hasn't improved in 2 rounds.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## [2]  train-logloss:0.382678 </span></span>
+<span><span class="co">## [3]  train-logloss:0.301181 </span></span>
+<span><span class="co">## [4]  train-logloss:0.250030 </span></span>
+<span><span class="co">## [5]  train-logloss:0.209675 </span></span>
+<span><span class="co">## [6]  train-logloss:0.181960 </span></span>
+<span><span class="co">## [7]  train-logloss:0.159940 </span></span>
+<span><span class="co">## [8]  train-logloss:0.138403 </span></span>
+<span><span class="co">## [9]  train-logloss:0.122538 </span></span>
+<span><span class="co">## [10] train-logloss:0.109483 </span></span>
+<span><span class="co">## [11] train-logloss:0.095623 </span></span>
+<span><span class="co">## [12] train-logloss:0.085993</span></span></code></pre>
 <pre><code><span><span class="co">## Threshold found:0.719</span></span></code></pre>
 <pre><code><span><span class="co">## 18 (3.4%) doublets called</span></span></code></pre>
 <p>If you encounter problems running the aggregation-based approach on
@@ -157,7 +197,7 @@ mitochondrial and sex chromosomes, as well as repetitive regions. This
 can be specified with the <code>regionsToExclude</code> argument (see
 the underlying <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOverlaps</a></code>). It can be used as
 follows:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># here we use a dummy fragment file for example:</span></span>
 <span><span class="va">fragfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_fragments.tsv.gz"</span>, package<span class="op">=</span><span class="st">"scDblFinder"</span><span class="op">)</span></span>
 <span></span>
@@ -172,9 +212,9 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:45 AM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:45 AM - Obtaining overlaps...</span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## 01:53:03 PM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:03 PM - Obtaining overlaps...</span></span></code></pre>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
 <span><span class="co">## barcode1    878       878       1             1 0.475069053 0.791781755</span></span>
@@ -236,31 +276,38 @@ usage.</p>
 approach, and its usage includes a number of arguments from both the
 <code>scDblFinder</code> and <code>amulet</code> method (see in
 particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOverlaps</a></code>):</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># not run</span></span>
 <span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="st">"path/to/fragments.tsv.gz"</span><span class="op">)</span></span></code></pre></div>
 <p>Since our dummy fragment file is so small (5 barcodes), here we’ll
 have to adjust the arguments for an example to run:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 09:58:46 AM - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:46 AM - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:47 AM - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:47 AM - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:47 AM - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:04 PM - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:05 PM - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 01:53:05 PM - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## [1]  train-logloss:0.284572 </span></span>
+<span><span class="co">## Will train until train_logloss hasn't improved in 2 rounds.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## [2]  train-logloss:0.284572 </span></span>
+<span><span class="co">## [3]  train-logloss:0.284572 </span></span>
+<span><span class="co">## Stopping. Best iteration:</span></span>
+<span><span class="co">## [1]  train-logloss:0.284572</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 09:58:47 AM Done!</span></span></code></pre>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## 01:53:05 PM Done!</span></span></code></pre>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
 <pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
 <span><span class="co">## barcode1    20       1             1 0.3822253      0.5                TRUE</span></span>
@@ -269,11 +316,11 @@ have to adjust the arguments for an example to run:</p>
 <span><span class="co">## barcode4    12       0             0       NaN      0.5                TRUE</span></span>
 <span><span class="co">## barcode5    18       6             6 0.2831145      0.5                TRUE</span></span>
 <span><span class="co">##              score</span></span>
-<span><span class="co">## barcode1 0.4174298</span></span>
-<span><span class="co">## barcode2 0.4174298</span></span>
-<span><span class="co">## barcode3 0.4174298</span></span>
-<span><span class="co">## barcode4 0.4174298</span></span>
-<span><span class="co">## barcode5 0.4174298</span></span></code></pre>
+<span><span class="co">## barcode1 0.2476638</span></span>
+<span><span class="co">## barcode2 0.2476638</span></span>
+<span><span class="co">## barcode3 0.2476638</span></span>
+<span><span class="co">## barcode4 0.2476638</span></span>
+<span><span class="co">## barcode5 0.2476638</span></span></code></pre>
 <p>The score can then be interpreted as for <code>scDblFinder</code>. We
 however note that this method proved <em>inferior to
 alternatives</em>.</p>
@@ -286,7 +333,7 @@ treating them as p-values and aggregating them (here using Fisher’s
 method from the <em><a href="https://CRAN.R-project.org/package=aggregation" class="external-link">aggregation</a></em>
 package, but see also the <em><a href="https://CRAN.R-project.org/package=metap" class="external-link">metap</a></em>
 package):</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">scDblFinder.p</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>, <span class="st">"scDblFinder.score"</span><span class="op">]</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">res</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scDblFinder.p"</span>, <span class="st">"p.value"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">1</span>, FUN<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">x</span><span class="op">[</span><span class="va">x</span><span class="op">&lt;</span><span class="fl">0.001</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0.001</span> <span class="co"># prevent too much skew from very small or 0 p-values</span></span>
@@ -314,7 +361,7 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R Under development (unstable) (2025-01-04 r87523)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -340,46 +387,46 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.21.2          SingleCellExperiment_1.29.2</span></span>
-<span><span class="co">##  [3] SummarizedExperiment_1.37.0 Biobase_2.67.0             </span></span>
-<span><span class="co">##  [5] GenomicRanges_1.59.1        GenomeInfoDb_1.43.4        </span></span>
-<span><span class="co">##  [7] IRanges_2.41.3              S4Vectors_0.45.4           </span></span>
-<span><span class="co">##  [9] BiocGenerics_0.53.6         generics_0.1.3             </span></span>
-<span><span class="co">## [11] MatrixGenerics_1.19.1       matrixStats_1.5.0          </span></span>
-<span><span class="co">## [13] BiocStyle_2.35.0           </span></span>
+<span><span class="co">##  [1] scDblFinder_1.23.3          SingleCellExperiment_1.30.1</span></span>
+<span><span class="co">##  [3] SummarizedExperiment_1.38.1 Biobase_2.68.0             </span></span>
+<span><span class="co">##  [5] GenomicRanges_1.60.0        GenomeInfoDb_1.44.0        </span></span>
+<span><span class="co">##  [7] IRanges_2.42.0              S4Vectors_0.46.0           </span></span>
+<span><span class="co">##  [9] BiocGenerics_0.54.0         generics_0.1.4             </span></span>
+<span><span class="co">## [11] MatrixGenerics_1.20.0       matrixStats_1.5.0          </span></span>
+<span><span class="co">## [13] BiocStyle_2.36.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] bitops_1.0-9             gridExtra_2.3            rlang_1.1.5             </span></span>
-<span><span class="co">##  [4] magrittr_2.0.3           scater_1.35.4            compiler_4.5.0          </span></span>
-<span><span class="co">##  [7] systemfonts_1.2.1        vctrs_0.6.5              pkgconfig_2.0.3         </span></span>
-<span><span class="co">## [10] crayon_1.5.3             fastmap_1.2.0            XVector_0.47.2          </span></span>
-<span><span class="co">## [13] scuttle_1.17.0           Rsamtools_2.23.1         rmarkdown_2.29          </span></span>
-<span><span class="co">## [16] UCSC.utils_1.3.1         ggbeeswarm_0.7.2         ragg_1.3.3              </span></span>
-<span><span class="co">## [19] xfun_0.51                bluster_1.17.0           cachem_1.1.0            </span></span>
-<span><span class="co">## [22] beachmat_2.23.7          jsonlite_1.9.1           DelayedArray_0.33.6     </span></span>
-<span><span class="co">## [25] BiocParallel_1.41.2      irlba_2.3.5.1            parallel_4.5.0          </span></span>
+<span><span class="co">##  [1] bitops_1.0-9             gridExtra_2.3            rlang_1.1.6             </span></span>
+<span><span class="co">##  [4] magrittr_2.0.3           scater_1.36.0            compiler_4.5.0          </span></span>
+<span><span class="co">##  [7] systemfonts_1.2.3        vctrs_0.6.5              pkgconfig_2.0.3         </span></span>
+<span><span class="co">## [10] crayon_1.5.3             fastmap_1.2.0            XVector_0.48.0          </span></span>
+<span><span class="co">## [13] scuttle_1.18.0           Rsamtools_2.24.0         rmarkdown_2.29          </span></span>
+<span><span class="co">## [16] UCSC.utils_1.4.0         ggbeeswarm_0.7.2         ragg_1.4.0              </span></span>
+<span><span class="co">## [19] xfun_0.52                bluster_1.18.0           cachem_1.1.0            </span></span>
+<span><span class="co">## [22] beachmat_2.24.0          jsonlite_2.0.0           DelayedArray_0.34.1     </span></span>
+<span><span class="co">## [25] BiocParallel_1.42.1      irlba_2.3.5.1            parallel_4.5.0          </span></span>
 <span><span class="co">## [28] cluster_2.1.8            R6_2.6.1                 bslib_0.9.0             </span></span>
-<span><span class="co">## [31] limma_3.63.9             rtracklayer_1.67.1       xgboost_1.7.8.1         </span></span>
-<span><span class="co">## [34] jquerylib_0.1.4          Rcpp_1.0.14              bookdown_0.42           </span></span>
-<span><span class="co">## [37] knitr_1.50               Matrix_1.7-1             igraph_2.1.4            </span></span>
-<span><span class="co">## [40] tidyselect_1.2.1         abind_1.4-8              yaml_2.3.10             </span></span>
-<span><span class="co">## [43] viridis_0.6.5            codetools_0.2-20         curl_6.2.1              </span></span>
-<span><span class="co">## [46] lattice_0.22-6           tibble_3.2.1             evaluate_1.0.3          </span></span>
-<span><span class="co">## [49] desc_1.4.3               Biostrings_2.75.4        pillar_1.10.1           </span></span>
-<span><span class="co">## [52] BiocManager_1.30.25      RCurl_1.98-1.16          ggplot2_3.5.1           </span></span>
-<span><span class="co">## [55] munsell_0.5.1            scales_1.3.0             glue_1.8.0              </span></span>
-<span><span class="co">## [58] metapod_1.15.0           tools_4.5.0              BiocIO_1.17.1           </span></span>
-<span><span class="co">## [61] data.table_1.17.0        BiocNeighbors_2.1.3      ScaledMatrix_1.15.0     </span></span>
-<span><span class="co">## [64] locfit_1.5-9.12          GenomicAlignments_1.43.0 fs_1.6.5                </span></span>
-<span><span class="co">## [67] scran_1.35.0             XML_3.99-0.18            grid_4.5.0              </span></span>
-<span><span class="co">## [70] edgeR_4.5.9              colorspace_2.1-1         GenomeInfoDbData_1.2.14 </span></span>
-<span><span class="co">## [73] beeswarm_0.4.0           BiocSingular_1.23.0      restfulr_0.0.15         </span></span>
-<span><span class="co">## [76] vipor_0.4.7              cli_3.6.4                rsvd_1.0.5              </span></span>
-<span><span class="co">## [79] textshaping_1.0.0        S4Arrays_1.7.3           viridisLite_0.4.2       </span></span>
-<span><span class="co">## [82] dplyr_1.1.4              gtable_0.3.6             sass_0.4.9              </span></span>
-<span><span class="co">## [85] digest_0.6.37            SparseArray_1.7.6        ggrepel_0.9.6           </span></span>
-<span><span class="co">## [88] dqrng_0.4.1              rjson_0.2.23             htmlwidgets_1.6.4       </span></span>
-<span><span class="co">## [91] htmltools_0.5.8.1        pkgdown_2.1.1            lifecycle_1.0.4         </span></span>
+<span><span class="co">## [31] RColorBrewer_1.1-3       limma_3.64.1             rtracklayer_1.68.0      </span></span>
+<span><span class="co">## [34] xgboost_1.7.11.1         jquerylib_0.1.4          Rcpp_1.1.0              </span></span>
+<span><span class="co">## [37] bookdown_0.43            knitr_1.50               Matrix_1.7-1            </span></span>
+<span><span class="co">## [40] igraph_2.1.4             tidyselect_1.2.1         abind_1.4-8             </span></span>
+<span><span class="co">## [43] yaml_2.3.10              viridis_0.6.5            codetools_0.2-20        </span></span>
+<span><span class="co">## [46] curl_6.4.0               lattice_0.22-6           tibble_3.3.0            </span></span>
+<span><span class="co">## [49] evaluate_1.0.4           desc_1.4.3               Biostrings_2.76.0       </span></span>
+<span><span class="co">## [52] pillar_1.11.0            BiocManager_1.30.26      RCurl_1.98-1.17         </span></span>
+<span><span class="co">## [55] ggplot2_3.5.2            scales_1.4.0             glue_1.8.0              </span></span>
+<span><span class="co">## [58] metapod_1.16.0           tools_4.5.0              BiocIO_1.18.0           </span></span>
+<span><span class="co">## [61] data.table_1.17.8        BiocNeighbors_2.2.0      ScaledMatrix_1.16.0     </span></span>
+<span><span class="co">## [64] locfit_1.5-9.12          GenomicAlignments_1.44.0 fs_1.6.6                </span></span>
+<span><span class="co">## [67] scran_1.36.0             XML_3.99-0.18            grid_4.5.0              </span></span>
+<span><span class="co">## [70] edgeR_4.6.3              GenomeInfoDbData_1.2.14  beeswarm_0.4.0          </span></span>
+<span><span class="co">## [73] BiocSingular_1.24.0      restfulr_0.0.16          vipor_0.4.7             </span></span>
+<span><span class="co">## [76] cli_3.6.5                rsvd_1.0.5               textshaping_1.0.1       </span></span>
+<span><span class="co">## [79] S4Arrays_1.8.1           viridisLite_0.4.2        dplyr_1.1.4             </span></span>
+<span><span class="co">## [82] gtable_0.3.6             sass_0.4.10              digest_0.6.37           </span></span>
+<span><span class="co">## [85] SparseArray_1.8.0        ggrepel_0.9.6            dqrng_0.4.1             </span></span>
+<span><span class="co">## [88] rjson_0.2.23             htmlwidgets_1.6.4        farver_2.1.2            </span></span>
+<span><span class="co">## [91] htmltools_0.5.8.1        pkgdown_2.1.3            lifecycle_1.0.4         </span></span>
 <span><span class="co">## [94] httr_1.4.7               statmod_1.5.0            MASS_7.3-64</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -393,7 +440,7 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

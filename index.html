@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,8 +62,15 @@
 <p><a href="https://github.com/plger/scDblFinder/actions" class="external-link"><img src="https://github.com/plger/scDblFinder/workflows/R-CMD-check/badge.svg" alt="R build status"></a></p>
 <p>The <code>scDblFinder</code> package gathers various methods for the detection and handling of doublets/multiplets in single-cell sequencing data (i.e. multiple cells captured within the same droplet or reaction volume), including the novel <code>scDblFinder</code> method. The methods included here are <em>complementary</em> to doublets detection via cell hashes and SNPs in multiplexed samples: while hashing/genotypes can identify doublets formed by cells of the same type (homotypic doublets) from two samples, which are often nearly undistinguishable from real cells transcriptionally (and hence generally unidentifiable through the present package), it cannot identify doublets made by cells of the same sample, even if they are heterotypic (formed by different cell types). Instead, the methods presented here are primarily geared towards the identification of heterotypic doublets, which for most purposes are also the most critical ones.</p>
 <p>For a brief overview of the methods, see the <a href="https://plger.github.io/scDblFinder/articles/introduction.html">introductory vignette</a> (<code><a href="articles/introduction.html">vignette("introduction", package="scDblFinder")</a></code>). For the detailed study including comparison with alternative methods, see the <a href="https://doi.org/10.12688/f1000research.73600.2" class="external-link">paper</a>. Here, we will showcase doublet detection using the fast and comprehensive <code>scDblFinder</code> method.</p>
-<p><strong><em>Important update</em>: the scDblFinder version (1.20) initially shipped with Bioconductor 3.20 (current) had a wrong default doublet rate argument. This has been fixed in Bioconductor, but you should update your package.</strong></p>
+<div class="section level3">
+<h3 id="important-notesupdates">Important notes/updates<a class="anchor" aria-label="anchor" href="#important-notesupdates"></a>
+</h3>
+<ul>
+<li><strong>if you are using xgboost version 3 or higher, make sure that you are using scDblFinder version 1.23.2 or later (available either from github or bioconductor devel)</strong></li>
+<li><strong>the scDblFinder version (1.20) initially shipped with Bioconductor 3.20 (current) had a wrong default doublet rate argument. This has been fixed in Bioconductor, but you should update your package.</strong></li>
+</ul>
 <p><br><br></p>
+</div>
 <div class="section level2">
 <h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
@@ -161,7 +168,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Pierre-Luc Germain <br><small class="roles"> Maintainer, author </small> <a href="https://orcid.org/0000-0003-3418-4218" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>Pierre-Luc Germain <br><small class="roles"> Maintainer, author </small> <a href="https://orcid.org/0000-0003-3418-4218" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
@@ -177,7 +184,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>
