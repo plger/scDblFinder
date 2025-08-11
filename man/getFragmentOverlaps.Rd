@@ -28,7 +28,9 @@ the `score` column containing the count).}
 
 \item{regionsToExclude}{A GRanges of regions to exclude. As per the original
 Amulet method, we recommend excluding repeats, as well as sex and 
-mitochondrial chromosomes.}
+mitochondrial chromosomes. (Note that the end coordinate does not need to 
+be exact when excluding entire chromosomes, but greater or equal to the 
+chromosome length.)}
 
 \item{minFrags}{Minimum number of fragments for a barcode to be 
 considered. If `uniqueFrags=TRUE`, this is the minimum number of unique 

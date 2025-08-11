@@ -11,7 +11,9 @@
 #' fragments. Ignored if `barcodes` is given.
 #' @param regionsToExclude A GRanges of regions to exclude. As per the original
 #'   Amulet method, we recommend excluding repeats, as well as sex and 
-#'   mitochondrial chromosomes.
+#'   mitochondrial chromosomes. (Note that the end coordinate does not need to 
+#'   be exact when excluding entire chromosomes, but greater or equal to the 
+#'   chromosome length.)
 #' @param uniqueFrags Logical; whether to use only unique fragments.
 #' @param maxFragSize Integer indicating the maximum fragment size to consider
 #' @param removeHighOverlapSites Logical; whether to remove sites that have
@@ -61,7 +63,8 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   if(!is.null(barcodes) && length(barcodes)==1 && file.exists(barcodes))
     barcodes <- readLines(barcodes) # assume barcodes to be a text file
   if(!is.null(regionsToExclude)){
-    if(length(regionsToExclude)==1 && file.exists(regionsToExclude)){
+    if(is.character(regionsToExclude) && length(regionsToExclude)==1 &&
+       file.exists(regionsToExclude)){
       if(verbose) message(format(Sys.time(), "%X"),
                           " - Reading regions to exclude")
       regionsToExclude <- rtracklayer::import(regionsToExclude)
@@ -148,6 +151,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
       regionsToExclude <- keepSeqlevels(regionsToExclude,
                                         value=seqlevelsInUse(regionsToExclude),
                                         pruning.mode="coarse")
+      seqlengths(regionsToExclude) <- NA
       gr <- gr[!overlapsAny(gr, regionsToExclude)]
     }
   }
