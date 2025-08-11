@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,9 @@ the `score` column containing the count).</p></dd>
 <dt id="arg-regionstoexclude">regionsToExclude<a class="anchor" aria-label="anchor" href="#arg-regionstoexclude"></a></dt>
 <dd><p>A GRanges of regions to exclude. As per the original
 Amulet method, we recommend excluding repeats, as well as sex and
-mitochondrial chromosomes.</p></dd>
+mitochondrial chromosomes. (Note that the end coordinate does not need to
+be exact when excluding entire chromosomes, but greater or equal to the
+chromosome length.)</p></dd>
 
 
 <dt id="arg-minfrags">minFrags<a class="anchor" aria-label="anchor" href="#arg-minfrags"></a></dt>
