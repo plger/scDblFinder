@@ -785,7 +785,7 @@ scDblFinder <- function(
   }
   xgboost( as.matrix(d2), as.logical(ctype), nrounds=nrounds, eval_metric=metric,
            objective="binary:logistic", tree_method=tree_method,
-           max_depth=max_depth, early_stopping_rounds=2, verbosity = 0,
+           max_depth=max_depth, early_stopping_rounds=2, verbos=0,
            nthread=nthreads, learning_rate=eta, ... )
 }
 
