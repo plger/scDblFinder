@@ -9,7 +9,7 @@ scDblFinder."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,69 +126,6 @@ of thresholds) if `returnType=="threshold"`.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="scDblFinder.html">scDblFinder</a></span><span class="op">(</span><span class="va">sce</span>, verbose<span class="op">=</span><span class="cn">FALSE</span>, returnType<span class="op">=</span><span class="st">"table"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.475482 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.353863 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.274842 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.219839 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.180137 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.150938 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.128770 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.112095 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.099626 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.088836 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.079505 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.072607 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.064934 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14]	train-logloss:0.059767 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15]	train-logloss:0.054759 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16]	train-logloss:0.051010 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17]	train-logloss:0.047390 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [18]	train-logloss:0.044133 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19]	train-logloss:0.041903 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [20]	train-logloss:0.039727 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21]	train-logloss:0.037491 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [22]	train-logloss:0.036372 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.475115 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.352987 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.273701 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.218236 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.178429 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.149258 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.127110 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.108705 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.095100 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.084802 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.076036 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.067767 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.061614 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14]	train-logloss:0.057206 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15]	train-logloss:0.052765 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16]	train-logloss:0.049225 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17]	train-logloss:0.045161 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [18]	train-logloss:0.042177 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19]	train-logloss:0.039129 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]	train-logloss:0.475115 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Will train until train_logloss hasn't improved in 2 rounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2]	train-logloss:0.352987 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3]	train-logloss:0.273701 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4]	train-logloss:0.218236 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5]	train-logloss:0.178429 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [6]	train-logloss:0.149258 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7]	train-logloss:0.127110 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [8]	train-logloss:0.108705 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [9]	train-logloss:0.095100 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10]	train-logloss:0.084802 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11]	train-logloss:0.076036 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12]	train-logloss:0.067767 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13]	train-logloss:0.061614 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14]	train-logloss:0.057206 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15]	train-logloss:0.052765 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16]	train-logloss:0.049225 </span>
 <span class="r-in"><span><span class="va">th</span> <span class="op">&lt;-</span> <span class="fu">doubletThresholding</span><span class="op">(</span><span class="va">d</span>, dbr<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">th</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.6689589</span>
