@@ -151,6 +151,7 @@ importFrom(utils,head)
 importFrom(utils,read.delim)
 importFrom(xgboost,xgb.cv)
 importFrom(xgboost,xgboost)
+importFrom(xgboost,xgb.DMatrix)
 if (packageVersion("xgboost") >= "3.0.0") {
      importFrom("xgboost", "xgb.params")
    }
