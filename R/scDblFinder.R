@@ -746,9 +746,8 @@ scDblFinder <- function(
                          "include.in.training","observed"))
 }
 
-#' @importFrom xgboost xgb.cv xgboost
+#' @importFrom xgboost xgb.cv xgboost xgb.DMatrix
 #' @rawNamespace if (packageVersion("xgboost") >= "3.0.0") {
-#'     importFrom("xgboost", "xgb.DMatrix")
 #'     importFrom("xgboost", "xgb.params")
 #'   }
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5, eta=1,
