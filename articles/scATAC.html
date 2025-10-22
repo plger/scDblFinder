@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -172,8 +172,8 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:22 PM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:22 PM - Obtaining overlaps...</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:28 AM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:28 AM - Obtaining overlaps...</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
@@ -243,23 +243,23 @@ particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOve
 have to adjust the arguments for an example to run:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 04:34:23 PM - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:23 PM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:23 PM - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:23 PM - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:29 AM - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM - Iterative training</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 04:34:24 PM Done!</span></span></code></pre>
+<pre><code><span><span class="co">## 08:56:30 AM Done!</span></span></code></pre>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
 <pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
@@ -340,7 +340,7 @@ Sequencing Data Using ScDblFinder” (F1000Research, September 28, 2021),
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.23.5          SingleCellExperiment_1.30.1</span></span>
+<span><span class="co">##  [1] scDblFinder_1.23.8          SingleCellExperiment_1.30.1</span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.38.1 Biobase_2.68.0             </span></span>
 <span><span class="co">##  [5] GenomicRanges_1.60.0        GenomeInfoDb_1.44.3        </span></span>
 <span><span class="co">##  [7] IRanges_2.42.0              S4Vectors_0.46.0           </span></span>
