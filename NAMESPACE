@@ -149,6 +149,9 @@ importFrom(stats,setNames)
 importFrom(stats,weighted.mean)
 importFrom(utils,head)
 importFrom(utils,read.delim)
-importFrom(xgboost,xgb.DMatrix)
 importFrom(xgboost,xgb.cv)
 importFrom(xgboost,xgboost)
+if (packageVersion("xgboost") >= "3.0.0") {
+     importFrom("xgboost", "xgb.DMatrix")
+     importFrom("xgboost", "xgb.params")
+   }
