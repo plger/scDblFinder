@@ -746,6 +746,7 @@ scDblFinder <- function(
                          "include.in.training","observed"))
 }
 
+#' @importFrom utils packageVersion
 #' @importFrom xgboost xgb.cv xgboost xgb.DMatrix
 #' @rawNamespace if (packageVersion("xgboost") >= "3.0.0") {
 #'     importFrom("xgboost", "xgb.params")
@@ -760,7 +761,7 @@ scDblFinder <- function(
   if(nrounds<=1){
     # use cross-validation
     if(packageVersion("xgboost")>="3"){
-      params <- xgboost::xgb.params(
+      params <- xgb.params(
         objective="binary:logistic", learning_rate=eta, max_depth=max_depth,
         nthread=nthreads, subsample=subsample, eval_metric=metric,
         tree_method=tree_method, verbosity = 0)
