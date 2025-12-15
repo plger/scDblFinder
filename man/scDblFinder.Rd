@@ -145,8 +145,8 @@ object containing both the real and artificial cells).}
 \item{processing}{Counts (real and artificial) processing before KNN. Either
 'default' (normal \code{scater}-based normalization and PCA), "rawPCA" (PCA
 without normalization), "rawFeatures" (no normalization/dimensional
-reduction), "normFeatures" (uses normalized features, without PCA) or a
-custom function with (at least) arguments `e` (the matrix of counts) and
+reduction), "normFeatures" (features are normalized and used without PCA) or
+a custom function with (at least) arguments `e` (the matrix of counts) and
 `dims` (the desired number of dimensions), returning a named matrix with
 cells as rows and components as columns.}
 
