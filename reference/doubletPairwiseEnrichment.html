@@ -13,7 +13,7 @@ the cluster labels match across samples."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23.9</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.25.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,27 +107,23 @@ identification difficulty in calculating expected counts</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="scDblFinder.html">scDblFinder</a></span><span class="op">(</span><span class="va">sce</span>, clusters<span class="op">=</span><span class="cn">TRUE</span>, artificialDoublets<span class="op">=</span><span class="fl">500</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Clustering cells...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 4 clusters</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 3 clusters</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Creating ~500 artificial doublets...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Dimensional reduction</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Evaluating kNN...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Training model...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 16 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 16 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 17 cells excluded from training.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.745</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 17 (3.2%) doublets called</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=0, 18 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=1, 19 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iter=2, 19 cells excluded from training.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Threshold found:0.839</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 19 (3.6%) doublets called</span>
 <span class="r-in"><span><span class="fu">doubletPairwiseEnrichment</span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> theta=0.132256711646597</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   combination  log2enrich    p.value       FDR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         2+3  0.93039223 0.02252954 0.1351773</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1+2  0.63698802 0.04573564 0.2286782</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1+4  0.06118543 0.23372625 0.9349050</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         2+4 -1.02767029 1.00000000 1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1+3 -0.38572448 1.00000000 1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         3+4 -0.33856090 1.00000000 1.0000000</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> theta=0.0547757562969042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   combination log2enrich      p.value          FDR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1+2  1.3618018 2.889871e-05 8.669612e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         2+3 -0.9759771 1.000000e+00 1.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1+3 -0.7165604 1.000000e+00 1.000000e+00</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -139,7 +135,7 @@ identification difficulty in calculating expected counts</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
