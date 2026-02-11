@@ -88,7 +88,21 @@ table(truth=sce$type, call=sce$scDblFinder.class)
     ##   singlet     499       1
     ##   doublet       0      24
 
-To use the *cluster-based* approach, one simply needs to additionally
+Since most of the time the truth is not known, a good, simple diagnostic
+is the distribution of doublet score:
+
+``` r
+hist(sce$scDblFinder.score)
+```
+
+![](scDblFinder_files/figure-html/unnamed-chunk-5-1.png) A bimodal
+distribution, with most values very close to 0, a few close to 1, and
+very little in-between is the sign that scDblFinder is able to do its
+job.
+
+#### Cluster-based approach
+
+To use the cluster-based approach, one simply needs to additionally
 provide the `clusters` argument:
 
 ``` r
@@ -669,7 +683,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.25.3          SingleCellExperiment_1.33.0
+    ##  [1] scDblFinder_1.25.4          SingleCellExperiment_1.33.0
     ##  [3] SummarizedExperiment_1.41.1 Biobase_2.71.0             
     ##  [5] GenomicRanges_1.63.1        Seqinfo_1.1.0              
     ##  [7] IRanges_2.45.0              S4Vectors_0.49.0           

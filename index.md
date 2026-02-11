@@ -29,8 +29,8 @@ we will showcase doublet detection using the fast and comprehensive
 ### Important notes/updates
 
 - **if you are using xgboost version 3.1 or higher, make sure that you
-  are using scDblFinder version 1.25.1 or later (available e.g. from
-  github)**
+  are using scDblFinder version 1.25.4 or later (available e.g. from
+  github). Results might otherwise be suboptimal.**
 - **the scDblFinder version (1.20) initially shipped with Bioconductor
   3.20 had a wrong default doublet rate argument. This has been fixed in
   Bioconductor, but you should update your package (\>1.21 is good).**
