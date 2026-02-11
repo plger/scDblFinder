@@ -10,7 +10,6 @@ test_that("fastcluster works as expected",{
   expect_equal(sum(is.na(x)),0)
   expect_gt(sum(apply(table(sce$cluster, x),1,max)[1:3])/
               sum(sce$type=="singlet"), 0.8)
-
 })
 
 sce <- scDblFinder(sce, clusters="fastcluster", samples="sample",
@@ -27,6 +26,10 @@ test_that("scDblFinder works as expected", {
     expect(min(sce$scDblFinder.score)>=0 & max(sce$scDblFinder.score)<=1,
            failure_message="scDblFinder.score not within 0-1")
     expect_gt(sum(sce$type==sce$scDblFinder.class)/ncol(sce), 0.8)
+    
+    sc <- unlist(lapply(split(sce$scDblFinder.score, sce$type), median))
+    expect_lt(sc[1], 0.1)
+    expect_gt(sc[2], 0.8)
 })
 
 test_that("feature aggregation works as expected", {
@@ -53,4 +56,17 @@ test_that("amulet works as expected", {
   expect_equal(sum(res$nAbove2<=1), 4)
   expect_equal(res["barcode5","nAbove2"], 6)
   expect_lt(res["barcode5","p.value"], 0.01)
+})
+
+
+d <- data.frame(f1=1:100, f2=c(rnorm(50), rnorm(50, mean=1)))
+lab <- factor(c(sample(1:2, 50, replace=TRUE, prob=c(.9,.1)),
+                sample(1:2, 50, replace=TRUE, prob=c(.2,.8))))
+test_that("scDblFinder is compatible with the xgboost version", {
+  expect_no_warning(scDblFinder:::.xgbtrain(d, lab))
+})
+
+test_that("scDblFinder results are as expected", {
+  lapply(split(sce2$scDblFinder.score, sce2$type), median)
+  expect_no_warning(scDblFinder:::.xgbtrain(d, lab))
 })
