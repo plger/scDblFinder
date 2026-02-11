@@ -63,14 +63,14 @@ sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 18 cells excluded from training.
-#> iter=1, 19 cells excluded from training.
+#> iter=1, 17 cells excluded from training.
 #> iter=2, 19 cells excluded from training.
-#> Threshold found:0.839
-#> 19 (3.6%) doublets called
+#> Threshold found:0.823
+#> 20 (3.8%) doublets called
 doubletPairwiseEnrichment(sce)
-#> theta=0.0547757562969042
+#> theta=0.0516689023856554
 #>   combination log2enrich      p.value          FDR
-#> 1         1+2  1.3618018 2.889871e-05 8.669612e-05
-#> 3         2+3 -0.9759771 1.000000e+00 1.000000e+00
-#> 2         1+3 -0.7165604 1.000000e+00 1.000000e+00
+#> 1         1+2  1.4483032 7.578058e-06 2.273417e-05
+#> 3         2+3 -1.0846156 1.000000e+00 1.000000e+00
+#> 2         1+3 -0.8115107 1.000000e+00 1.000000e+00
 ```

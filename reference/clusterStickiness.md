@@ -54,15 +54,15 @@ sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 40 cells excluded from training.
-#> iter=1, 37 cells excluded from training.
-#> iter=2, 37 cells excluded from training.
-#> Threshold found:0.699
-#> 41 (3.5%) doublets called
+#> iter=1, 41 cells excluded from training.
+#> iter=2, 44 cells excluded from training.
+#> Threshold found:0.688
+#> 45 (3.8%) doublets called
 clusterStickiness(sce)
-#>       Estimate Std. Error     t value    p.value       FDR
-#> 1  0.570949414  0.2367866  2.41124002 0.06077094 0.3038547
-#> 4  0.537158468  0.2379533  2.25741087 0.07359007 0.3038547
-#> 5 -1.061269307  0.5524059 -1.92117660 0.11275844 0.3382753
-#> 3 -0.463794435  0.3297274 -1.40659974 0.21855358 0.4371072
-#> 2  0.004126825  0.2783859  0.01482412 0.98874583 0.9887458
+#>     Estimate Std. Error    t value    p.value       FDR
+#> 4  0.5669779  0.2048421  2.7678773 0.03946444 0.1973222
+#> 5 -1.1509962  0.5242631 -2.1954552 0.07954797 0.3181919
+#> 1  0.4464573  0.2077003  2.1495267 0.08429545 0.3181919
+#> 3 -0.3525247  0.2725346 -1.2935046 0.25236718 0.5047344
+#> 2  0.1105706  0.2378989  0.4647799 0.66162650 0.6616265
 ```

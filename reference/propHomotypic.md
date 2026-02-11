@@ -24,5 +24,5 @@ A numeric value between 0 and 1.
 ``` r
 clusters <- sample(LETTERS[1:5], 100, replace=TRUE)
 propHomotypic(clusters)
-#> [1] 0.2066
+#> [1] 0.208
 ```

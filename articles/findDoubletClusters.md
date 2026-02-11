@@ -3,7 +3,7 @@
 ## tl;dr
 
 To demonstrate, we’ll use one of the mammary gland datasets from the
-*[scRNAseq](https://bioconductor.org/packages/3.22/scRNAseq)* package.
+*[scRNAseq](https://bioconductor.org/packages/3.23/scRNAseq)* package.
 We will subset it down to a random set of 500 cells for speed.
 
 ``` r
@@ -139,7 +139,7 @@ Significant genes are identified by an intersection-union test on the
 $p$-values from the pairwise comparisons between $j\prime$ and
 $i\prime_{1}$ or $i\prime_{2}$. (Specifically, $t$-tests are used via
 the [`findMarkers()`](https://rdrr.io/pkg/scran/man/findMarkers.html)
-function from *[scran](https://bioconductor.org/packages/3.22/scran)*.)
+function from *[scran](https://bioconductor.org/packages/3.23/scran)*.)
 The $p$-value for a gene is set to unity when the signs of the log-fold
 changes are not the same between comparisons. Multiple correction
 testing is applied using the Benjamini-Hochberg method, and the number
@@ -203,9 +203,9 @@ the differences of power on the IUT.
 sessionInfo()
 ```
 
-    ## R Under development (unstable) (2025-01-04 r87523)
+    ## R Under development (unstable) (2026-02-08 r89382)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.1 LTS
+    ## Running under: Ubuntu 24.04.3 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -227,60 +227,60 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.25.0          bluster_1.20.0             
-    ##  [3] scater_1.38.0               ggplot2_4.0.1              
-    ##  [5] scran_1.38.0                scuttle_1.20.0             
-    ##  [7] ensembldb_2.34.0            AnnotationFilter_1.34.0    
-    ##  [9] GenomicFeatures_1.62.0      AnnotationDbi_1.72.0       
-    ## [11] scRNAseq_2.24.0             SingleCellExperiment_1.32.0
-    ## [13] SummarizedExperiment_1.40.0 Biobase_2.70.0             
-    ## [15] GenomicRanges_1.62.1        Seqinfo_1.0.0              
-    ## [17] IRanges_2.44.0              S4Vectors_0.48.0           
-    ## [19] BiocGenerics_0.56.0         generics_0.1.4             
-    ## [21] MatrixGenerics_1.22.0       matrixStats_1.5.0          
-    ## [23] BiocStyle_2.38.0           
+    ##  [1] scDblFinder_1.25.2          bluster_1.21.0             
+    ##  [3] scater_1.39.2               ggplot2_4.0.2              
+    ##  [5] scran_1.39.0                scuttle_1.21.0             
+    ##  [7] ensembldb_2.35.0            AnnotationFilter_1.35.0    
+    ##  [9] GenomicFeatures_1.63.1      AnnotationDbi_1.73.0       
+    ## [11] scRNAseq_2.25.0             SingleCellExperiment_1.33.0
+    ## [13] SummarizedExperiment_1.41.1 Biobase_2.71.0             
+    ## [15] GenomicRanges_1.63.1        Seqinfo_1.1.0              
+    ## [17] IRanges_2.45.0              S4Vectors_0.49.0           
+    ## [19] BiocGenerics_0.57.0         generics_0.1.4             
+    ## [21] MatrixGenerics_1.23.0       matrixStats_1.5.0          
+    ## [23] BiocStyle_2.39.0           
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] RColorBrewer_1.1-3       jsonlite_2.0.0           magrittr_2.0.4          
-    ##   [4] ggbeeswarm_0.7.3         gypsum_1.6.0             farver_2.1.2            
-    ##   [7] rmarkdown_2.30           fs_1.6.6                 BiocIO_1.20.0           
-    ##  [10] ragg_1.5.0               vctrs_0.6.5              memoise_2.0.1           
-    ##  [13] Rsamtools_2.26.0         RCurl_1.98-1.17          htmltools_0.5.9         
-    ##  [16] S4Arrays_1.10.1          AnnotationHub_4.0.0      curl_7.0.0              
-    ##  [19] BiocNeighbors_2.4.0      xgboost_3.1.2.1          Rhdf5lib_1.32.0         
-    ##  [22] SparseArray_1.10.6       rhdf5_2.54.1             sass_0.4.10             
-    ##  [25] alabaster.base_1.10.0    bslib_0.9.0              htmlwidgets_1.6.4       
-    ##  [28] desc_1.4.3               alabaster.sce_1.10.0     httr2_1.2.2             
-    ##  [31] cachem_1.1.0             GenomicAlignments_1.46.0 igraph_2.2.1            
-    ##  [34] lifecycle_1.0.4          pkgconfig_2.0.3          rsvd_1.0.5              
-    ##  [37] Matrix_1.7-1             R6_2.6.1                 fastmap_1.2.0           
-    ##  [40] digest_0.6.39            dqrng_0.4.1              irlba_2.3.5.1           
-    ##  [43] ExperimentHub_3.0.0      textshaping_1.0.4        RSQLite_2.4.5           
-    ##  [46] beachmat_2.26.0          labeling_0.4.3           filelock_1.0.3          
-    ##  [49] httr_1.4.7               abind_1.4-8              compiler_4.5.0          
+    ##   [4] ggbeeswarm_0.7.3         gypsum_1.7.0             farver_2.1.2            
+    ##   [7] rmarkdown_2.30           fs_1.6.6                 BiocIO_1.21.0           
+    ##  [10] ragg_1.5.0               vctrs_0.7.1              memoise_2.0.1           
+    ##  [13] Rsamtools_2.27.0         RCurl_1.98-1.17          htmltools_0.5.9         
+    ##  [16] S4Arrays_1.11.1          AnnotationHub_4.1.0      curl_7.0.0              
+    ##  [19] BiocNeighbors_2.5.3      xgboost_3.2.0.1          Rhdf5lib_1.33.0         
+    ##  [22] SparseArray_1.11.10      rhdf5_2.55.13            sass_0.4.10             
+    ##  [25] alabaster.base_1.11.2    bslib_0.10.0             htmlwidgets_1.6.4       
+    ##  [28] desc_1.4.3               alabaster.sce_1.11.0     httr2_1.2.2             
+    ##  [31] cachem_1.1.0             GenomicAlignments_1.47.0 igraph_2.2.1            
+    ##  [34] lifecycle_1.0.5          pkgconfig_2.0.3          rsvd_1.0.5              
+    ##  [37] Matrix_1.7-4             R6_2.6.1                 fastmap_1.2.0           
+    ##  [40] digest_0.6.39            dqrng_0.4.1              irlba_2.3.7             
+    ##  [43] ExperimentHub_3.1.0      textshaping_1.0.4        RSQLite_2.4.6           
+    ##  [46] beachmat_2.27.2          labeling_0.4.3           filelock_1.0.3          
+    ##  [49] httr_1.4.7               abind_1.4-8              compiler_4.6.0          
     ##  [52] bit64_4.6.0-1            withr_3.0.2              S7_0.2.1                
-    ##  [55] BiocParallel_1.44.0      viridis_0.6.5            DBI_1.2.3               
-    ##  [58] HDF5Array_1.38.0         alabaster.ranges_1.10.0  alabaster.schemas_1.10.0
-    ##  [61] MASS_7.3-64              rappdirs_0.3.3           DelayedArray_0.36.0     
-    ##  [64] rjson_0.2.23             tools_4.5.0              vipor_0.4.7             
-    ##  [67] beeswarm_0.4.0           glue_1.8.0               h5mread_1.2.1           
-    ##  [70] restfulr_0.0.16          rhdf5filters_1.22.0      grid_4.5.0              
-    ##  [73] Rtsne_0.17               cluster_2.1.8            gtable_0.3.6            
-    ##  [76] data.table_1.17.8        BiocSingular_1.26.1      ScaledMatrix_1.18.0     
-    ##  [79] metapod_1.18.0           XVector_0.50.0           ggrepel_0.9.6           
-    ##  [82] BiocVersion_3.22.0       pillar_1.11.1            limma_3.66.0            
-    ##  [85] dplyr_1.1.4              BiocFileCache_3.0.0      lattice_0.22-6          
-    ##  [88] rtracklayer_1.70.0       bit_4.6.0                tidyselect_1.2.1        
-    ##  [91] locfit_1.5-9.12          Biostrings_2.78.0        knitr_1.50              
-    ##  [94] gridExtra_2.3            bookdown_0.46            ProtGenerics_1.42.0     
-    ##  [97] edgeR_4.8.1              xfun_0.54                statmod_1.5.1           
-    ## [100] UCSC.utils_1.6.0         lazyeval_0.2.2           yaml_2.3.12             
-    ## [103] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.0.0         
-    ## [106] tibble_3.3.0             alabaster.matrix_1.10.0  BiocManager_1.30.27     
-    ## [109] cli_3.6.5                systemfonts_1.3.1        jquerylib_0.1.4         
-    ## [112] Rcpp_1.1.0               GenomeInfoDb_1.46.2      dbplyr_2.5.1            
-    ## [115] png_0.1-8                XML_3.99-0.20            parallel_4.5.0          
-    ## [118] pkgdown_2.2.0            blob_1.2.4               bitops_1.0-9            
-    ## [121] viridisLite_0.4.2        alabaster.se_1.10.0      scales_1.4.0            
-    ## [124] purrr_1.2.0              crayon_1.5.3             rlang_1.1.6             
-    ## [127] KEGGREST_1.50.0
+    ##  [55] BiocParallel_1.45.0      viridis_0.6.5            DBI_1.2.3               
+    ##  [58] HDF5Array_1.39.0         alabaster.ranges_1.11.0  alabaster.schemas_1.11.0
+    ##  [61] MASS_7.3-65              rappdirs_0.3.4           DelayedArray_0.37.0     
+    ##  [64] rjson_0.2.23             tools_4.6.0              vipor_0.4.7             
+    ##  [67] otel_0.2.0               beeswarm_0.4.0           glue_1.8.0              
+    ##  [70] h5mread_1.3.1            restfulr_0.0.16          rhdf5filters_1.23.3     
+    ##  [73] grid_4.6.0               Rtsne_0.17               cluster_2.1.8.2         
+    ##  [76] gtable_0.3.6             data.table_1.18.2.1      metapod_1.19.1          
+    ##  [79] BiocSingular_1.27.1      ScaledMatrix_1.19.0      XVector_0.51.0          
+    ##  [82] ggrepel_0.9.6            BiocVersion_3.23.1       pillar_1.11.1           
+    ##  [85] limma_3.67.0             dplyr_1.2.0              BiocFileCache_3.1.0     
+    ##  [88] lattice_0.22-9           rtracklayer_1.71.3       bit_4.6.0               
+    ##  [91] tidyselect_1.2.1         locfit_1.5-9.12          Biostrings_2.79.4       
+    ##  [94] knitr_1.51               gridExtra_2.3            bookdown_0.46           
+    ##  [97] ProtGenerics_1.43.0      edgeR_4.9.2              xfun_0.56               
+    ## [100] statmod_1.5.1            UCSC.utils_1.7.1         lazyeval_0.2.2          
+    ## [103] yaml_2.3.12              evaluate_1.0.5           codetools_0.2-20        
+    ## [106] cigarillo_1.1.0          tibble_3.3.1             alabaster.matrix_1.11.0 
+    ## [109] BiocManager_1.30.27      cli_3.6.5                systemfonts_1.3.1       
+    ## [112] jquerylib_0.1.4          Rcpp_1.1.1               GenomeInfoDb_1.47.2     
+    ## [115] dbplyr_2.5.1             png_0.1-8                XML_3.99-0.22           
+    ## [118] parallel_4.6.0           pkgdown_2.2.0            blob_1.3.0              
+    ## [121] bitops_1.0-9             viridisLite_0.4.3        alabaster.se_1.11.0     
+    ## [124] scales_1.4.0             purrr_1.2.1              crayon_1.5.3            
+    ## [127] rlang_1.1.7              KEGGREST_1.51.1

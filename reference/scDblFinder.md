@@ -336,9 +336,9 @@ sce <- scDblFinder(sce)
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 23 cells excluded from training.
-#> iter=1, 19 cells excluded from training.
-#> iter=2, 19 cells excluded from training.
-#> Threshold found:0.382
+#> iter=1, 20 cells excluded from training.
+#> iter=2, 20 cells excluded from training.
+#> Threshold found:0.612
 #> 18 (3.5%) doublets called
 table(truth=sce$type, call=sce$scDblFinder.class)
 #>          call

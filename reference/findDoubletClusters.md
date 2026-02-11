@@ -214,26 +214,26 @@ dbl
 #> DataFrame with 3 rows and 9 columns
 #>              source1     source2    num.de median.de        best      p.value
 #>          <character> <character> <integer> <integer> <character>    <numeric>
-#> cluster3    cluster2    cluster1       100       100      gene12 1.72469e-139
-#> cluster1    cluster3    cluster2       105       105      gene29 8.90974e-102
-#> cluster2    cluster3    cluster1       110       110     gene171 1.56657e-102
+#> cluster1    cluster3    cluster2        96        96     gene153 2.42669e-133
+#> cluster2    cluster3    cluster1       103       103      gene35 5.62809e-136
+#> cluster3    cluster2    cluster1       104       104     gene120  5.28430e-81
 #>          lib.size1 lib.size2      prop
 #>          <numeric> <numeric> <numeric>
-#> cluster3  0.981618  1.014706  0.268817
-#> cluster1  0.985507  0.967391  0.305108
-#> cluster2  1.018727  1.033708  0.426075
+#> cluster1  0.866906  0.964029  0.307898
+#> cluster2  0.899254  1.037313  0.424364
+#> cluster3  1.112033  1.153527  0.267738
 
 # Narrow this down to clusters with very low 'N':
 library(scuttle)
 isOutlier(dbl$num.de, log=TRUE, type="lower")
-#> [1] FALSE FALSE FALSE
+#> [1]  TRUE FALSE FALSE
 #> attr(,"class")
 #> [1] "outlier.filter" "logical"       
 #> attr(,"thresholds")
-#>   lower  higher 
-#> 85.3746     Inf 
+#>    lower   higher 
+#> 98.66741      Inf 
 
 # Get help from "lib.size" below 1.
 dbl$lib.size1 < 1 & dbl$lib.size2 < 1
-#> [1] FALSE  TRUE FALSE
+#> [1]  TRUE FALSE FALSE
 ```
