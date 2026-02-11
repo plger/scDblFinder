@@ -148,11 +148,8 @@ importFrom(stats,rpois)
 importFrom(stats,setNames)
 importFrom(stats,weighted.mean)
 importFrom(utils,head)
+importFrom(utils,packageVersion)
 importFrom(utils,read.delim)
-importFrom(utils, packageVersion)
+importFrom(xgboost,xgb.DMatrix)
 importFrom(xgboost,xgb.cv)
 importFrom(xgboost,xgboost)
-importFrom(xgboost,xgb.DMatrix)
-if (packageVersion("xgboost") >= "3.0.0") {
-     importFrom("xgboost", "xgb.params")
-   }

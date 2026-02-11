@@ -746,11 +746,9 @@ scDblFinder <- function(
                          "include.in.training","observed"))
 }
 
+
 #' @importFrom utils packageVersion
 #' @importFrom xgboost xgb.cv xgboost xgb.DMatrix
-#' @rawNamespace if (packageVersion("xgboost") >= "3.0.0") {
-#'     importFrom("xgboost", "xgb.params")
-#'   }
 .xgbtrain <- function(d2, ctype, nrounds=NULL, max_depth=6, nfold=5, eta=1,
                       tree_method="exact", subsample=0.75, nthreads=1,
                       metric="logloss", ...){
@@ -758,39 +756,55 @@ scDblFinder <- function(
   if(is.null(nrounds)) nrounds <- 0L
   if(!is.numeric(nrounds) || nrounds<0)
     stop("If given, `nrounds` must be a positive number!")
+  
   if(nrounds<=1){
     # use cross-validation
-    if(packageVersion("xgboost")>="3"){
-      params <- xgb.params(
-        objective="binary:logistic", learning_rate=eta, max_depth=max_depth,
-        nthread=nthreads, subsample=subsample, eval_metric=metric,
-        tree_method=tree_method, verbosity = 0)
-      res <- xgb.cv(data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
-                    params=params, nrounds=200, nfold=nfold, 
-                    early_stopping_rounds=2, verbose=FALSE, ...)
-    }else{
-      res <- xgb.cv(data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
-                    nrounds=200, nfold=nfold, early_stopping_rounds=2, 
-                    verbose=FALSE, max_depth=max_depth,
-                    objective="binary:logistic", learning_rate=eta, 
-                    nthread=nthreads, subsample=subsample, eval_metric=metric,
-                    tree_method=tree_method, ...)
-    }
+    
+    params <- list(
+      objective="binary:logistic",
+      eval_metric=metric,
+      max_depth=max_depth,
+      learning_rate=eta,
+      subsample=subsample,
+      tree_method=tree_method
+    )
+    
+    res <- xgb.cv(
+      data=xgb.DMatrix(data=as.matrix(d2), label=ctype), 
+      params=params,
+      nrounds=200, 
+      nfold=nfold, 
+      early_stopping_rounds=2,
+      verbose=FALSE,
+      ...
+    )
+    
     e <- res$evaluation_log
-    testm <- grep("test.+mean",colnames(e))
+    testm <- grep("test.+mean", colnames(e))
     best <- which.min(e[,testm])
+    
     if(nrounds==0){
       nrounds <- best
     }else{
-      ac <- e[[testm]][best] + nrounds*e[[grep("test.+std",colnames(e))]][best]
-      nrounds <- min(which(e[[grep("test.+mean",colnames(e))]] <= ac))
+      ac <- e[[testm]][best] + nrounds*e[[grep("test.+std", colnames(e))]][best]
+      nrounds <- min(which(e[[grep("test.+mean", colnames(e))]] <= ac))
     }
+    
     #message("Best iteration: ", best, "; selected nrounds: ", nrounds)
   }
-  xgboost( as.matrix(d2), as.logical(ctype), nrounds=nrounds, eval_metric=metric,
-           objective="binary:logistic", tree_method=tree_method,
-           max_depth=max_depth, early_stopping_rounds=2, verbos=0,
-           nthread=nthreads, learning_rate=eta, ... )
+  
+  xgboost(
+    x=xgb.DMatrix(data=as.matrix(d2), label=ctype),
+    nrounds=nrounds,
+    objective="binary:logistic",
+    eval_metric=metric,
+    max_depth=max_depth,
+    learning_rate=eta,
+    subsample=subsample,
+    tree_method=tree_method,
+    early_stopping_rounds=2,
+    ...
+  )
 }
 
 .aggResultsTable <- function(d, keep.col=NULL){
