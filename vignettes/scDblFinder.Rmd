@@ -68,7 +68,16 @@ We can compare the calls with the truth in this toy example:
 table(truth=sce$type, call=sce$scDblFinder.class)
 ```
 
-To use the *cluster-based* approach, one simply needs to additionally provide the `clusters` argument:
+Since most of the time the truth is not known, a good, simple diagnostic is the distribution of doublet score:
+
+```{r}
+hist(sce$scDblFinder.score)
+```
+A bimodal distribution, with most values very close to 0, a few close to 1, and very little in-between is the sign that scDblFinder is able to do its job.
+
+### Cluster-based approach
+
+To use the cluster-based approach, one simply needs to additionally provide the `clusters` argument:
 
 ```{r}
 sce <- scDblFinder(sce, clusters="cluster")
