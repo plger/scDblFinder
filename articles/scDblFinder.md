@@ -669,7 +669,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.25.2          SingleCellExperiment_1.33.0
+    ##  [1] scDblFinder_1.25.3          SingleCellExperiment_1.33.0
     ##  [3] SummarizedExperiment_1.41.1 Biobase_2.71.0             
     ##  [5] GenomicRanges_1.63.1        Seqinfo_1.1.0              
     ##  [7] IRanges_2.45.0              S4Vectors_0.49.0           

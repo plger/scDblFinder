@@ -227,7 +227,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.25.2          bluster_1.21.0             
+    ##  [1] scDblFinder_1.25.3          bluster_1.21.0             
     ##  [3] scater_1.39.2               ggplot2_4.0.2              
     ##  [5] scran_1.39.0                scuttle_1.21.0             
     ##  [7] ensembldb_2.35.0            AnnotationFilter_1.35.0    
