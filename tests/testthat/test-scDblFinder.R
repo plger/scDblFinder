@@ -65,8 +65,3 @@ lab <- factor(c(sample(1:2, 50, replace=TRUE, prob=c(.9,.1)),
 test_that("scDblFinder is compatible with the xgboost version", {
   expect_no_warning(scDblFinder:::.xgbtrain(d, lab))
 })
-
-test_that("scDblFinder results are as expected", {
-  lapply(split(sce2$scDblFinder.score, sce2$type), median)
-  expect_no_warning(scDblFinder:::.xgbtrain(d, lab))
-})
