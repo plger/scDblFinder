@@ -766,7 +766,8 @@ scDblFinder <- function(
       max_depth=max_depth,
       learning_rate=eta,
       subsample=subsample,
-      tree_method=tree_method
+      tree_method=tree_method,
+      nthread=nthreads
     )
     
     res <- xgb.cv(
@@ -804,6 +805,7 @@ scDblFinder <- function(
     subsample=subsample,
     tree_method=tree_method,
     early_stopping_rounds=2,
+    nthreads=nthreads,
     ...
   )
 }
