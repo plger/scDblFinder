@@ -1,5 +1,5 @@
-Changes in version 1.23.1 (2025-07-17)
-+ fixed compatibility issues with xgboost version>=3
+Changes in version 1.26.1 (2026-05-26)
++ fixed xgboost default arg change that was causing using all threads
 
 Changes in version 1.19.9 (2025-01-07)
 + fixed the default dbr.per1k value in the top-level function
