@@ -196,6 +196,15 @@ clusters <- rep(1:5, c(rep(100, 4), ncol(counts.m)))
 
 # Find potential doublets.
 scores <- computeDoubletDensity(counts)
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
 boxplot(split(log10(scores), clusters))
 
 ```

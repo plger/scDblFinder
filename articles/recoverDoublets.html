@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Recovering intra-sample doublets • scDblFinder</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Recovering intra-sample doublets">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.25.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@
                   <a class="author_email" href="mailto:#"></a><a href="mailto:infinite.monkeys.with.keyboards@gmail.com" class="email">infinite.monkeys.with.keyboards@gmail.com</a>
       
                   
-            <h4 data-toc-skip class="date">2026-02-11</h4>
+            <h4 data-toc-skip class="date">2026-06-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/plger/scDblFinder/blob/devel/vignettes/recoverDoublets.Rmd" class="external-link"><code>vignettes/recoverDoublets.Rmd</code></a></small>
       <div class="d-none name"><code>recoverDoublets.Rmd</code></div>
@@ -108,7 +108,7 @@ doublets
 Similarly, the expected proportion of inter-sample doublets in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
 is just
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><msub><mi>C</mi><mn>1</mn></msub></msub><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false" form="postfix">∥</mo><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><msub><mi>C</mi><mn>1</mn></msub></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">q_{C_1} =1 - \| \vec p_{C_1} \|_2^2</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><msub><mi>C</mi><mn>1</mn></msub></msub><mo>=</mo><mn>1</mn><mi>−</mi><mo stretchy="false" form="postfix">∥</mo><msub><mover><mi>p</mi><mo accent="true">→</mo></mover><msub><mi>C</mi><mn>1</mn></msub></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">q_{C_1} =1 - \| \vec p_{C_1} \|_2^2</annotation></semantics></math>.</p>
 <p>Now, let’s consider the observed proportion of events
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>X</mi></msub><annotation encoding="application/x-tex">r_X</annotation></semantics></math>
 in each state
@@ -224,9 +224,9 @@ replicates.</p>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R Under development (unstable) (2026-02-08 r89382)</span></span>
+<pre><code><span><span class="co">## R version 4.6.0 (2026-04-24)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -247,19 +247,19 @@ replicates.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] BiocStyle_2.39.0</span></span>
+<span><span class="co">## [1] BiocStyle_2.40.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           </span></span>
-<span><span class="co">##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.56          </span></span>
+<span><span class="co">##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.57          </span></span>
 <span><span class="co">##  [7] cachem_1.1.0        knitr_1.51          htmltools_0.5.9    </span></span>
-<span><span class="co">## [10] rmarkdown_2.30      lifecycle_1.0.5     cli_3.6.5          </span></span>
-<span><span class="co">## [13] sass_0.4.10         pkgdown_2.2.0       textshaping_1.0.4  </span></span>
-<span><span class="co">## [16] jquerylib_0.1.4     systemfonts_1.3.1   compiler_4.6.0     </span></span>
-<span><span class="co">## [19] tools_4.6.0         ragg_1.5.0          bslib_0.10.0       </span></span>
+<span><span class="co">## [10] rmarkdown_2.31      lifecycle_1.0.5     cli_3.6.6          </span></span>
+<span><span class="co">## [13] sass_0.4.10         pkgdown_2.2.0       textshaping_1.0.5  </span></span>
+<span><span class="co">## [16] jquerylib_0.1.4     systemfonts_1.3.2   compiler_4.6.0     </span></span>
+<span><span class="co">## [19] tools_4.6.0         ragg_1.5.2          bslib_0.11.0       </span></span>
 <span><span class="co">## [22] evaluate_1.0.5      yaml_2.3.12         BiocManager_1.30.27</span></span>
-<span><span class="co">## [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.1.7        </span></span>
-<span><span class="co">## [28] fs_1.6.6            htmlwidgets_1.6.4</span></span></code></pre>
+<span><span class="co">## [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.2.0        </span></span>
+<span><span class="co">## [28] fs_2.1.0            htmlwidgets_1.6.4</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

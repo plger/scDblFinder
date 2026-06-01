@@ -52,5 +52,10 @@ A vector of feature (i.e. row) names.
 ``` r
 sce <- mockDoubletSCE()
 selFeatures(sce, clusters=sce$cluster, nfeatures=5)
-#> [1] "gene12"  "gene148" "gene69"  "gene83"  "gene170"
+#> Warning: 'sumCountsAcrossCells' is deprecated.
+#> Use 'scrapper::aggregateAcrossCells' instead.
+#> See help("Deprecated")
+#> Warning: 'summarizeAssayByGroup' is deprecated.
+#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
+#> [1] "gene13"  "gene149" "gene70"  "gene84"  "gene171"
 ```

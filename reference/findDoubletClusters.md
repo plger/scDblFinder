@@ -210,30 +210,44 @@ sce <- mockDoubletSCE(c(200,300,200))
 
 # Compute doublet-ness of each cluster:
 dbl <- findDoubletClusters(counts(sce), sce$cluster)
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
+#> Warning: 'findMarkers' is deprecated.
+#> Use 'scrapper::scoreMarkers.se' instead.
+#> See help("Deprecated")
+#> Warning: 'pairwiseTTests' is deprecated.
+#> See help("Deprecated")
+#> Warning: 'combineMarkers' is deprecated.
+#> Use 'scrapper::summarizeEffects' instead.
+#> See help("Deprecated")
 dbl
 #> DataFrame with 3 rows and 9 columns
 #>              source1     source2    num.de median.de        best      p.value
 #>          <character> <character> <integer> <integer> <character>    <numeric>
-#> cluster1    cluster3    cluster2        96        96     gene153 2.42669e-133
-#> cluster2    cluster3    cluster1       103       103      gene35 5.62809e-136
-#> cluster3    cluster2    cluster1       104       104     gene120  5.28430e-81
+#> cluster3    cluster2    cluster1        93        93     gene181 1.25899e-141
+#> cluster2    cluster3    cluster1        94        94     gene149 1.51477e-104
+#> cluster1    cluster3    cluster2       103       103     gene199 2.20647e-156
 #>          lib.size1 lib.size2      prop
 #>          <numeric> <numeric> <numeric>
-#> cluster1  0.866906  0.964029  0.307898
-#> cluster2  0.899254  1.037313  0.424364
-#> cluster3  1.112033  1.153527  0.267738
+#> cluster3  0.908730  1.007937  0.268817
+#> cluster2  1.100437  1.109170  0.423387
+#> cluster1  0.992126  0.901575  0.307796
 
 # Narrow this down to clusters with very low 'N':
 library(scuttle)
 isOutlier(dbl$num.de, log=TRUE, type="lower")
-#> [1]  TRUE FALSE FALSE
+#> [1] FALSE FALSE FALSE
 #> attr(,"class")
 #> [1] "outlier.filter" "logical"       
 #> attr(,"thresholds")
 #>    lower   higher 
-#> 98.66741      Inf 
+#> 89.63306      Inf 
 
 # Get help from "lib.size" below 1.
 dbl$lib.size1 < 1 & dbl$lib.size2 < 1
-#> [1]  TRUE FALSE FALSE
+#> [1] FALSE FALSE  TRUE
 ```

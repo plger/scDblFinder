@@ -64,6 +64,6 @@ x <- amuletFromCounts(x)
 table(call=x$amuletFromCounts.q<0.05, truth=x$type)
 #>        truth
 #> call    singlet doublet
-#>   FALSE     499       0
-#>   TRUE        1      21
+#>   FALSE     500       0
+#>   TRUE        0      22
 ```

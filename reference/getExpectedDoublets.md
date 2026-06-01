@@ -37,5 +37,5 @@ The expected number of doublets of each combination of clusters
 cl <- sample(head(LETTERS,4), size=2000, prob=c(.4,.2,.2,.2), replace=TRUE)
 getExpectedDoublets(cl)
 #>      A+B      A+C      B+C      A+D      B+D      C+D 
-#> 5.808704 4.766784 2.611776 4.870976 2.668864 2.190144 
+#> 4.973520 5.151600 2.533680 5.202480 2.558704 2.650320 
 ```

@@ -174,6 +174,12 @@ counts.2 <- matrix(rpois(ngenes*100, mu2), nrow=ngenes) # Pure type 2
 counts.m <- matrix(rpois(ngenes*20, mu1+mu2), nrow=ngenes) # Doublets (1 & 2)
 all.counts <- cbind(counts.1, counts.2, counts.m)
 lcounts <- scuttle::normalizeCounts(all.counts)
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
 
 # Pretending that half of the doublets are known. Also pretending that 
 # the experiment involved two samples of equal size.

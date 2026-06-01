@@ -48,21 +48,39 @@ sce <- mockDoubletSCE(rep(200,5), dbl.rate=0.2)
 sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #> Warning: Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out
 #> Clustering cells...
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
 #> 5 clusters
 #> Creating ~500 artificial doublets...
 #> Dimensional reduction
+#> Warning: 'normalizeCounts' is deprecated.
+#> Use 'scrapper::normalizeCounts' instead.
+#> See help("Deprecated")
+#> Warning: 'librarySizeFactors' is deprecated.
+#> Use 'scrapper::centerSizeFactors' instead.
+#> See help("Deprecated")
 #> Evaluating kNN...
 #> Training model...
-#> iter=0, 40 cells excluded from training.
-#> iter=1, 41 cells excluded from training.
+#> iter=0, 38 cells excluded from training.
+#> iter=1, 40 cells excluded from training.
 #> iter=2, 44 cells excluded from training.
-#> Threshold found:0.688
-#> 45 (3.8%) doublets called
+#> Threshold found:0.734
+#> 45 (3.9%) doublets called
 clusterStickiness(sce)
 #>     Estimate Std. Error    t value    p.value       FDR
-#> 4  0.5669779  0.2048421  2.7678773 0.03946444 0.1973222
-#> 5 -1.1509962  0.5242631 -2.1954552 0.07954797 0.3181919
-#> 1  0.4464573  0.2077003  2.1495267 0.08429545 0.3181919
-#> 3 -0.3525247  0.2725346 -1.2935046 0.25236718 0.5047344
-#> 2  0.1105706  0.2378989  0.4647799 0.66162650 0.6616265
+#> 2  0.4852933  0.2323662  2.0884854 0.09107487 0.4553743
+#> 3 -0.3071994  0.2804440 -1.0954038 0.32327665 1.0000000
+#> 1  0.1633938  0.2659148  0.6144592 0.56579277 1.0000000
+#> 4  0.1031945  0.2647532  0.3897761 0.71275204 1.0000000
+#> 5 -0.1129954  0.3171997 -0.3562279 0.73620809 1.0000000
 ```

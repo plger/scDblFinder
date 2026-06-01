@@ -7,11 +7,13 @@ To demonstrate, we’ll use one of the mammary gland datasets from the
 We will subset it down to a random set of 1000 cells for speed.
 
 ``` r
+
 library(scRNAseq)
 sce <- BachMammaryData(samples="G_1")
 ```
 
 ``` r
+
 set.seed(1001)
 sce <- sce[,sample(ncol(sce), 1000)]
 ```
@@ -22,6 +24,7 @@ quality control, create some diagnostic plots, etc., but we don’t have
 the space for that.
 
 ``` r
+
 library(scuttle)
 sce <- logNormCounts(sce)
 
@@ -42,6 +45,7 @@ simulated doublets around it. We log this to get some better dynamic
 range.
 
 ``` r
+
 set.seed(1003)
 library(scDblFinder)
 scores <- computeDoubletDensity(sce, subset.row=hvgs)
@@ -59,7 +63,7 @@ simulated doublets from the original data set:
     dataset.
 2.  Randomly select two cells and add their count profiles together.
     Compute the log-normalized profile and project it into the PC space.
-3.  Repeat **2** to obtain $N_{s}$ simulated doublet cells.
+3.  Repeat **2** to obtain $`N_s`$ simulated doublet cells.
 4.  For each cell, compute the local density of simulated doublets,
     scaled by the density of the original cells. This is used as the
     doublet score.
@@ -122,12 +126,12 @@ non-unity values for the RNA content size factors:
     the rescaled normalization size factors.
 
 To understand the correctness of the rescaled normalization size
-factors, consider a non-DE gene with abundance $\lambda_{g}$. The
-expected count in each cell is $\lambda_{g}s_{i}$ for scaling bias
-$s_{i}$ (i.e., normalization size factor). The rescaled count is
-$\lambda_{g}s_{i}c_{i}^{- 1}$ for some RNA content size factor $c_{i}$.
-The rescaled normalization size factor is $s_{i}c_{i}^{- 1}$, such that
-normalization yields $\lambda_{g}$ as desired. This also holds for
+factors, consider a non-DE gene with abundance $`\lambda_g`$. The
+expected count in each cell is $`\lambda_g s_i`$ for scaling bias
+$`s_i`$ (i.e., normalization size factor). The rescaled count is
+$`\lambda_g s_i c_i^{-1}`$ for some RNA content size factor $`c_i`$. The
+rescaled normalization size factor is $`s_i c_i^{-1}`$, such that
+normalization yields $`\lambda_g`$ as desired. This also holds for
 doublets where the scaling biases and size factors are additive.
 
 ## Doublet score calculations
@@ -143,33 +147,34 @@ is proportional to the ratio of the number of neighboring simulated
 doublets to the number of neighboring real cells.
 
 A mild additional challenge here is that the number of simulated cells
-$N_{s}$ can vary. Ideally, we would like the expected output of the
-function to be the same regardless of the user’s choice of $N_{s}$,
+$`N_s`$ can vary. Ideally, we would like the expected output of the
+function to be the same regardless of the user’s choice of $`N_s`$,
 i.e., the chosen value should only affect the precision/speed trade-off.
-Many other doublet-based methods take a $k$-nearest neighbours approach
-to compute densities; but if $N_{s}$ is too large relative to the number
-of real cells, all of the $k$ nearest neighbours will be simulated,
-while if $N_{s}$ is too small, all of the nearest neighbors will be
-original cells.
+Many other doublet-based methods take a $`k`$-nearest neighbours
+approach to compute densities; but if $`N_s`$ is too large relative to
+the number of real cells, all of the $`k`$ nearest neighbours will be
+simulated, while if $`N_s`$ is too small, all of the nearest neighbors
+will be original cells.
 
-Thus, we use a modified version of the $k$NN approach whereby we
-identify the distance from each cell to its $k$-th nearest neighbor.
+Thus, we use a modified version of the $`k`$NN approach whereby we
+identify the distance from each cell to its $`k`$-th nearest neighbor.
 This defines a hypersphere around that cell in which we count the number
 of simulated cells. We then compute the odds ratio of the number of
-simulated cells in the hypersphere to $N_{s}$, divided by the ratio of
-$k$ to the total number of cells in the dataset. This score captures the
-relative frequency of simulated cells to real cells while being robust
-to changes to $N_{s}$.
+simulated cells in the hypersphere to $`N_s`$, divided by the ratio of
+$`k`$ to the total number of cells in the dataset. This score captures
+the relative frequency of simulated cells to real cells while being
+robust to changes to $`N_s`$.
 
 ## Session information
 
 ``` r
+
 sessionInfo()
 ```
 
-    ## R Under development (unstable) (2026-02-08 r89382)
+    ## R version 4.6.0 (2026-04-24)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -191,60 +196,60 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] bluster_1.21.0              scDblFinder_1.25.4         
-    ##  [3] scater_1.39.2               ggplot2_4.0.2              
-    ##  [5] scran_1.39.0                scuttle_1.21.0             
-    ##  [7] ensembldb_2.35.0            AnnotationFilter_1.35.0    
-    ##  [9] GenomicFeatures_1.63.1      AnnotationDbi_1.73.0       
-    ## [11] scRNAseq_2.25.0             SingleCellExperiment_1.33.0
-    ## [13] SummarizedExperiment_1.41.1 Biobase_2.71.0             
-    ## [15] GenomicRanges_1.63.1        Seqinfo_1.1.0              
-    ## [17] IRanges_2.45.0              S4Vectors_0.49.0           
-    ## [19] BiocGenerics_0.57.0         generics_0.1.4             
-    ## [21] MatrixGenerics_1.23.0       matrixStats_1.5.0          
-    ## [23] BiocStyle_2.39.0           
+    ##  [1] bluster_1.22.0              scDblFinder_1.27.2         
+    ##  [3] scater_1.40.1               ggplot2_4.0.3              
+    ##  [5] scran_1.40.0                scuttle_1.22.0             
+    ##  [7] ensembldb_2.36.1            AnnotationFilter_1.36.0    
+    ##  [9] GenomicFeatures_1.64.0      AnnotationDbi_1.74.0       
+    ## [11] scRNAseq_2.26.0             SingleCellExperiment_1.34.0
+    ## [13] SummarizedExperiment_1.42.0 Biobase_2.72.0             
+    ## [15] GenomicRanges_1.64.0        Seqinfo_1.2.0              
+    ## [17] IRanges_2.46.0              S4Vectors_0.50.1           
+    ## [19] BiocGenerics_0.58.1         generics_0.1.4             
+    ## [21] MatrixGenerics_1.24.0       matrixStats_1.5.0          
+    ## [23] BiocStyle_2.40.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3       jsonlite_2.0.0           magrittr_2.0.4          
-    ##   [4] ggbeeswarm_0.7.3         gypsum_1.7.0             farver_2.1.2            
-    ##   [7] rmarkdown_2.30           fs_1.6.6                 BiocIO_1.21.0           
-    ##  [10] ragg_1.5.0               vctrs_0.7.1              memoise_2.0.1           
-    ##  [13] Rsamtools_2.27.0         RCurl_1.98-1.17          htmltools_0.5.9         
-    ##  [16] S4Arrays_1.11.1          AnnotationHub_4.1.0      curl_7.0.0              
-    ##  [19] BiocNeighbors_2.5.3      xgboost_3.2.0.1          Rhdf5lib_1.33.0         
-    ##  [22] SparseArray_1.11.10      rhdf5_2.55.13            sass_0.4.10             
-    ##  [25] alabaster.base_1.11.2    bslib_0.10.0             htmlwidgets_1.6.4       
-    ##  [28] desc_1.4.3               alabaster.sce_1.11.0     httr2_1.2.2             
-    ##  [31] cachem_1.1.0             GenomicAlignments_1.47.0 igraph_2.2.1            
+    ##   [1] RColorBrewer_1.1-3       jsonlite_2.0.0           magrittr_2.0.5          
+    ##   [4] ggbeeswarm_0.7.3         gypsum_1.8.0             farver_2.1.2            
+    ##   [7] rmarkdown_2.31           fs_2.1.0                 BiocIO_1.22.0           
+    ##  [10] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           
+    ##  [13] Rsamtools_2.28.0         RCurl_1.98-1.18          htmltools_0.5.9         
+    ##  [16] S4Arrays_1.12.0          AnnotationHub_4.2.0      curl_7.1.0              
+    ##  [19] BiocNeighbors_2.6.0      xgboost_3.2.1.1          Rhdf5lib_2.0.0          
+    ##  [22] SparseArray_1.12.2       rhdf5_2.56.0             sass_0.4.10             
+    ##  [25] alabaster.base_1.12.0    bslib_0.11.0             htmlwidgets_1.6.4       
+    ##  [28] desc_1.4.3               alabaster.sce_1.12.0     httr2_1.2.2             
+    ##  [31] cachem_1.1.0             GenomicAlignments_1.48.0 igraph_2.3.2            
     ##  [34] lifecycle_1.0.5          pkgconfig_2.0.3          rsvd_1.0.5              
-    ##  [37] Matrix_1.7-4             R6_2.6.1                 fastmap_1.2.0           
+    ##  [37] Matrix_1.7-5             R6_2.6.1                 fastmap_1.2.0           
     ##  [40] digest_0.6.39            dqrng_0.4.1              irlba_2.3.7             
-    ##  [43] ExperimentHub_3.1.0      textshaping_1.0.4        RSQLite_2.4.6           
-    ##  [46] beachmat_2.27.2          labeling_0.4.3           filelock_1.0.3          
-    ##  [49] httr_1.4.7               abind_1.4-8              compiler_4.6.0          
-    ##  [52] bit64_4.6.0-1            withr_3.0.2              S7_0.2.1                
-    ##  [55] BiocParallel_1.45.0      viridis_0.6.5            DBI_1.2.3               
-    ##  [58] HDF5Array_1.39.0         alabaster.ranges_1.11.0  alabaster.schemas_1.11.0
-    ##  [61] MASS_7.3-65              rappdirs_0.3.4           DelayedArray_0.37.0     
+    ##  [43] ExperimentHub_3.2.0      textshaping_1.0.5        RSQLite_3.53.1          
+    ##  [46] beachmat_2.28.0          labeling_0.4.3           filelock_1.0.3          
+    ##  [49] httr_1.4.8               abind_1.4-8              compiler_4.6.0          
+    ##  [52] bit64_4.8.2              withr_3.0.2              S7_0.2.2                
+    ##  [55] BiocParallel_1.46.0      viridis_0.6.5            DBI_1.3.0               
+    ##  [58] HDF5Array_1.40.0         alabaster.ranges_1.12.0  alabaster.schemas_1.12.0
+    ##  [61] MASS_7.3-65              rappdirs_0.3.4           DelayedArray_0.38.2     
     ##  [64] rjson_0.2.23             tools_4.6.0              vipor_0.4.7             
-    ##  [67] otel_0.2.0               beeswarm_0.4.0           glue_1.8.0              
-    ##  [70] h5mread_1.3.1            restfulr_0.0.16          rhdf5filters_1.23.3     
+    ##  [67] otel_0.2.0               beeswarm_0.4.0           glue_1.8.1              
+    ##  [70] h5mread_1.4.0            restfulr_0.0.16          rhdf5filters_1.24.0     
     ##  [73] grid_4.6.0               Rtsne_0.17               cluster_2.1.8.2         
-    ##  [76] gtable_0.3.6             data.table_1.18.2.1      metapod_1.19.1          
-    ##  [79] BiocSingular_1.27.1      ScaledMatrix_1.19.0      XVector_0.51.0          
-    ##  [82] ggrepel_0.9.6            BiocVersion_3.23.1       pillar_1.11.1           
-    ##  [85] limma_3.67.0             dplyr_1.2.0              BiocFileCache_3.1.0     
-    ##  [88] lattice_0.22-9           rtracklayer_1.71.3       bit_4.6.0               
-    ##  [91] tidyselect_1.2.1         locfit_1.5-9.12          Biostrings_2.79.4       
+    ##  [76] gtable_0.3.6             data.table_1.18.4        metapod_1.20.0          
+    ##  [79] BiocSingular_1.28.0      ScaledMatrix_1.20.0      XVector_0.52.0          
+    ##  [82] ggrepel_0.9.8            BiocVersion_3.23.1       pillar_1.11.1           
+    ##  [85] limma_3.68.4             dplyr_1.2.1              BiocFileCache_3.2.0     
+    ##  [88] lattice_0.22-9           rtracklayer_1.72.0       bit_4.6.0               
+    ##  [91] tidyselect_1.2.1         locfit_1.5-9.12          Biostrings_2.80.1       
     ##  [94] knitr_1.51               gridExtra_2.3            bookdown_0.46           
-    ##  [97] ProtGenerics_1.43.0      edgeR_4.9.2              xfun_0.56               
-    ## [100] statmod_1.5.1            UCSC.utils_1.7.1         lazyeval_0.2.2          
+    ##  [97] ProtGenerics_1.44.0      edgeR_4.10.1             xfun_0.57               
+    ## [100] statmod_1.5.2            UCSC.utils_1.8.0         lazyeval_0.2.3          
     ## [103] yaml_2.3.12              evaluate_1.0.5           codetools_0.2-20        
-    ## [106] cigarillo_1.1.0          tibble_3.3.1             alabaster.matrix_1.11.0 
-    ## [109] BiocManager_1.30.27      cli_3.6.5                systemfonts_1.3.1       
-    ## [112] jquerylib_0.1.4          Rcpp_1.1.1               GenomeInfoDb_1.47.2     
-    ## [115] dbplyr_2.5.1             png_0.1-8                XML_3.99-0.22           
+    ## [106] cigarillo_1.2.0          tibble_3.3.1             alabaster.matrix_1.12.0 
+    ## [109] BiocManager_1.30.27      cli_3.6.6                systemfonts_1.3.2       
+    ## [112] jquerylib_0.1.4          Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0     
+    ## [115] dbplyr_2.5.2             png_0.1-9                XML_3.99-0.23           
     ## [118] parallel_4.6.0           pkgdown_2.2.0            blob_1.3.0              
-    ## [121] bitops_1.0-9             viridisLite_0.4.3        alabaster.se_1.11.0     
-    ## [124] scales_1.4.0             purrr_1.2.1              crayon_1.5.3            
-    ## [127] rlang_1.1.7              KEGGREST_1.51.1
+    ## [121] bitops_1.0-9             viridisLite_0.4.3        alabaster.se_1.12.0     
+    ## [124] scales_1.4.0             purrr_1.2.2              crayon_1.5.3            
+    ## [127] rlang_1.2.0              KEGGREST_1.52.0

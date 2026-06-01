@@ -28,9 +28,10 @@ we will showcase doublet detection using the fast and comprehensive
 
 ### Important notes/updates
 
-- **if you are using xgboost version 3.1 or higher, make sure that you
-  are using scDblFinder version 1.25.4 or later (available e.g. from
-  github). Results might otherwise be suboptimal.**
+- **if you are using xgboost version 3.1 or higher, make sure that your
+  version of scDblFinder is up-to-date, otherwise results might be
+  suboptimal. For Bioc 3.22 users, version \>1.24.7 is correct; for
+  devel/later users, 1.25.4 on is fixed.**
 - **the scDblFinder version (1.20) initially shipped with Bioconductor
   3.20 had a wrong default doublet rate argument. This has been fixed in
   Bioconductor, but you should update your package (\>1.21 is good).**
@@ -45,12 +46,14 @@ we will showcase doublet detection using the fast and comprehensive
 You may install the pakage using:
 
 ``` r
+
 BiocManager::install("scDblFinder")
 ```
 
 Or, to get the very latest version,
 
 ``` r
+
 BiocManager::install("plger/scDblFinder")
 ```
 
@@ -77,6 +80,7 @@ contain any empty drops, but hasn’t been further filtered), you can
 launch the doublet detection with:
 
 ``` r
+
 library(scDblFinder)
 sce <- scDblFinder(sce)
 ```
@@ -110,6 +114,7 @@ such cases, you might also consider multithreading it using the
 `BPPARAM` parameter. For example:
 
 ``` r
+
 library(BiocParallel)
 sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
 table(sce$scDblFinder.class)
