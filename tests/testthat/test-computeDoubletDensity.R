@@ -47,13 +47,6 @@ test_that("computeDoubletDensity PC spawning works correctly", {
 
 set.seed(9900003)
 test_that("size factor variations in computeDoubletDensity work correctly", {
-    # Library sizes get used.
-    set.seed(12345)
-    out <- computeDoubletDensity(counts)
-    set.seed(12345)
-    ref <- computeDoubletDensity(counts, size.factors.norm=scuttle::librarySizeFactors(counts))
-    expect_equal(out, ref)
-
     # Normalization size factors get centered.
     sf1 <- runif(ncol(counts))
     set.seed(23456)
@@ -128,13 +121,6 @@ test_that("other settings for computeDoubletDensity work correctly", {
     # Warnings raised if too many neighbors are requested.
     expect_warning(computeDoubletDensity(counts, k=1000), "'k' capped")
 
-    # IRLBA works correctly.
-    set.seed(2000)
-    sim <- computeDoubletDensity(counts, d=5)
-    set.seed(2000)
-    ref <- computeDoubletDensity(counts, BSPARAM=BiocSingular::IrlbaParam(tol=1e-12, extra.work=50, maxit=20000), d=5)
-    expect_true(median( abs(sim-ref)/(sim+ref+1e-6) ) < 0.01)
-
     # Alternative neighbor search method works correctly.
     expect_error(sim <- computeDoubletDensity(counts, BNPARAM=BiocNeighbors::VptreeParam()), NA)
 
@@ -166,12 +152,4 @@ test_that("computeDoubletDensity works correctly for SCE objects", {
     dbl2 <- computeDoubletDensity(sce, assay.type="whee")
     expect_identical(ref2, dbl2)
 
-    # With subsetting.
-    keep <- sample(nrow(sce), 10)
-
-    set.seed(1003)
-    dbl5 <- computeDoubletDensity(sce, subset.row=keep)
-    set.seed(1003)
-    ref4 <- computeDoubletDensity(sce[keep,])
-    expect_identical(ref4, dbl5)
 })

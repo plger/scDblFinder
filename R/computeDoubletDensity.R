@@ -119,7 +119,7 @@ NULL
         x <- x[subset.row,,drop=FALSE]
     }
     if (is.null(size.factors.norm)) {
-        size.factors.norm <- librarySizeFactors(x, BPPARAM=BPPARAM)
+        size.factors.norm <- scrapper::centerSizeFactors(Matrix::colSums(x))
     }
     if(!all(size.factors.norm>0))
         stop("Some size.factors are not positive. This typically happens ",
