@@ -10,6 +10,10 @@ counts.1 <- matrix(rpois(ngenes*100, mu1), nrow=ngenes)
 counts.2 <- matrix(rpois(ngenes*100, mu2), nrow=ngenes)
 counts.m <- matrix(rpois(ngenes*20, mu1+mu2), nrow=ngenes)
 
+normalizeCounts <- function(counts){
+  scrapper::normalizeCounts(counts, scrapper::centerSizeFactors(colSums(counts)))
+}
+
 counts <- cbind(counts.1, counts.2, counts.m)
 clusters <- rep(1:3, c(ncol(counts.1), ncol(counts.2), ncol(counts.m)))
 
@@ -64,7 +68,7 @@ test_that("findDoubletClusters agrees with a reference implementation", {
     clusters <- rep(1:4, c(ncol(counts.1), ncol(counts.2), ncol(counts.3), ncol(counts.m)))
 
     dbl <- findDoubletClusters(counts, clusters, get.all.pairs=TRUE)
-    ref <- scran::findMarkers(scuttle::normalizeCounts(counts), clusters, full.stats=TRUE)
+    ref <- scran::findMarkers(normalizeCounts(counts), clusters, full.stats=TRUE)
 
     for (x in rownames(dbl)) {
         stats <- ref[[x]]
