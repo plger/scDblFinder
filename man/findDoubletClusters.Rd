@@ -115,13 +115,6 @@ sce <- mockDoubletSCE(c(200,300,200))
 dbl <- findDoubletClusters(counts(sce), sce$cluster)
 dbl
 
-# Narrow this down to clusters with very low 'N':
-library(scuttle)
-isOutlier(dbl$num.de, log=TRUE, type="lower")
-
-# Get help from "lib.size" below 1.
-dbl$lib.size1 < 1 & dbl$lib.size2 < 1
-
 }
 \references{
 Bach K, Pensa S, Grzelak M, Hadfield J, Adams DJ, Marioni JC and Khaled WT (2017).

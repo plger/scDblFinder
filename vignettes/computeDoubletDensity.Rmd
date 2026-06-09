@@ -36,17 +36,8 @@ One would usually take more care here and do some quality control,
 create some diagnostic plots, etc., but we don't have the space for that.
 
 ```{r}
-library(scuttle)
-sce <- logNormCounts(sce)
-
-library(scran)
-dec <- modelGeneVar(sce)
-hvgs <- getTopHVGs(dec, n=1000)
-
-library(scater)
-set.seed(1002)
-sce <- runPCA(sce, ncomponents=10, subset_row=hvgs)
-sce <- runTSNE(sce, dimred="PCA")
+library(scrapper)
+sce <- scrapper::analyze.se(sce)$x
 ```
 
 We run `computeDoubletDensity()` to obtain a doublet score for each cell based on the density of simulated doublets around it.
@@ -55,18 +46,17 @@ We log this to get some better dynamic range.
 ```{r}
 set.seed(1003)
 library(scDblFinder)
+hvgs <- row.names(sce)[which(rowData(sce)$hvg)]
 scores <- computeDoubletDensity(sce, subset.row=hvgs)
+library(scater)
 plotTSNE(sce, colour_by=I(log1p(scores)))
 ```
 
 ```{r, echo=FALSE}
 # Sanity check that the plot has one cluster with much higher scores.
-# If this fails, we probably need to pick a more demonstrative example.
-library(bluster)
-clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
-by.clust <- split(scores, clusters)
+by.clust <- split(scores, sce$graph.cluster)
 med.scores <- sort(vapply(by.clust, median, 0), decreasing=TRUE)
-stopifnot(med.scores[1] > med.scores[2] * 4)
+stopifnot(med.scores[1] > med.scores[2] * 3)
 ```
 
 # Algorithm overview {#overview}

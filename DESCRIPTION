@@ -30,7 +30,6 @@ Imports:
     SummarizedExperiment, 
     scran,
     scater, 
-    scuttle,
     scrapper,
     bluster,
     methods, 

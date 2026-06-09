@@ -96,17 +96,9 @@
 #' dbl <- findDoubletClusters(counts(sce), sce$cluster)
 #' dbl
 #'
-#' # Narrow this down to clusters with very low 'N':
-#' library(scuttle)
-#' isOutlier(dbl$num.de, log=TRUE, type="lower")
-#'
-#' # Get help from "lib.size" below 1.
-#' dbl$lib.size1 < 1 & dbl$lib.size2 < 1
-#'
 #' @name findDoubletClusters
 NULL
 
-#' @importFrom scuttle librarySizeFactors logNormCounts
 #' @importFrom scran findMarkers .logBH
 #' @importFrom BiocGenerics "sizeFactors<-" sizeFactors
 #' @importFrom stats p.adjust median
@@ -119,7 +111,6 @@ NULL
 
     # Computing normalized counts using the library size (looking for compositional differences!)
     sce <- SingleCellExperiment(list(counts=x))
-    sizeFactors(sce) <- librarySizeFactors(x, subset_row=subset.row)
     sce <- logNormCounts(sce)
 
     degs <- findMarkers(sce, clusters, subset.row=subset.row, full.stats=TRUE, ...)

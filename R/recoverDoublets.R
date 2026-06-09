@@ -87,7 +87,6 @@ NULL
 #' @importFrom BiocNeighbors findKNN KmknnParam
 #' @importFrom utils head
 #' @importFrom S4Vectors DataFrame metadata metadata<-
-#' @importFrom scuttle .subset2index
 #' @importFrom BiocParallel SerialParam
 .doublet_recovery <- function(x, doublets, samples,
     k=50, transposed=FALSE, subset.row=NULL, BNPARAM=KmknnParam(), BPPARAM=SerialParam()) 
@@ -117,6 +116,35 @@ NULL
     output <- DataFrame(proportion=P, known=is.doublet, predicted=predicted)
     metadata(output)$intra <- intra.doublets
     output
+}
+
+# taken from scuttle
+.subset2index <- function(subset, target, byrow = TRUE){
+  if (is.factor(subset)) {
+    subset <- as.character(subset)
+  }
+  if (is.na(byrow)) {
+    dummy <- seq_along(target)
+    names(dummy) <- names(target)
+  }
+  else if (byrow) {
+    dummy <- seq_len(nrow(target))
+    names(dummy) <- rownames(target)
+  }
+  else {
+    dummy <- seq_len(ncol(target))
+    names(dummy) <- colnames(target)
+  }
+  if (!is.null(subset)) {
+    subset <- dummy[subset]
+    if (any(is.na(subset))) {
+      stop("invalid subset indices specified")
+    }
+  }
+  else {
+    subset <- dummy
+  }
+  unname(subset)
 }
 
 #' @export

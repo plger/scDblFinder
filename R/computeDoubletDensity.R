@@ -93,7 +93,6 @@
 #' @name computeDoubletDensity
 NULL
 
-#' @importFrom scuttle .bpNotSharedOrUp
 #' @importFrom SingleCellExperiment SingleCellExperiment logcounts
 #' @importFrom BiocParallel SerialParam bpmapply bpstart bpstop
 #' @importFrom Matrix rowMeans
@@ -111,7 +110,7 @@ NULL
     setAutoBPPARAM(BPPARAM)
     on.exit(setAutoBPPARAM(old))
 
-    if (.bpNotSharedOrUp(BPPARAM)){ 
+    if (!bpisup(BPPARAM) && !is(BPPARAM, "MulticoreParam")){ 
         bpstart(BPPARAM)
         on.exit(bpstop(BPPARAM))
     }

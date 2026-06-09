@@ -36,21 +36,10 @@ One would usually take more care here and do some quality control,
 create some diagnostic plots, etc., but we don't have the space for that.
 
 ```{r}
-library(scuttle)
-sce <- logNormCounts(sce)
-
-library(scran)
-dec <- modelGeneVar(sce)
-
+library(scrapper)
+sce <- scrapper::analyze.se(sce)$x
 library(scater)
-set.seed(1000)
-sce <- runPCA(sce, ncomponents=10, subset_row=getTopHVGs(dec, n=1000))
-
-library(bluster)
-clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
-
-sce <- runTSNE(sce, dimred="PCA")
-plotTSNE(sce, colour_by=I(clusters), text_by=I(clusters))
+plotTSNE(sce, colour_by="graph.cluster", text_by="graph.cluster")
 ```
 
 We then run `findDoubletClusters()` to test each cluster against the null hypothesis that it _does_ consist of doublets.
@@ -59,7 +48,7 @@ On the other hand, if `num.de` is low, the cluster's expression profile is consi
 
 ```{r}
 library(scDblFinder)
-tab <- findDoubletClusters(sce, clusters)
+tab <- findDoubletClusters(sce, sce$graph.cluster)
 tab
 ```
 
