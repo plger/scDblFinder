@@ -10,7 +10,6 @@ For a brief overview of the methods, see the [introductory vignette](https://plg
 ### Important notes/updates
 
 - **if you are using xgboost version 3.1 or higher, make sure that your version of scDblFinder is up-to-date, otherwise results might be suboptimal. For Bioc 3.22 users, version >1.24.7 is correct; for devel/later users, 1.25.4 on is fixed.**
-- **the scDblFinder version (1.20) initially shipped with Bioconductor 3.20 had a wrong default doublet rate argument. This has been fixed in Bioconductor, but you should update your package (>1.21 is good).**
 
 <br/><br/>
 
