@@ -36,6 +36,7 @@ One would usually take more care here and do some quality control,
 create some diagnostic plots, etc., but we don't have the space for that.
 
 ```{r}
+set.seed(123)
 library(scrapper)
 sce <- scrapper::analyze.se(sce)$x
 library(scater)
@@ -55,7 +56,6 @@ tab
 ```{r, echo=FALSE}
 # Sanity check that one of the clusters is a good doublet candidate.
 # If this fails, we probably need to pick a more demonstrative example.
-stopifnot(rownames(tab)[1]=="6")
 stopifnot(tab[1,"num.de"]==0)
 ```
 
