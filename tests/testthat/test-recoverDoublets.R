@@ -15,8 +15,8 @@ clusters <- rep(1:3, c(ncol(counts.1), ncol(counts.2), ncol(counts.m)))
 
 library(SingleCellExperiment)
 sce <- SingleCellExperiment(list(counts=counts))
-logcounts(sce) <- scrapper::normalizeCounts(assay(sce),
-                        scrapper::centerSizeFactors(colSums(assay(counts))))
+logcounts(sce) <- scrapper::normalizeCounts(counts,
+                        scrapper::centerSizeFactors(colSums(counts)))
 
 set.seed(99000007)
 test_that("recoverDoublets works as expected", {
