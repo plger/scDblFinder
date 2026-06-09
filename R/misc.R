@@ -111,7 +111,6 @@ getExpectedDoublets <- function(x, dbr=NULL, only.heterotypic=TRUE,
 #' @return A vector of feature (i.e. row) names.
 #' @export
 #'
-#' @importFrom scuttle sumCountsAcrossCells
 #' @importFrom scran findMarkers
 #' @examples
 #' sce <- mockDoubletSCE()
@@ -126,7 +125,7 @@ selFeatures <- function(sce, clusters=NULL, nfeatures=1000, propMarkers=0, FDR.m
                                 decreasing=TRUE)[seq_len(ng)]]
     }else{
       g <- tryCatch({
-        cl.means <- as.matrix(assay(scuttle::sumCountsAcrossCells(counts(sce), clusters)))
+        cl.means <- as.matrix(.sumCountsAcrossCells(counts(sce), clusters))
         g <- unique(as.numeric(t(apply(cl.means, 2, FUN=function(x){
           order(x, decreasing=TRUE)[seq_len(nfeatures)]
         }))))[seq_len(ng)]
@@ -355,8 +354,8 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
       suppressWarnings(mm <- scran::findMarkers(e2, groups=clusters, test.type="binom"))
       g <- unique(unlist(lapply(mm, FUN=function(x) row.names(x)[seq_len(nMarkers)])))
     }
-    e2 <- scuttle::sumCountsAcrossCells(e2[g,], ids=clusters)
-    clusters <- as.matrix(assay(e2))
+    e2 <- .sumCountsAcrossCells(e2[g,], ids=clusters)
+    clusters <- as.matrix(e2)
   }else{
     if(ncol(clusters)>500)
       warning("You're using a very large `clustCor` matrix, are you sure that the",
@@ -415,7 +414,7 @@ propHomotypic <- function(clusters){
   if(is.null(doNorm)) doNorm <- ncol(e)<=50000
   if(doNorm){
     tryCatch({
-      e <- normalizeCounts(e)
+      e <- logNormCounts(e)
     }, error=function(er){
       warning("Error in calculating norm factors:", er)
     })
@@ -579,7 +578,7 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
                     default=.defaultProcessing(e, dims=dims),
                     rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
                     rawFeatures=t(e),
-                    normFeatures=t(normalizeCounts(e)),
+                    normFeatures=t(logNormCounts(e)),
                     stop("Unknown processing function.")
     )
   }else{
@@ -622,4 +621,26 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
   nc <- seq_len(min(5,ncol(x)))
   colnames(x)[nc] <- c("seqname", "start", "end", "name", "score")[nc]
   return(makeGRangesFromDataFrame(x, keep.extra.columns=TRUE))
+}
+
+# transition from old scuttle-based functions to scrapper...
+logNormCounts <- function(x, sf=NULL){
+  if(is(x, "SingleCellExperiment")){
+    if(is.null(sf)) sf <- sizeFactors(x)
+    if(is.null(sf)){
+      sizeFactors(x) <- sf <- centerSizeFactors(Matrix::colSums(counts(x)))
+    }
+    logcounts(x) <- logNormCounts(counts(x), sf)
+    return(x)
+  }
+  if(is.null(sf)) sf <- centerSizeFactors(Matrix::colSums(counts(x)))
+  normalizeCounts(x, sf)
+}
+
+# transition from old scuttle-based functions to scrapper...
+.sumCountsAcrossCells <- function(x, f){
+  if(inherits(x, "SingleCellExperiment")) x <- assay(x)
+  ag <- aggregateAcrossCells(x, list(f), compute.sum=TRUE,
+                             compute.detected=FALSE, compute.median=FALSE)
+  ag$sums
 }

@@ -180,7 +180,8 @@
 #'
 #' @import SingleCellExperiment BiocParallel
 #' @importFrom SummarizedExperiment colData<- assayNames
-#' @importFrom scuttle normalizeCounts
+#' @importFrom scrapper centerSizeFactors normalizeCounts aggregateAcrossCells
+#' @importFrom scrapper aggregateAcrossGenes
 #' @importFrom scater runPCA
 #' @importFrom methods is
 #' @importFrom DelayedArray as.matrix
@@ -466,7 +467,7 @@ scDblFinder <- function(
                   rawPCA=.defaultProcessing(e, dims=dims, doNorm=FALSE),
                   rawFeatures=t(e),
                   atac=.atacProcessing(e, dims=dims),
-                  normFeatures=t(normalizeCounts(e)),
+                  normFeatures=t(logNormCounts(e)),
                   stop("Unknown processing function.")
     )
   }else{

@@ -93,7 +93,7 @@
 #' @name computeDoubletDensity
 NULL
 
-#' @importFrom scuttle librarySizeFactors normalizeCounts .bpNotSharedOrUp
+#' @importFrom scuttle .bpNotSharedOrUp
 #' @importFrom SingleCellExperiment SingleCellExperiment logcounts
 #' @importFrom BiocParallel SerialParam bpmapply bpstart bpstop
 #' @importFrom Matrix rowMeans
@@ -130,15 +130,16 @@ NULL
     # Manually controlling the size factor centering here to ensure the final counts are on the same scale.
     size.factors.norm <- size.factors.norm/mean(size.factors.norm)
     if (!is.null(size.factors.content)) {
-        x <- normalizeCounts(x, size.factors.content, log=FALSE, center_size_factors=FALSE)
+        x <- scrapper::normalizeCounts(x, size.factors.content, log=FALSE)
         size.factors.norm <- size.factors.norm/size.factors.content
     }
-    y <- normalizeCounts(x, size.factors.norm, center_size_factors=FALSE)
+    y <- scrapper::normalizeCounts(x, size.factors.norm)
 
     # Running the PCA.
     pc.out <- runPCA(t(y), center=TRUE, BSPARAM=BSPARAM, rank=dims, BPPARAM=BPPARAM)
     pcs <- as.matrix(pc.out$x)
-    sim.pcs <- .spawn_doublet_pcs(x, size.factors.norm, V=pc.out$rotation, centers=rowMeans(y), niters=niters, block=block)
+    sim.pcs <- .spawn_doublet_pcs(x, size.factors.norm, V=pc.out$rotation, 
+                                  centers=rowMeans(y), niters=niters, block=block)
 
     # Computing densities, using a distance computed from the kth nearest neighbor.
     self.dist <- findDistance(pcs, k=k, BNPARAM=BNPARAM, BPPARAM=BPPARAM)
@@ -156,7 +157,7 @@ NULL
 }
 
 #' @importFrom Matrix crossprod
-#' @importFrom scuttle normalizeCounts
+#' @importFrom scrapper normalizeCounts
 #' @importFrom DelayedArray sweep
 .spawn_doublet_pcs <- function(x, size.factors, V, centers, niters=10000L, block=10000L) {
     collected <- list()
@@ -173,7 +174,7 @@ NULL
         # Do not center, otherwise the simulated doublets will always have higher normalized counts
         # than actual doublets (as the latter will have been normalized to the level of singlets).
         sim.sf <- size.factors[left] + size.factors[right]
-        sim.y <- normalizeCounts(sim.x, sim.sf, center_size_factors=FALSE)
+        sim.y <- scrapper::normalizeCounts(sim.x, sim.sf)
 
         # Projecting onto the PC space of the original data.
         sim.pcs <- crossprod(sim.y, V)

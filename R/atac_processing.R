@@ -54,7 +54,6 @@ TFIDF <- function(x, sf=10000){
 #' `SingleCellExperiment`, the feature clusters will also be stored in 
 #' `metadata(x)$featureGroups`
 #'
-#' @importFrom scuttle logNormCounts
 #' @importFrom BiocSingular runPCA IrlbaParam
 #' @export
 aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
@@ -88,17 +87,16 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
 
   if(twoPass & use.subset<ncol(xo)){
     message("Second iteration...")
-    x <- t(normalizeCounts(scuttle::sumCountsAcrossFeatures(xo, fc)))
+    x <- t(logNormCounts(.agAcrossFeatures(xo, fc)))
     cellclust <- kmeans(scale(x), min(1000,ceiling(use.subset/2)), iter.max=100, 
                         nstart=num_init)$cluster
-    x <- sumCountsAcrossCells(xo, cellclust)
-    if(is(x,"SummarizedExperiment")) x <- assay(x)
+    x <- .sumCountsAcrossCells(xo, cellclust)
     x <- norm.fn(x)
     fc <- .clusterFeaturesStep(x, k=k, dims.use=seq_len(max(dims.use)),
                                use.mbk=use.mbk, num_init=num_init, ...)
   }
   fg <- setNames(fc, row.names(xo))
-  x <- scuttle::sumCountsAcrossFeatures(xo, fc)
+  x <- .agAcrossFeatures(xo, fc)
   row.names(x) <- paste0("feat",seq_len(nrow(x)))
   if(is(xo,"SingleCellExperiment")){
     x <- SingleCellExperiment(list(counts=x), colData=colData(xo),
@@ -106,6 +104,11 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
     metadata(x)$featureGroups <- fg
   }
   x
+}
+
+#' @importFrom scrapper aggregateAcrossGenes
+.agAcrossFeatures <- function(m, fc){
+  t(as.data.frame(aggregateAcrossGenes(m, split(seq_len(nrow(m)), fc))))
 }
 
 # used by aggregateFeatures
