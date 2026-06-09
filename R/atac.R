@@ -138,6 +138,8 @@ clamulet <- function(x, artificialDoublets=NULL, iter=2, k=NULL, minCount=0.001,
   if(verbose) message(format(Sys.time(), "%X"), " - Aggregating features")
   counts <- aggregateFeatures(counts, seq_len(min(ncol(counts)-1,10)),
                               k=min(nrow(counts), nfeatures))
+  if(is.null(colnames(counts)))
+    colnames(counts) <- paste0(real, seq_len(ncol(counts)))
   
   if(verbose) message(format(Sys.time(), "%X"),
                       " - Computing features for artificial doublets")
