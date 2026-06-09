@@ -354,7 +354,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
       suppressWarnings(mm <- scran::findMarkers(e2, groups=clusters, test.type="binom"))
       g <- unique(unlist(lapply(mm, FUN=function(x) row.names(x)[seq_len(nMarkers)])))
     }
-    e2 <- .sumCountsAcrossCells(e2[g,], ids=clusters)
+    e2 <- .sumCountsAcrossCells(e2[g,], clusters)
     clusters <- as.matrix(e2)
   }else{
     if(ncol(clusters)>500)
