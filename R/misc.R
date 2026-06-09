@@ -633,7 +633,7 @@ logNormCounts <- function(x, sf=NULL){
     logcounts(x) <- logNormCounts(counts(x), sf)
     return(x)
   }
-  if(is.null(sf)) sf <- centerSizeFactors(Matrix::colSums(counts(x)))
+  if(is.null(sf)) sf <- centerSizeFactors(Matrix::colSums(x))
   normalizeCounts(x, sf)
 }
 
