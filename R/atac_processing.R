@@ -108,6 +108,8 @@ aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
 
 #' @importFrom scrapper aggregateAcrossGenes
 .agAcrossFeatures <- function(m, fc){
+  if(inherits(m, "SingleCellExperiment")) m <- counts(m)
+  if(inherits(m, "SummarizedExperiment")) m <- assay(m)
   t(as.data.frame(aggregateAcrossGenes(m, split(seq_len(nrow(m)), fc))))
 }
 
