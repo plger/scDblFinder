@@ -112,9 +112,9 @@ NULL
     # Computing normalized counts using the library size (looking for compositional differences!)
     sce <- SingleCellExperiment(list(counts=x))
     if(is.null(subset.row)){
-      sf <- Matrix:colSums(x)
+      sf <- Matrix::colSums(x)
     }else{
-      sf <- Matrix:colSums(x[subset.row,])
+      sf <- Matrix:LcolSums(x[subset.row,])
     }
     sce <- logNormCounts(sce, centerSizeFactors(sf))
 
