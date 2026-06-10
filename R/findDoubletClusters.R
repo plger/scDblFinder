@@ -111,7 +111,12 @@ NULL
 
     # Computing normalized counts using the library size (looking for compositional differences!)
     sce <- SingleCellExperiment(list(counts=x))
-    sce <- logNormCounts(sce)
+    if(is.null(susbet.row)){
+      sf <- Matrix:colSums(x)
+    }else{
+      sf <- Matrix:colSums(x[subset.row,])
+    }
+    sce <- logNormCounts(sce, centerSizeFactors(sf))
 
     degs <- findMarkers(sce, clusters, subset.row=subset.row, full.stats=TRUE, ...)
     med.lib.size <- vapply(split(sizeFactors(sce), clusters), FUN=median, FUN.VALUE=0)

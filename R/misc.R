@@ -626,7 +626,11 @@ directDblClassification <- function(sce, dbr=NULL, processing="default", iter=2,
 # transition from old scuttle-based functions to scrapper...
 logNormCounts <- function(x, sf=NULL){
   if(is(x, "SingleCellExperiment")){
-    if(is.null(sf)) sf <- sizeFactors(x)
+    if(is.null(sf)){
+      sf <- sizeFactors(x)
+    }else{
+      sizeFactors(x) <- sf
+    }
     if(is.null(sf)){
       sizeFactors(x) <- sf <- centerSizeFactors(Matrix::colSums(counts(x)))
     }
