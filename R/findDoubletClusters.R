@@ -114,7 +114,7 @@ NULL
     if(is.null(subset.row)){
       sf <- Matrix::colSums(x)
     }else{
-      sf <- Matrix:LcolSums(x[subset.row,])
+      sf <- Matrix::colSums(x[subset.row,])
     }
     sce <- logNormCounts(sce, centerSizeFactors(sf))
 
