@@ -30,16 +30,16 @@ Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellEx
 
 \item{...}{For the generic, additional arguments to pass to specific methods.
 
-For the ANY method, additional arguments to pass to \code{\link{findMarkers}}.
-
 For the SummarizedExperiment method, additional arguments to pass to the ANY method.
 
-For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.}
+For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.
+
+For the ANY method, these arguments are ignored.}
 
 \item{clusters}{A vector of length equal to \code{ncol(x)}, containing cluster identities for all cells.
 If \code{x} is a SingleCellExperiment, this is taken from \code{\link{colLabels}(x)} by default.}
 
-\item{subset.row}{See \code{?"\link{scran-gene-selection}"}.}
+\item{subset.row}{Integer, logical or character vector specifying the subset of rows of \code{x} to use.}
 
 \item{threshold}{A numeric scalar specifying the FDR threshold with which to identify significant genes.}
 
@@ -120,9 +120,6 @@ dbl
 Bach K, Pensa S, Grzelak M, Hadfield J, Adams DJ, Marioni JC and Khaled WT (2017).
 Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA sequencing.
 \emph{Nat Commun.} 8, 1:2128.
-}
-\seealso{
-\code{\link{findMarkers}}, to detect DE genes between clusters.
 }
 \author{
 Aaron Lun
