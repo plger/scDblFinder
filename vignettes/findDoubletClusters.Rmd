@@ -107,7 +107,6 @@ For each pair of other clusters $i'_1$ and $i'_2$, we identify genes that change
 The presence of such genes violates the intermediacy expected of a doublet cluster and provides evidence that $j'$ is not a doublet of $i'_1$ and $i'_2$.
 
 Significant genes are identified by an intersection-union test on the $p$-values from the pairwise comparisons between $j'$ and $i'_1$ or $i'_2$. 
-(Specifically, $t$-tests are used via the `findMarkers()` function from `r Biocpkg("scran")`.)
 The $p$-value for a gene is set to unity when the signs of the log-fold changes are not the same between comparisons.
 Multiple correction testing is applied using the Benjamini-Hochberg method, and the number of genes detected at a specified false discovery rate (usually 5\%) is counted.
 The pair $(i'_1, i'_2)$ with the fewest detected genes are considered as the putative parents of $j'$.
