@@ -9,7 +9,8 @@ selFeatures(
   clusters = NULL,
   nfeatures = 1000,
   propMarkers = 0,
-  FDR.max = 0.05
+  auc.min = 0.75,
+  FDR.max = NULL
 )
 }
 \arguments{
@@ -25,8 +26,10 @@ labels for each cell.}
 \item{propMarkers}{The proportion of features to select from markers (rather
 than on the basis of high expression). Ignored if `clusters` isn't given.}
 
-\item{FDR.max}{The maximum marker binom FDR to be included in the selection.
-(see \code{\link[scran]{findMarkers}}).}
+\item{auc.min}{Minimum AUC to consider for marters (this will be the minimum
+of the mean of AUC min, max, median and mean).}
+
+\item{FDR.max}{Deprecated. Use 'auc.min' instead.}
 }
 \value{
 A vector of feature (i.e. row) names.

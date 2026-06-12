@@ -26,7 +26,6 @@
 #' graph of (meta-)cells and the corresponding cell indexes.
 #'
 #' @importFrom igraph cluster_louvain membership
-#' @importFrom scran buildKNNGraph
 #' @importFrom stats kmeans
 #'
 #' @examples
