@@ -9,15 +9,15 @@
 #' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} object containing such a matrix.
 #' @param clusters A vector of length equal to \code{ncol(x)}, containing cluster identities for all cells.
 #' If \code{x} is a SingleCellExperiment, this is taken from \code{\link{colLabels}(x)} by default.
-#' @param subset.row See \code{?"\link{scran-gene-selection}"}.
 #' @param threshold A numeric scalar specifying the FDR threshold with which to identify significant genes.
+#' @param subset.row Integer, logical or character vector specifying the subset of rows of \code{x} to use. 
 #' @param ... For the generic, additional arguments to pass to specific methods.
-#'
-#' For the ANY method, additional arguments to pass to \code{\link{findMarkers}}.
 #'
 #' For the SummarizedExperiment method, additional arguments to pass to the ANY method.
 #'
 #' For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.
+#'
+#' For the ANY method, these arguments are ignored.
 #' @param assay.type A string specifying which assay values to use, e.g., \code{"counts"} or \code{"logcounts"}.
 #' @param get.all.pairs Logical scalar indicating whether statistics for all possible source pairings should be returned.
 #'
@@ -84,9 +84,6 @@
 #' Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA sequencing.
 #' \emph{Nat Commun.} 8, 1:2128.
 #'
-#' @seealso
-#' \code{\link{findMarkers}}, to detect DE genes between clusters.
-#'
 #' @examples
 #' # Mocking up an example.
 #' library(SingleCellExperiment)
@@ -99,7 +96,6 @@
 #' @name findDoubletClusters
 NULL
 
-#' @importFrom scran findMarkers .logBH
 #' @importFrom BiocGenerics "sizeFactors<-" sizeFactors
 #' @importFrom stats p.adjust median
 #' @importFrom methods as
@@ -109,17 +105,34 @@ NULL
         stop("need at least three clusters to detect doublet clusters")
     }
 
-    # Computing normalized counts using the library size (looking for compositional differences!)
-    sce <- SingleCellExperiment(list(counts=x))
-    if(is.null(subset.row)){
-      sf <- Matrix::colSums(x)
-    }else{
-      sf <- Matrix::colSums(x[subset.row,])
+    # Just ignoring the extra arguments that used to be passed along to scran::findMarkers.
+    extra.args <- list(...)
+    if (length(extra.args) > 0L) {
+        warning("ignoring unused arguments ", paste(sprintf("'%s'", names(extra.args)), collapse=", "))
     }
-    sce <- logNormCounts(sce, centerSizeFactors(sf))
 
-    degs <- findMarkers(sce, clusters, subset.row=subset.row, full.stats=TRUE, ...)
-    med.lib.size <- vapply(split(sizeFactors(sce), clusters), FUN=median, FUN.VALUE=0)
+    # Handling a non-NULL subset.row.
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+    gene.names <- rownames(x)
+    if (is.null(gene.names)) {
+        if (is.null(subset.row)) {
+            gene.names <- seq_len(nrow(x))
+        } else if (is.logical(subset.row)) {
+            gene.names <- which(subset.row)
+        } else {
+            gene.names <- subset.row
+        }
+    }
+
+    # Computing normalized counts using the library size (looking for compositional differences!)
+    sf <- Matrix::colSums(x)
+    sf <- scrapper::centerSizeFactors(sf)
+    x <- scrapper::normalizeCounts(x, size.factors = sf)
+
+    degs <- .pairwise_ttests(x, groups = clusters, num.threads = 1) 
+    med.lib.size <- vapply(split(sf, clusters), FUN=median, FUN.VALUE=0)
     n.cluster <- table(clusters)/length(clusters)
 
     # Setting up the output.
@@ -138,9 +151,9 @@ NULL
         idx <- 1L
 
         for (i1 in seq_along(remnants)) {
-            stats1 <- ref.stats[[paste0("stats.", remnants[i1])]]
+            stats1 <- ref.stats[[remnants[i1]]]
             for (i2 in seq_len(i1-1L)) {
-                stats2 <- ref.stats[[paste0("stats.", remnants[i2])]]
+                stats2 <- ref.stats[[remnants[i2]]]
 
                 # Obtaining the IUT and setting opposing log-fold changes to 1.
                 max.log.p <- pmax(stats1$log.p.value, stats2$log.p.value)
@@ -164,13 +177,16 @@ NULL
         parent1 <- remnants[all.parent1]
         parent2 <- remnants[all.parent2]
 
-        stats <- DataFrame(source1=parent1, source2=parent2,
-            num.de=all.N,
-            median.de=rep(0, length(all.N)), # placeholder, see below.
-            best=rownames(ref.stats)[all.gene],
-            p.value=all.p,
-            lib.size1=unname(med.lib.size[parent1]/med.lib.size[ref]),
-            lib.size2=unname(med.lib.size[parent2]/med.lib.size[ref]))
+        stats <- DataFrame(
+            source1 = parent1,
+            source2 = parent2,
+            num.de = all.N,
+            median.de = rep(0, length(all.N)), # placeholder, see below.
+            best = gene.names[all.gene],
+            p.value = all.p,
+            lib.size1 = unname(med.lib.size[parent1]/med.lib.size[ref]),
+            lib.size2 = unname(med.lib.size[parent2]/med.lib.size[ref])
+        )
 
         o <- order(all.N, -all.p)
         top <- cbind(stats[o[1],], prop=n.cluster[[ref]])
@@ -191,6 +207,62 @@ NULL
         out$all.pairs <- as(collected.all, "SimpleList")
     }
     out[order(out$num.de),]
+}
+
+.logBH <- function(log.p.val) {
+    o <- order(log.p.val)
+    repval <- log.p.val[o] + log(length(o)/seq_along(o))
+    repval <- rev(cummin(rev(repval)))
+    repval[o] <- repval
+    repval
+}
+
+.pairwise_ttests <- function(mat, groups, num.threads = 1) {
+    stats <- scrapper::modelGeneVariances(
+        mat,
+        block = groups,
+        block.average.policy = "none",
+        fit.trend = FALSE,
+        num.threads = num.threads
+    )$per.block
+
+    group.sizes <- table(groups)
+    output.p <- list()
+    all.groups <- names(stats)
+
+    for (g1 in all.groups) {
+        left.mean <- stats[[g1]]$means
+        left.var <- stats[[g1]]$variances
+        left.n <- group.sizes[[g1]] 
+        left.df <- max(0L, left.n - 1L)
+
+        all.p <- list()
+        for (g2 in all.groups) {
+            if (g1 == g2) {
+                next
+            }
+
+            right.mean <- stats[[g2]]$means
+            right.var <- stats[[g2]]$variances
+            right.n <- group.sizes[[g2]]
+            right.df <- max(0L, right.n - 1L)
+
+            # Perform Welch's t-test here.
+            left.err <- left.var / left.n
+            right.err <- right.var / right.n
+            cur.err <- left.err + right.err
+            cur.df <- cur.err^2 / (left.err^2 / left.df + right.err^2 / right.df)
+
+            cur.lfc <- left.mean - right.mean
+            cur.t <- cur.lfc / sqrt(cur.err)
+            log.p <- pt(cur.t, df = cur.df, lower.tail = FALSE, log.p = TRUE)
+            all.p[[g2]] <- data.frame(logFC = cur.lfc, log.p.value = log.p)
+        }
+
+        output.p[[g1]] <- all.p
+    }
+
+    output.p
 }
 
 ##############################
