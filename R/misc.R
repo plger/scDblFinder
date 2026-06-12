@@ -353,7 +353,7 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
   }else{
     targetPerCluster <- nper
   }
-  mm <- lapply(mm, \(x){
+  mm <- lapply(mm, function(x){
     x <- rowMeans(as.matrix(x))[,1:4]
     x <- x[order(-x)]
     if(!is.null(auc.min)) x <- x[x>=auc.min]
