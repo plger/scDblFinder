@@ -1,5 +1,6 @@
-Changes in version 1.26.3 (2026-06-09)
-+ Updated most functions to get rid of deprecated warnings due to the great-scrapper-deprecation
+Changes in version 1.26.4 (2026-06-11)
++ Fixed deprecation warnings -> moved to scrapper
++ scDblFinder results when using propMarkers>0 will not be identical.
 
 Changes in version 1.26.1 (2026-05-26)
 + fixed xgboost default arg change that was causing using all threads
