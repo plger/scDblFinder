@@ -9,7 +9,7 @@ i.e., their profiles lie between two other &amp;#8220;source&amp;#8221; clusters
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,14 +76,15 @@ i.e., their profiles lie between two other “source” clusters.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A numeric matrix-like object of count values,
 where each column corresponds to a cell and each row corresponds to an endogenous gene.</p>
-<p>Alternatively, a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a> or <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object containing such a matrix.</p></dd>
+<p>Alternatively, a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a> or
+<a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object containing such a matrix.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>For the generic, additional arguments to pass to specific methods.</p>
-<p>For the ANY method, additional arguments to pass to <code>findMarkers</code>.</p>
 <p>For the SummarizedExperiment method, additional arguments to pass to the ANY method.</p>
-<p>For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.</p></dd>
+<p>For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.</p>
+<p>For the ANY method, these arguments are ignored.</p></dd>
 
 
 <dt id="arg-clusters">clusters<a class="anchor" aria-label="anchor" href="#arg-clusters"></a></dt>
@@ -92,7 +93,7 @@ If <code>x</code> is a SingleCellExperiment, this is taken from <code><a href="h
 
 
 <dt id="arg-subset-row">subset.row<a class="anchor" aria-label="anchor" href="#arg-subset-row"></a></dt>
-<dd><p>See <code>?"scran-gene-selection"</code>.</p></dd>
+<dd><p>Integer, logical or character vector specifying the subset of rows of <code>x</code> to use.</p></dd>
 
 
 <dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
@@ -170,7 +171,7 @@ This can be helpful for diagnostics to identify relationships between specific c
 Technically, it could be treated as the Simes combined p-value against the doublet hypothesis for the query cluster.
 However, this does not account for the multiple testing across all pairs of clusters for each chosen cluster,
 especially as we are chosing the pair that is most concordant with the doublet null hypothesis.</p>
-<p>We use library size normalization (via <code><a href="https://rdrr.io/pkg/scuttle/man/librarySizeFactors.html" class="external-link">librarySizeFactors</a></code>) even if existing size factors are present.
+<p>We use library size normalization even if existing size factors are present.
 This is because intermediate expression of the doublet cluster is not guaranteed for arbitrary size factors.
 For example, expression in the doublet cluster will be higher than that in the source clusters if normalization was performed with spike-in size factors.</p>
     </div>
@@ -181,10 +182,6 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
 <em>Nat Commun.</em> 8, 1:2128.</p>
     </div>
     <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code>findMarkers</code>, to detect DE genes between clusters.</p></div>
-    </div>
-    <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
     <p>Aaron Lun</p>
     </div>
@@ -192,51 +189,23 @@ Differentiation dynamics of mammary epithelial cells revealed by single-cell RNA
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Mocking up an example.</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/drisso/SingleCellExperiment" class="external-link">SingleCellExperiment</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDoubletSCE.html">mockDoubletSCE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>,<span class="fl">300</span>,<span class="fl">200</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Compute doublet-ness of each cluster:</span></span></span>
 <span class="r-in"><span><span class="va">dbl</span> <span class="op">&lt;-</span> <span class="fu">findDoubletClusters</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="va">sce</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'librarySizeFactors' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::centerSizeFactors' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'normalizeCounts' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::normalizeCounts' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'findMarkers' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::scoreMarkers.se' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'pairwiseTTests' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'combineMarkers' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::summarizeEffects' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
 <span class="r-in"><span><span class="va">dbl</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 3 rows and 9 columns</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              source1     source2    num.de median.de        best      p.value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;character&gt;    &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1        93        93     gene181 1.25899e-141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        94        94     gene149 1.51477e-104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2       103       103     gene199 2.20647e-156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2    cluster3    cluster1        50        50      gene71 2.28796e-106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3    cluster2    cluster1        50        50     gene127  9.72063e-99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1    cluster3    cluster2        56        56     gene128 6.05550e-109</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          lib.size1 lib.size2      prop</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3  0.908730  1.007937  0.268817</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2  1.100437  1.109170  0.423387</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1  0.992126  0.901575  0.307796</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Narrow this down to clusters with very low 'N':</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/isOutlier.html" class="external-link">isOutlier</a></span><span class="op">(</span><span class="va">dbl</span><span class="op">$</span><span class="va">num.de</span>, log<span class="op">=</span><span class="cn">TRUE</span>, type<span class="op">=</span><span class="st">"lower"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE FALSE FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "outlier.filter" "logical"       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"thresholds")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    lower   higher </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 89.63306      Inf </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Get help from "lib.size" below 1.</span></span></span>
-<span class="r-in"><span><span class="va">dbl</span><span class="op">$</span><span class="va">lib.size1</span> <span class="op">&lt;</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">dbl</span><span class="op">$</span><span class="va">lib.size2</span> <span class="op">&lt;</span> <span class="fl">1</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE FALSE  TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster2  0.961224  0.951020  0.416890</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster3  1.040340  0.989384  0.268097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cluster1  1.010730  1.051502  0.315013</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

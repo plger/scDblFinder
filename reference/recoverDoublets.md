@@ -39,10 +39,8 @@ recoverDoublets(x, ..., use.dimred = NULL)
   [SummarizedExperiment](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
   or
   [SingleCellExperiment](https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html)
-  containing (i) a log-expression matrix in the
-  [`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
-  as specified by `assay.type`, or (ii) a matrix of reduced dimensions
-  in the
+  containing (i) a log-expression matrix in the `assays` as specified by
+  `assay.type`, or (ii) a matrix of reduced dimensions in the
   [`reducedDims`](https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html)
   as specified by `use.dimred`.
 
@@ -146,8 +144,11 @@ next-closest cluster.
 
 ## See also
 
-`doubletCells` and `doubletCluster`, for alternative methods of doublet
-detection when no prior doublet information is available.
+[`scDblFinder`](https://plger.github.io/scDblFinder/reference/scDblFinder.md)
+and
+[`findDoubletClusters`](https://plger.github.io/scDblFinder/reference/findDoubletClusters.md),
+for alternative methods of doublet detection when no prior doublet
+information is available.
 
 `hashedDrops` from the DropletUtils package, to identify doublets from
 cell hashing experiments.
@@ -173,13 +174,7 @@ counts.1 <- matrix(rpois(ngenes*100, mu1), nrow=ngenes) # Pure type 1
 counts.2 <- matrix(rpois(ngenes*100, mu2), nrow=ngenes) # Pure type 2
 counts.m <- matrix(rpois(ngenes*20, mu1+mu2), nrow=ngenes) # Doublets (1 & 2)
 all.counts <- cbind(counts.1, counts.2, counts.m)
-lcounts <- scuttle::normalizeCounts(all.counts)
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
+lcounts <- scrapper::normalizeCounts(all.counts, colSums(all.counts))
 
 # Pretending that half of the doublets are known. Also pretending that 
 # the experiment involved two samples of equal size.
@@ -197,7 +192,7 @@ out
 #> ...        ...       ...       ...
 #> 216        0.5     FALSE      TRUE
 #> 217        0.5     FALSE      TRUE
-#> 218        0.4     FALSE      TRUE
-#> 219        0.3     FALSE      TRUE
-#> 220        0.4     FALSE      TRUE
+#> 218        0.5     FALSE      TRUE
+#> 219        0.5     FALSE      TRUE
+#> 220        0.5     FALSE      TRUE
 ```

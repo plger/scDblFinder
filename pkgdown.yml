@@ -8,7 +8,7 @@ articles:
   recoverDoublets: recoverDoublets.html
   scATAC: scATAC.html
   scDblFinder: scDblFinder.html
-last_built: 2026-06-01T21:08Z
+last_built: 2026-06-13T14:48Z
 urls:
   reference: https://plger.github.io/scDblFinder/reference
   article: https://plger.github.io/scDblFinder/articles

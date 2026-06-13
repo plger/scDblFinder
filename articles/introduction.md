@@ -19,7 +19,7 @@ a more general introduction to the topic of doublets, refer to the [OCSA
 book](https://osca.bioconductor.org/doublet-detection.html).
 
 All methods require as an input either a matrix of counts or a
-*[SingleCellExperiment](https://bioconductor.org/packages/3.23/SingleCellExperiment)*
+*[SingleCellExperiment](https://bioconductor.org/packages/3.24/SingleCellExperiment)*
 containing count data. With the exception of
 [findDoubletClusters](https://plger.github.io/scDblFinder/articles/findDoubletClusters.md),
 which operates at the level of clusters (and consequently requires
@@ -41,8 +41,7 @@ purposes are also the most critical ones.
 
 ### computeDoubletDensity
 
-The `computeDoubletDensity` method (formerly
-[`scran::doubletCells`](https://rdrr.io/pkg/scran/man/defunct.html))
+The `computeDoubletDensity` method (formerly `scran::doubletCells`)
 generates random artificial doublets from the real cells, and tries to
 identify cells whose neighborhood has a high local density of articial
 doublets. See
@@ -140,11 +139,11 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] BiocStyle_2.40.0
+    ## [1] BiocStyle_2.41.0
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           
-    ##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.57          
+    ##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.58          
     ##  [7] cachem_1.1.0        knitr_1.51          htmltools_0.5.9    
     ## [10] rmarkdown_2.31      lifecycle_1.0.5     cli_3.6.6          
     ## [13] sass_0.4.10         pkgdown_2.2.0       textshaping_1.0.5  

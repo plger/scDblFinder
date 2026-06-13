@@ -33,7 +33,7 @@ BiocManager::install("plger/scDblFinder")
 ### Usage
 
 The input of `scDblFinder` is an object `sce` of class
-*[SingleCellExperiment](https://bioconductor.org/packages/3.23/SingleCellExperiment)*
+*[SingleCellExperiment](https://bioconductor.org/packages/3.24/SingleCellExperiment)*
 (empty drops having already been removed) containing at least the counts
 (assay ‘counts’). Alternatively, a simple count matrix can also be
 provided.
@@ -59,15 +59,15 @@ sce <- scDblFinder(sce, dbr=0.1)
 
     ## Training model...
 
-    ## iter=0, 38 cells excluded from training.
+    ## iter=0, 36 cells excluded from training.
 
-    ## iter=1, 26 cells excluded from training.
+    ## iter=1, 25 cells excluded from training.
 
-    ## iter=2, 26 cells excluded from training.
+    ## iter=2, 27 cells excluded from training.
 
-    ## Threshold found:0.615
+    ## Threshold found:0.382
 
-    ## 25 (4.8%) doublets called
+    ## 28 (5.3%) doublets called
 
 For 10x data, it is usually safe to leave the `dbr` empty, and it will
 be automatically estimated. (If using a chip other than the standard
@@ -88,7 +88,7 @@ table(truth=sce$type, call=sce$scDblFinder.class)
 
     ##          call
     ## truth     singlet doublet
-    ##   singlet     499       1
+    ##   singlet     496       4
     ##   doublet       0      24
 
 Since most of the time the truth is not known, a good, simple diagnostic
@@ -120,14 +120,6 @@ sce <- scDblFinder(sce, clusters="cluster")
 
     ## Dimensional reduction
 
-    ## Warning in .local(x, ...): 'normalizeCounts' is deprecated.
-    ## Use 'scrapper::normalizeCounts' instead.
-    ## See help("Deprecated")
-
-    ## Warning in .local(x, ...): 'librarySizeFactors' is deprecated.
-    ## Use 'scrapper::centerSizeFactors' instead.
-    ## See help("Deprecated")
-
     ## Evaluating kNN...
 
     ## Training model...
@@ -138,7 +130,7 @@ sce <- scDblFinder(sce, clusters="cluster")
 
     ## iter=2, 24 cells excluded from training.
 
-    ## Threshold found:0.944
+    ## Threshold found:0.998
 
     ## 24 (4.6%) doublets called
 
@@ -270,7 +262,7 @@ kNN-derived properties along with a few additional features
 (e.g. library size, number of non-zero features, and an estimate of the
 difficultly of detecting artificial doublets in the cell’s neighborhood,
 a variant of the `cxds` score from the
-*[scds](https://bioconductor.org/packages/3.23/scds/vignettes/scds)*,
+*[scds](https://bioconductor.org/packages/3.24/scds/vignettes/scds)*,
 etc.) to distinguish doublets (either artificial or given) from other
 cells, and assigns a score on this basis.
 
@@ -558,7 +550,7 @@ done:
 After artificial doublets generation, the counts of real and artificial
 cells must then be reprocessed (i.e. normalization and PCA) together,
 which is performed internally using
-*[scater](https://bioconductor.org/packages/3.23/scater)*. If you wish
+*[scater](https://bioconductor.org/packages/3.24/scater)*. If you wish
 this step to be performed differently, you may provide your own function
 for doing so (see the `processing` argument in
 [`?scDblFinder`](https://plger.github.io/scDblFinder/reference/scDblFinder.md)).
@@ -699,45 +691,44 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.2          SingleCellExperiment_1.34.0
-    ##  [3] SummarizedExperiment_1.42.0 Biobase_2.72.0             
-    ##  [5] GenomicRanges_1.64.0        Seqinfo_1.2.0              
-    ##  [7] IRanges_2.46.0              S4Vectors_0.50.1           
-    ##  [9] BiocGenerics_0.58.1         generics_0.1.4             
-    ## [11] MatrixGenerics_1.24.0       matrixStats_1.5.0          
-    ## [13] BiocStyle_2.40.0           
+    ##  [1] scDblFinder_1.27.4          SingleCellExperiment_1.35.1
+    ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
+    ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
+    ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           
+    ##  [9] BiocGenerics_0.59.7         generics_0.1.4             
+    ## [11] MatrixGenerics_1.25.0       matrixStats_1.5.0          
+    ## [13] BiocStyle_2.41.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] bitops_1.0-9             gridExtra_2.3            rlang_1.2.0             
-    ##  [4] magrittr_2.0.5           scater_1.40.1            otel_0.2.0              
-    ##  [7] compiler_4.6.0           systemfonts_1.3.2        vctrs_0.7.3             
-    ## [10] pkgconfig_2.0.3          crayon_1.5.3             fastmap_1.2.0           
-    ## [13] XVector_0.52.0           scuttle_1.22.0           Rsamtools_2.28.0        
-    ## [16] rmarkdown_2.31           UCSC.utils_1.8.0         ggbeeswarm_0.7.3        
-    ## [19] ragg_1.5.2               xfun_0.57                bluster_1.22.0          
-    ## [22] cachem_1.1.0             beachmat_2.28.0          cigarillo_1.2.0         
-    ## [25] GenomeInfoDb_1.48.0      jsonlite_2.0.0           DelayedArray_0.38.2     
-    ## [28] BiocParallel_1.46.0      irlba_2.3.7              parallel_4.6.0          
-    ## [31] cluster_2.1.8.2          R6_2.6.1                 bslib_0.11.0            
-    ## [34] RColorBrewer_1.1-3       limma_3.68.4             rtracklayer_1.72.0      
-    ## [37] xgboost_3.2.1.1          jquerylib_0.1.4          Rcpp_1.1.1-1.1          
-    ## [40] bookdown_0.46            knitr_1.51               Matrix_1.7-5            
-    ## [43] igraph_2.3.2             tidyselect_1.2.1         abind_1.4-8             
-    ## [46] yaml_2.3.12              viridis_0.6.5            codetools_0.2-20        
-    ## [49] curl_7.1.0               lattice_0.22-9           tibble_3.3.1            
-    ## [52] S7_0.2.2                 evaluate_1.0.5           desc_1.4.3              
-    ## [55] Biostrings_2.80.1        pillar_1.11.1            BiocManager_1.30.27     
-    ## [58] RCurl_1.98-1.18          ggplot2_4.0.3            scales_1.4.0            
-    ## [61] glue_1.8.1               metapod_1.20.0           tools_4.6.0             
-    ## [64] BiocIO_1.22.0            data.table_1.18.4        BiocNeighbors_2.6.0     
-    ## [67] ScaledMatrix_1.20.0      locfit_1.5-9.12          GenomicAlignments_1.48.0
-    ## [70] fs_2.1.0                 scran_1.40.0             XML_3.99-0.23           
-    ## [73] grid_4.6.0               edgeR_4.10.1             beeswarm_0.4.0          
-    ## [76] BiocSingular_1.28.0      restfulr_0.0.16          vipor_0.4.7             
-    ## [79] cli_3.6.6                rsvd_1.0.5               textshaping_1.0.5       
-    ## [82] S4Arrays_1.12.0          viridisLite_0.4.3        dplyr_1.2.1             
-    ## [85] gtable_0.3.6             sass_0.4.10              digest_0.6.39           
-    ## [88] SparseArray_1.12.2       ggrepel_0.9.8            dqrng_0.4.1             
-    ## [91] rjson_0.2.23             htmlwidgets_1.6.4        farver_2.1.2            
-    ## [94] htmltools_0.5.9          pkgdown_2.2.0            lifecycle_1.0.5         
-    ## [97] httr_1.4.8               statmod_1.5.2            MASS_7.3-65
+    ##  [1] tidyselect_1.2.1         viridisLite_0.4.3        vipor_0.4.7             
+    ##  [4] dplyr_1.2.1              farver_2.1.2             viridis_0.6.5           
+    ##  [7] S7_0.2.2                 Biostrings_2.81.3        bitops_1.0-9            
+    ## [10] fastmap_1.2.0            RCurl_1.98-1.19          scrapper_1.7.3          
+    ## [13] bluster_1.23.0           GenomicAlignments_1.49.0 XML_3.99-0.23           
+    ## [16] digest_0.6.39            rsvd_1.0.5               lifecycle_1.0.5         
+    ## [19] cluster_2.1.8.2          magrittr_2.0.5           compiler_4.6.0          
+    ## [22] rlang_1.2.0              sass_0.4.10              tools_4.6.0             
+    ## [25] igraph_2.3.2             yaml_2.3.12              data.table_1.18.4       
+    ## [28] rtracklayer_1.73.0       knitr_1.51               S4Arrays_1.13.0         
+    ## [31] htmlwidgets_1.6.4        xgboost_3.2.1.1          curl_7.1.0              
+    ## [34] DelayedArray_0.39.3      RColorBrewer_1.1-3       abind_1.4-8             
+    ## [37] BiocParallel_1.47.0      desc_1.4.3               grid_4.6.0              
+    ## [40] beachmat_2.29.0          ggplot2_4.0.3            scales_1.4.0            
+    ## [43] MASS_7.3-65              cli_3.6.6                rmarkdown_2.31          
+    ## [46] crayon_1.5.3             ragg_1.5.2               otel_0.2.0              
+    ## [49] httr_1.4.8               rjson_0.2.23             BiocBaseUtils_1.15.1    
+    ## [52] scuttle_1.23.1           ggbeeswarm_0.7.3         cachem_1.1.0            
+    ## [55] parallel_4.6.0           BiocManager_1.30.27      XVector_0.53.0          
+    ## [58] restfulr_0.0.17          vctrs_0.7.3              Matrix_1.7-5            
+    ## [61] jsonlite_2.0.0           bookdown_0.46            BiocSingular_1.29.0     
+    ## [64] BiocNeighbors_2.7.2      ggrepel_0.9.8            beeswarm_0.4.0          
+    ## [67] irlba_2.3.7              scater_1.41.1            systemfonts_1.3.2       
+    ## [70] jquerylib_0.1.4          glue_1.8.1               pkgdown_2.2.0           
+    ## [73] codetools_0.2-20         gtable_0.3.6             GenomeInfoDb_1.49.1     
+    ## [76] BiocIO_1.23.3            UCSC.utils_1.9.0         ScaledMatrix_1.21.0     
+    ## [79] tibble_3.3.1             pillar_1.11.1            htmltools_0.5.9         
+    ## [82] R6_2.6.1                 textshaping_1.0.5        evaluate_1.0.5          
+    ## [85] lattice_0.22-9           Rsamtools_2.29.0         cigarillo_1.3.0         
+    ## [88] bslib_0.11.0             Rcpp_1.1.1-1.1           gridExtra_2.3           
+    ## [91] SparseArray_1.13.2       xfun_0.58                fs_2.1.0                
+    ## [94] pkgconfig_2.0.3

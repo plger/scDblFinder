@@ -72,7 +72,8 @@ computeDoubletDensity(x, size.factors.norm = sizeFactors(x), ...)
 
 - subset.row:
 
-  See `?"scran-gene-selection"`.
+  An optional logical, integer or character vector indicating the rows
+  of x to use.
 
 - niters:
 
@@ -92,7 +93,8 @@ computeDoubletDensity(x, size.factors.norm = sizeFactors(x), ...)
 - BNPARAM:
 
   A BiocNeighborParam object specifying the nearest neighbor algorithm.
-  This should be an algorithm supported by `queryNeighbors`.
+  This should be an algorithm supported by
+  [`queryNeighbors`](https://rdrr.io/pkg/BiocNeighbors/man/queryNeighbors.html).
 
 - BSPARAM:
 
@@ -137,10 +139,7 @@ score.
 The two size factor arguments have different roles:
 
 - `size.factors.norm` contains the size factors to be used for
-  normalization prior to PCA and distance calculations. This defaults to
-  the values returned by `librarySizeFactors` but can be explicitly set
-  to ensure that the low-dimensional space is consistent with that in
-  the rest of the analysis.
+  normalization prior to PCA and distance calculations.
 
 - `size.factors.content` is much more important, and represents the size
   factors that preserve RNA content differences. This is usually
@@ -196,15 +195,6 @@ clusters <- rep(1:5, c(rep(100, 4), ncol(counts.m)))
 
 # Find potential doublets.
 scores <- computeDoubletDensity(counts)
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
 boxplot(split(log10(scores), clusters))
 
 ```

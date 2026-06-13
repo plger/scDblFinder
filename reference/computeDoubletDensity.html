@@ -9,7 +9,7 @@ This replaces the older doubletCells function from the scran package."></head><b
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,7 +81,8 @@ This replaces the older <code>doubletCells</code> function from the <span class=
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A numeric matrix-like object of count values,
 where each column corresponds to a cell and each row corresponds to an endogenous gene.</p>
-<p>Alternatively, a SummarizedExperiment or <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object containing such a matrix.</p></dd>
+<p>Alternatively, a SummarizedExperiment or
+<a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object containing such a matrix.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -105,7 +106,7 @@ This is orthogonal to the values in <code>size.factors.norm</code>, see Details.
 
 
 <dt id="arg-subset-row">subset.row<a class="anchor" aria-label="anchor" href="#arg-subset-row"></a></dt>
-<dd><p>See <code>?"scran-gene-selection"</code>.</p></dd>
+<dd><p>An optional logical, integer or character vector indicating the rows of x to use.</p></dd>
 
 
 <dt id="arg-niters">niters<a class="anchor" aria-label="anchor" href="#arg-niters"></a></dt>
@@ -122,7 +123,7 @@ This is orthogonal to the values in <code>size.factors.norm</code>, see Details.
 
 <dt id="arg-bnparam">BNPARAM<a class="anchor" aria-label="anchor" href="#arg-bnparam"></a></dt>
 <dd><p>A BiocNeighborParam object specifying the nearest neighbor algorithm.
-This should be an algorithm supported by <code>queryNeighbors</code>.</p></dd>
+This should be an algorithm supported by <code><a href="https://rdrr.io/pkg/BiocNeighbors/man/queryNeighbors.html" class="external-link">queryNeighbors</a></code>.</p></dd>
 
 
 <dt id="arg-bsparam">BSPARAM<a class="anchor" aria-label="anchor" href="#arg-bsparam"></a></dt>
@@ -151,8 +152,7 @@ Thus, the doublet score for each cell is defined as the ratio of densities of si
 Simulated doublets are projected into the low-dimensional space using the rotation vectors computed from the original cells.
 For each cell, the density of simulated doublets is computed for a hypersphere with radius set to the median distance to the <code>k</code> nearest neighbour.
 This is normalized by <code>niters</code>, <code>k</code> and the total number of cells in <code>x</code> to yield the final score.</p>
-<p>The two size factor arguments have different roles:</p><ul><li><p><code>size.factors.norm</code> contains the size factors to be used for normalization prior to PCA and distance calculations.
-This defaults to the values returned by <code>librarySizeFactors</code> but can be explicitly set to ensure that the low-dimensional space is consistent with that in the rest of the analysis.</p></li>
+<p>The two size factor arguments have different roles:</p><ul><li><p><code>size.factors.norm</code> contains the size factors to be used for normalization prior to PCA and distance calculations.</p></li>
 <li><p><code>size.factors.content</code> is much more important, and represents the size factors that preserve RNA content differences.
 This is usually computed from spike-in RNA and ensures that the simulated doublets have the correct ratio of contributions from the original cells.</p></li>
 </ul><p>It is possible to set both of these arguments as they are orthogonal to each other.
@@ -198,15 +198,6 @@ Detecting doublet cells with <em>scran</em>.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Find potential doublets.</span></span></span>
 <span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu">computeDoubletDensity</span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'librarySizeFactors' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::centerSizeFactors' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'normalizeCounts' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::normalizeCounts' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'normalizeCounts' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::normalizeCounts' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/boxplot.html" class="external-link">boxplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span>, <span class="va">clusters</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="computeDoubletDensity-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

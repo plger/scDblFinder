@@ -81,13 +81,7 @@ vector of thresholds) if \`returnType=="threshold"\`.
 ``` r
 sce <- mockDoubletSCE()
 d <- scDblFinder(sce, verbose=FALSE, returnType="table")
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
 th <- doubletThresholding(d, dbr=0.05)
 th
-#> [1] 0.6167517
+#> [1] 0.5086083
 ```

@@ -333,18 +333,12 @@ sce <- mockDoubletSCE()
 sce <- scDblFinder(sce)
 #> Creating ~1500 artificial doublets...
 #> Dimensional reduction
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 23 cells excluded from training.
-#> iter=1, 20 cells excluded from training.
+#> iter=1, 19 cells excluded from training.
 #> iter=2, 20 cells excluded from training.
-#> Threshold found:0.615
+#> Threshold found:0.716
 #> 19 (3.7%) doublets called
 table(truth=sce$type, call=sce$scDblFinder.class)
 #>          call

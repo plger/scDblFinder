@@ -43,13 +43,13 @@ findDoubletClusters(x, clusters = colLabels(x, onAbsence = "error"), ...)
 
   For the generic, additional arguments to pass to specific methods.
 
-  For the ANY method, additional arguments to pass to `findMarkers`.
-
   For the SummarizedExperiment method, additional arguments to pass to
   the ANY method.
 
   For the SingleCellExperiment method, additional arguments to pass to
   the SummarizedExperiment method.
+
+  For the ANY method, these arguments are ignored.
 
 - clusters:
 
@@ -60,7 +60,8 @@ findDoubletClusters(x, clusters = colLabels(x, onAbsence = "error"), ...)
 
 - subset.row:
 
-  See `?"scran-gene-selection"`.
+  Integer, logical or character vector specifying the subset of rows of
+  `x` to use.
 
 - threshold:
 
@@ -179,23 +180,17 @@ all pairs of clusters for each chosen cluster, especially as we are
 chosing the pair that is most concordant with the doublet null
 hypothesis.
 
-We use library size normalization (via
-[`librarySizeFactors`](https://rdrr.io/pkg/scuttle/man/librarySizeFactors.html))
-even if existing size factors are present. This is because intermediate
-expression of the doublet cluster is not guaranteed for arbitrary size
-factors. For example, expression in the doublet cluster will be higher
-than that in the source clusters if normalization was performed with
-spike-in size factors.
+We use library size normalization even if existing size factors are
+present. This is because intermediate expression of the doublet cluster
+is not guaranteed for arbitrary size factors. For example, expression in
+the doublet cluster will be higher than that in the source clusters if
+normalization was performed with spike-in size factors.
 
 ## References
 
 Bach K, Pensa S, Grzelak M, Hadfield J, Adams DJ, Marioni JC and Khaled
 WT (2017). Differentiation dynamics of mammary epithelial cells revealed
 by single-cell RNA sequencing. *Nat Commun.* 8, 1:2128.
-
-## See also
-
-`findMarkers`, to detect DE genes between clusters.
 
 ## Author
 
@@ -210,44 +205,16 @@ sce <- mockDoubletSCE(c(200,300,200))
 
 # Compute doublet-ness of each cluster:
 dbl <- findDoubletClusters(counts(sce), sce$cluster)
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'findMarkers' is deprecated.
-#> Use 'scrapper::scoreMarkers.se' instead.
-#> See help("Deprecated")
-#> Warning: 'pairwiseTTests' is deprecated.
-#> See help("Deprecated")
-#> Warning: 'combineMarkers' is deprecated.
-#> Use 'scrapper::summarizeEffects' instead.
-#> See help("Deprecated")
 dbl
 #> DataFrame with 3 rows and 9 columns
 #>              source1     source2    num.de median.de        best      p.value
 #>          <character> <character> <integer> <integer> <character>    <numeric>
-#> cluster3    cluster2    cluster1        93        93     gene181 1.25899e-141
-#> cluster2    cluster3    cluster1        94        94     gene149 1.51477e-104
-#> cluster1    cluster3    cluster2       103       103     gene199 2.20647e-156
+#> cluster2    cluster3    cluster1        50        50      gene71 2.28796e-106
+#> cluster3    cluster2    cluster1        50        50     gene127  9.72063e-99
+#> cluster1    cluster3    cluster2        56        56     gene128 6.05550e-109
 #>          lib.size1 lib.size2      prop
 #>          <numeric> <numeric> <numeric>
-#> cluster3  0.908730  1.007937  0.268817
-#> cluster2  1.100437  1.109170  0.423387
-#> cluster1  0.992126  0.901575  0.307796
-
-# Narrow this down to clusters with very low 'N':
-library(scuttle)
-isOutlier(dbl$num.de, log=TRUE, type="lower")
-#> [1] FALSE FALSE FALSE
-#> attr(,"class")
-#> [1] "outlier.filter" "logical"       
-#> attr(,"thresholds")
-#>    lower   higher 
-#> 89.63306      Inf 
-
-# Get help from "lib.size" below 1.
-dbl$lib.size1 < 1 & dbl$lib.size2 < 1
-#> [1] FALSE FALSE  TRUE
+#> cluster2  0.961224  0.951020  0.416890
+#> cluster3  1.040340  0.989384  0.268097
+#> cluster1  1.010730  1.051502  0.315013
 ```

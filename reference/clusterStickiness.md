@@ -48,27 +48,9 @@ sce <- mockDoubletSCE(rep(200,5), dbl.rate=0.2)
 sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #> Warning: Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out
 #> Clustering cells...
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
 #> 5 clusters
 #> Creating ~500 artificial doublets...
 #> Dimensional reduction
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 38 cells excluded from training.

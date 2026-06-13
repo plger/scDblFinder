@@ -78,14 +78,8 @@ with the additional \`colData\` column \`directDoubletScore\`.
 
 ``` r
 sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=1)
-#> Creating ~528 artificial doublets...
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Round 1: 3 excluded from training.
-#> Round 2: 30 excluded from training.
+#> Creating ~525 artificial doublets...
+#> Round 1: 2 excluded from training.
+#> Round 2: 31 excluded from training.
 boxplot(sce$directDoubletScore~sce$type)
 ```

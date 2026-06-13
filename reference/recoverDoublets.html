@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,8 +75,9 @@
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A log-expression matrix for all cells (including doublets) in columns and genes in rows.
 If <code>transposed=TRUE</code>, this should be a matrix of low-dimensional coordinates where each row corresponds to a cell.</p>
-<p>Alternatively, a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a> or <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> containing
-(i) a log-expression matrix in the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></code> as specified by <code>assay.type</code>,
+<p>Alternatively, a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">SummarizedExperiment</a> or
+<a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> containing
+(i) a log-expression matrix in the <code>assays</code> as specified by <code>assay.type</code>,
 or (ii) a matrix of reduced dimensions in the <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDims</a></code> as specified by <code>use.dimred</code>.</p></dd>
 
 
@@ -121,7 +122,8 @@ Only used when <code>transposed=FALSE</code>.</p></dd>
 
 
 <dt id="arg-use-dimred">use.dimred<a class="anchor" aria-label="anchor" href="#arg-use-dimred"></a></dt>
-<dd><p>A string specifying whether existing values in <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDims</a>(x)</code> should be used.</p></dd>
+<dd><p>A string specifying whether existing values in
+<code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDims</a>(x)</code> should be used.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -147,7 +149,7 @@ its doublet proportions will be “diluted” by inclusion of unmarked cells in 
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code>doubletCells</code> and <code>doubletCluster</code>,
+    <div class="dont-index"><p><code><a href="scDblFinder.html">scDblFinder</a></code> and <code><a href="findDoubletClusters.html">findDoubletClusters</a></code>,
 for alternative methods of doublet detection when no prior doublet information is available.</p>
 <p><code>hashedDrops</code> from the <span class="pkg">DropletUtils</span> package,
 to identify doublets from cell hashing experiments.</p>
@@ -171,13 +173,7 @@ to identify doublets from cell hashing experiments.</p>
 <span class="r-in"><span><span class="va">counts.2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">ngenes</span><span class="op">*</span><span class="fl">100</span>, <span class="va">mu2</span><span class="op">)</span>, nrow<span class="op">=</span><span class="va">ngenes</span><span class="op">)</span> <span class="co"># Pure type 2</span></span></span>
 <span class="r-in"><span><span class="va">counts.m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">ngenes</span><span class="op">*</span><span class="fl">20</span>, <span class="va">mu1</span><span class="op">+</span><span class="va">mu2</span><span class="op">)</span>, nrow<span class="op">=</span><span class="va">ngenes</span><span class="op">)</span> <span class="co"># Doublets (1 &amp; 2)</span></span></span>
 <span class="r-in"><span><span class="va">all.counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">counts.1</span>, <span class="va">counts.2</span>, <span class="va">counts.m</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">lcounts</span> <span class="op">&lt;-</span> <span class="fu">scuttle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/normalizeCounts.html" class="external-link">normalizeCounts</a></span><span class="op">(</span><span class="va">all.counts</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'normalizeCounts' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::normalizeCounts' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'librarySizeFactors' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::centerSizeFactors' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
+<span class="r-in"><span><span class="va">lcounts</span> <span class="op">&lt;-</span> <span class="fu">scrapper</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scrapper/man/normalizeCounts.html" class="external-link">normalizeCounts</a></span><span class="op">(</span><span class="va">all.counts</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">all.counts</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Pretending that half of the doublets are known. Also pretending that </span></span></span>
 <span class="r-in"><span><span class="co"># the experiment involved two samples of equal size.</span></span></span>
@@ -195,9 +191,9 @@ to identify doublets from cell hashing experiments.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...        ...       ...       ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 216        0.5     FALSE      TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 217        0.5     FALSE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 218        0.4     FALSE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 219        0.3     FALSE      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 220        0.4     FALSE      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 218        0.5     FALSE      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 219        0.5     FALSE      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 220        0.5     FALSE      TRUE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

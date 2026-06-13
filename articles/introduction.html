@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,7 +96,7 @@ single-cell RNA sequencing. <em>For doublet detection in genomic data,
 see the <a href="scATAC.html">scATACseq vignette</a></em>. For a more
 general introduction to the topic of doublets, refer to the <a href="https://osca.bioconductor.org/doublet-detection.html" class="external-link">OCSA
 book</a>.</p>
-<p>All methods require as an input either a matrix of counts or a <em><a href="https://bioconductor.org/packages/3.23/SingleCellExperiment" class="external-link">SingleCellExperiment</a></em>
+<p>All methods require as an input either a matrix of counts or a <em><a href="https://bioconductor.org/packages/3.24/SingleCellExperiment" class="external-link">SingleCellExperiment</a></em>
 containing count data. With the exception of <a href="findDoubletClusters.html">findDoubletClusters</a>, which operates
 at the level of clusters (and consequently requires clustering
 information), all methods try to assign each cell a score indicating its
@@ -116,7 +116,7 @@ which for most purposes are also the most critical ones.</p>
 <h3 id="computedoubletdensity">computeDoubletDensity<a class="anchor" aria-label="anchor" href="#computedoubletdensity"></a>
 </h3>
 <p>The <code>computeDoubletDensity</code> method (formerly
-<code><a href="https://rdrr.io/pkg/scran/man/defunct.html" class="external-link">scran::doubletCells</a></code>) generates random artificial doublets
+<code>scran::doubletCells</code>) generates random artificial doublets
 from the real cells, and tries to identify cells whose neighborhood has
 a high local density of articial doublets. See <a href="computeDoubletDensity.html">computeDoubletDensity</a> for more
 information.</p>
@@ -211,11 +211,11 @@ should be used by default.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] BiocStyle_2.40.0</span></span>
+<span><span class="co">## [1] BiocStyle_2.41.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           </span></span>
-<span><span class="co">##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.57          </span></span>
+<span><span class="co">##  [4] bookdown_0.46       fastmap_1.2.0       xfun_0.58          </span></span>
 <span><span class="co">##  [7] cachem_1.1.0        knitr_1.51          htmltools_0.5.9    </span></span>
 <span><span class="co">## [10] rmarkdown_2.31      lifecycle_1.0.5     cli_3.6.6          </span></span>
 <span><span class="co">## [13] sass_0.4.10         pkgdown_2.2.0       textshaping_1.0.5  </span></span>

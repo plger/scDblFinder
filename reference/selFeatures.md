@@ -11,7 +11,8 @@ selFeatures(
   clusters = NULL,
   nfeatures = 1000,
   propMarkers = 0,
-  FDR.max = 0.05
+  auc.min = 0.75,
+  FDR.max = NULL
 )
 ```
 
@@ -38,10 +39,14 @@ selFeatures(
   The proportion of features to select from markers (rather than on the
   basis of high expression). Ignored if \`clusters\` isn't given.
 
+- auc.min:
+
+  Minimum AUC to consider for marters (this will be the minimum of the
+  mean of AUC min, max, median and mean).
+
 - FDR.max:
 
-  The maximum marker binom FDR to be included in the selection. (see
-  [`findMarkers`](https://rdrr.io/pkg/scran/man/findMarkers.html)).
+  Deprecated. Use 'auc.min' instead.
 
 ## Value
 
@@ -52,10 +57,5 @@ A vector of feature (i.e. row) names.
 ``` r
 sce <- mockDoubletSCE()
 selFeatures(sce, clusters=sce$cluster, nfeatures=5)
-#> Warning: 'sumCountsAcrossCells' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' instead.
-#> See help("Deprecated")
-#> Warning: 'summarizeAssayByGroup' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
 #> [1] "gene13"  "gene149" "gene70"  "gene84"  "gene171"
 ```
