@@ -28,8 +28,9 @@ recoverDoublets(x, ...)
 \item{x}{A log-expression matrix for all cells (including doublets) in columns and genes in rows.
 If \code{transposed=TRUE}, this should be a matrix of low-dimensional coordinates where each row corresponds to a cell.
 
-Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing 
-(i) a log-expression matrix in the \code{\link{assays}} as specified by \code{assay.type},
+Alternatively, a \linkS4class[SummarizedExperiment]{SummarizedExperiment} or 
+\linkS4class[SingleCellExperiment]{SingleCellExperiment} containing 
+(i) a log-expression matrix in the \code{assays} as specified by \code{assay.type},
 or (ii) a matrix of reduced dimensions in the \code{\link{reducedDims}} as specified by \code{use.dimred}.}
 
 \item{...}{For the generic, additional arguments to pass to specific methods.
@@ -50,13 +51,14 @@ used to determine how many cells are to be considered as intra-sample doublets.}
 \item{subset.row}{A logical, integer or character vector specifying the genes to use for the neighbor search. 
 Only used when \code{transposed=FALSE}.}
 
-\item{BNPARAM}{A \linkS4class{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.}
+\item{BNPARAM}{A \linkS4class[BiocNeighbors]{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.}
 
-\item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying the parallelization to use for the nearest neighbor search.}
+\item{BPPARAM}{A \linkS4class[BiocParallel]{BiocParallelParam} object specifying the parallelization to use for the nearest neighbor search.}
 
 \item{assay.type}{A string specifying which assay values contain the log-expression matrix.}
 
-\item{use.dimred}{A string specifying whether existing values in \code{\link{reducedDims}(x)} should be used.}
+\item{use.dimred}{A string specifying whether existing values in 
+\code{\link[SingleCellExperiment]{reducedDims}(x)} should be used.}
 }
 \value{
 A \linkS4class{DataFrame} containing one row per cell and the following fields:
@@ -106,7 +108,7 @@ out
 
 }
 \seealso{
-\code{\link{doubletCells}} and \code{\link{doubletCluster}},
+\code{\link{scDblFinder}} and \code{\link{findDoubletClusters}},
 for alternative methods of doublet detection when no prior doublet information is available.
 
 \code{hashedDrops} from the \pkg{DropletUtils} package,

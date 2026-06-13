@@ -5,8 +5,9 @@
 #' @param x A log-expression matrix for all cells (including doublets) in columns and genes in rows.
 #' If \code{transposed=TRUE}, this should be a matrix of low-dimensional coordinates where each row corresponds to a cell.
 #'
-#' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing 
-#' (i) a log-expression matrix in the \code{\link{assays}} as specified by \code{assay.type},
+#' Alternatively, a \linkS4class[SummarizedExperiment]{SummarizedExperiment} or 
+#' \linkS4class[SingleCellExperiment]{SingleCellExperiment} containing 
+#' (i) a log-expression matrix in the \code{assays} as specified by \code{assay.type},
 #' or (ii) a matrix of reduced dimensions in the \code{\link{reducedDims}} as specified by \code{use.dimred}.
 #' @param doublets A logical, integer or character vector specifying which cells in \code{x} are known (inter-sample) doublets.
 #' @param samples A numeric vector containing the relative proportions of cells from each sample,
@@ -15,15 +16,16 @@
 #' @param transposed Logical scalar indicating whether \code{x} is transposed, i.e., cells in the rows.
 #' @param subset.row A logical, integer or character vector specifying the genes to use for the neighbor search. 
 #' Only used when \code{transposed=FALSE}.
-#' @param BNPARAM A \linkS4class{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.
-#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying the parallelization to use for the nearest neighbor search.
+#' @param BNPARAM A \linkS4class[BiocNeighbors]{BiocNeighborParam} object specifying the algorithm to use for the nearest neighbor search.
+#' @param BPPARAM A \linkS4class[BiocParallel]{BiocParallelParam} object specifying the parallelization to use for the nearest neighbor search.
 #' @param ... For the generic, additional arguments to pass to specific methods.
 #' 
 #' For the SummarizedExperiment method, additional arguments to pass to the ANY method.
 #'
 #' For the SingleCellExperiment method, additional arguments to pass to the SummarizedExperiment method.
 #' @param assay.type A string specifying which assay values contain the log-expression matrix. 
-#' @param use.dimred A string specifying whether existing values in \code{\link{reducedDims}(x)} should be used.
+#' @param use.dimred A string specifying whether existing values in 
+#'  \code{\link[SingleCellExperiment]{reducedDims}(x)} should be used.
 #'
 #' @return
 #' A \linkS4class{DataFrame} containing one row per cell and the following fields:
@@ -52,7 +54,7 @@
 #' @author Aaron Lun
 #' 
 #' @seealso
-#' \code{\link{doubletCells}} and \code{\link{doubletCluster}},
+#' \code{\link{scDblFinder}} and \code{\link{findDoubletClusters}},
 #' for alternative methods of doublet detection when no prior doublet information is available.
 #'
 #' \code{hashedDrops} from the \pkg{DropletUtils} package,

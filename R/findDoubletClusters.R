@@ -6,7 +6,8 @@
 #' @param x A numeric matrix-like object of count values,
 #' where each column corresponds to a cell and each row corresponds to an endogenous gene.
 #'
-#' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} object containing such a matrix.
+#' Alternatively, a \linkS4class[SummarizedExperiment]{SummarizedExperiment} or 
+#' \linkS4class[SingleCellExperiment]{SingleCellExperiment} object containing such a matrix.
 #' @param clusters A vector of length equal to \code{ncol(x)}, containing cluster identities for all cells.
 #' If \code{x} is a SingleCellExperiment, this is taken from \code{\link{colLabels}(x)} by default.
 #' @param threshold A numeric scalar specifying the FDR threshold with which to identify significant genes.
@@ -36,7 +37,7 @@
 #' \item{\code{lib.size1}:}{Numeric, ratio of the median library sizes for the first source cluster to the query cluster.}
 #' \item{\code{lib.size2}:}{Numeric, ratio of the median library sizes for the second source cluster to the query cluster.}
 #' \item{\code{prop}:}{Numeric, proportion of cells in the query cluster.}
-#' \item{\code{all.pairs}:}{A \linkS4class{SimpleList} object containing the above statistics
+#' \item{\code{all.pairs}:}{A \linkS4class[S4Vectors]{SimpleList} object containing the above statistics
 #' for every pair of potential source clusters, if \code{get.all.pairs=TRUE}.}
 #' }
 #' Each row is named according to its query cluster.
@@ -72,7 +73,7 @@
 #' However, this does not account for the multiple testing across all pairs of clusters for each chosen cluster,
 #' especially as we are chosing the pair that is most concordant with the doublet null hypothesis.
 #'
-#' We use library size normalization (via \code{\link{librarySizeFactors}}) even if existing size factors are present.
+#' We use library size normalization even if existing size factors are present.
 #' This is because intermediate expression of the doublet cluster is not guaranteed for arbitrary size factors.
 #' For example, expression in the doublet cluster will be higher than that in the source clusters if normalization was performed with spike-in size factors.
 #'

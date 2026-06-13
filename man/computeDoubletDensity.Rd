@@ -31,7 +31,8 @@ computeDoubletDensity(x, ...)
 \item{x}{A numeric matrix-like object of count values, 
 where each column corresponds to a cell and each row corresponds to an endogenous gene.
 
-Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} object containing such a matrix.}
+Alternatively, a \linkS4class[SummarizedExperiment]{SummarizedExperiment} or 
+\linkS4class[SingleCellExperiment]{SingleCellExperiment} object containing such a matrix.}
 
 \item{...}{For the generic, additional arguments to pass to specific methods.
 
@@ -40,14 +41,14 @@ For the SummarizedExperiment and SingleCellExperiment methods, additional argume
 \item{size.factors.norm}{A numeric vector of size factors for normalization of \code{x} prior to PCA and distance calculations.
 If \code{NULL}, defaults to size factors derived from the library sizes of \code{x}.
 
-For the SingleCellExperiment method, the default values are taken from \code{\link{sizeFactors}(x)}, if they are available.}
+For the SingleCellExperiment method, the default values are taken from \code{\link[SingleCellExperiment]{sizeFactors}(x)}, if they are available.}
 
 \item{size.factors.content}{A numeric vector of size factors for RNA content normalization of \code{x} prior to simulating doublets.
 This is orthogonal to the values in \code{size.factors.norm}, see Details.}
 
 \item{k}{An integer scalar specifying the number of nearest neighbours to use to determine the bandwidth for density calculations.}
 
-\item{subset.row}{See \code{?"\link{scran-gene-selection}"}.}
+\item{subset.row}{An optional logical, integer or character vector indicating the rows of x to use.}
 
 \item{niters}{An integer scalar specifying how many simulated doublets should be generated.}
 
@@ -55,12 +56,12 @@ This is orthogonal to the values in \code{size.factors.norm}, see Details.}
 
 \item{dims}{An integer scalar specifying the number of components to retain after the PCA.}
 
-\item{BNPARAM}{A \linkS4class{BiocNeighborParam} object specifying the nearest neighbor algorithm.
-This should be an algorithm supported by \code{\link{queryNeighbors}}.}
+\item{BNPARAM}{A \linkS4class[BiocNeighbors]{BiocNeighborParam} object specifying the nearest neighbor algorithm.
+This should be an algorithm supported by \code{\link[BiocNeighbors]{queryNeighbors}}.}
 
-\item{BSPARAM}{A \linkS4class{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.}
+\item{BSPARAM}{A \linkS4class[BiocSingular]{BiocSingularParam} object specifying the algorithm to use for PCA, if \code{d} is not \code{NA}.}
 
-\item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether the neighbour searches should be parallelized.}
+\item{BPPARAM}{A \linkS4class[BiocParallel]{BiocParallelParam} object specifying whether the neighbour searches should be parallelized.}
 
 \item{assay.type}{A string specifying which assay values contain the count matrix.}
 }
@@ -85,7 +86,6 @@ This is normalized by \code{niters}, \code{k} and the total number of cells in \
 The two size factor arguments have different roles:
 \itemize{
 \item \code{size.factors.norm} contains the size factors to be used for normalization prior to PCA and distance calculations.
-This defaults to the values returned by \code{\link{librarySizeFactors}} but can be explicitly set to ensure that the low-dimensional space is consistent with that in the rest of the analysis.
 \item \code{size.factors.content} is much more important, and represents the size factors that preserve RNA content differences.
 This is usually computed from spike-in RNA and ensures that the simulated doublets have the correct ratio of contributions from the original cells.
 }
