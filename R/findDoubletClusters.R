@@ -256,6 +256,7 @@ NULL
             cur.lfc <- left.mean - right.mean
             cur.t <- cur.lfc / sqrt(cur.err)
             log.p <- pt(cur.t, df = cur.df, lower.tail = FALSE, log.p = TRUE)
+            log.p[is.na(log.p)] <- 0
             all.p[[g2]] <- data.frame(logFC = cur.lfc, log.p.value = log.p)
         }
 
