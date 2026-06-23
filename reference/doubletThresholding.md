@@ -83,5 +83,5 @@ sce <- mockDoubletSCE()
 d <- scDblFinder(sce, verbose=FALSE, returnType="table")
 th <- doubletThresholding(d, dbr=0.05)
 th
-#> [1] 0.5086083
+#> [1] 0.6180837
 ```

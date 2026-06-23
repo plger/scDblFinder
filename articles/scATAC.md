@@ -71,11 +71,11 @@ sce <- scDblFinder(sce, artificialDoublets=1, aggregateFeatures=TRUE, nfeatures=
 
     ## iter=1, 36 cells excluded from training.
 
-    ## iter=2, 42 cells excluded from training.
+    ## iter=2, 40 cells excluded from training.
 
-    ## Threshold found:0.764
+    ## Threshold found:0.843
 
-    ## 23 (4.4%) doublets called
+    ## 22 (4.2%) doublets called
 
 If you encounter problems running the aggregation-based approach on
 large datasets, first make sure you have the `mbkmeans` package
@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 02:51:43 PM - Splitting and subsetting barcodes...
+    ## 07:45:44 AM - Splitting and subsetting barcodes...
 
-    ## 02:51:43 PM - Obtaining overlaps...
+    ## 07:45:44 AM - Obtaining overlaps...
 
 ``` r
 
@@ -207,55 +207,55 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 02:51:44 PM - Reading full fragments...
+    ## 07:45:45 AM - Reading full fragments...
 
-    ## 02:51:44 PM - Splitting and subsetting barcodes...
+    ## 07:45:45 AM - Splitting and subsetting barcodes...
 
-    ## 02:51:44 PM - Computing coverages
+    ## 07:45:45 AM - Computing coverages
 
-    ## 02:51:45 PM - Obtaining windows
+    ## 07:45:45 AM - Obtaining windows
 
-    ## 02:51:45 PM - Obtaining window counts
+    ## 07:45:46 AM - Obtaining window counts
 
-    ## 02:51:45 PM - Aggregating features
+    ## 07:45:46 AM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 02:51:45 PM - Computing features for artificial doublets
+    ## 07:45:46 AM - Computing features for artificial doublets
 
-    ## 02:51:45 PM - Counting overlaps for real cells
+    ## 07:45:46 AM - Counting overlaps for real cells
 
-    ## 02:51:45 PM - Counting overlaps for artificial doublets
+    ## 07:45:46 AM - Counting overlaps for artificial doublets
 
-    ## 02:51:45 PM - Scoring network
+    ## 07:45:46 AM - Scoring network
 
-    ## 02:51:45 PM - Iterative training
+    ## 07:45:46 AM - Iterative training
 
-    ## iter=0, 5 cells excluded from training.
+    ## iter=0, 0 cells excluded from training.
 
-    ## iter=1, 5 cells excluded from training.
+    ## iter=1, 0 cells excluded from training.
 
-    ## 02:51:45 PM Done!
+    ## 07:45:46 AM Done!
 
 ``` r
 
 d
 ```
 
-    ##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training
-    ## barcode1    19       1             1 1.0000000      1.0               FALSE
-    ## barcode2     8       0             0       NaN      0.5               FALSE
-    ## barcode3     7       1             1 0.4373488      0.5               FALSE
-    ## barcode4     8       0             0       NaN      1.0               FALSE
-    ## barcode5    14       6             6 0.4956057      0.5               FALSE
+    ##          total nAbove2 total.nAbove2 weighted ratio.k2 include.in.training
+    ## barcode1    21       1             1        1      1.0                TRUE
+    ## barcode2    13       0             0      NaN      0.5                TRUE
+    ## barcode3     9       1             1        0      0.0                TRUE
+    ## barcode4     7       0             0      NaN      0.5                TRUE
+    ## barcode5    15       6             6        1      1.0                TRUE
     ##              score
-    ## barcode1 0.9999989
-    ## barcode2 0.9999989
-    ## barcode3 0.9999989
-    ## barcode4 0.9999989
-    ## barcode5 0.9999989
+    ## barcode1 0.5625595
+    ## barcode2 0.2530172
+    ## barcode3 0.2530172
+    ## barcode4 0.2530172
+    ## barcode5 0.4696436
 
 The score can then be interpreted as for `scDblFinder`. We however note
 that this method proved *inferior to alternatives*.
@@ -330,7 +330,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.4          SingleCellExperiment_1.35.1
+    ##  [1] scDblFinder_1.27.5          SingleCellExperiment_1.35.1
     ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
     ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
     ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           

@@ -26,6 +26,7 @@ scDblFinder(
   propMarkers = 0,
   aggregateFeatures = FALSE,
   returnType = c("sce", "table", "full", "counts", "scores"),
+  BNPARAM = NULL,
   score = c("xgb", "weighted", "ratio"),
   processing = "default",
   metric = "logloss",
@@ -336,13 +337,13 @@ sce <- scDblFinder(sce)
 #> Evaluating kNN...
 #> Training model...
 #> iter=0, 23 cells excluded from training.
-#> iter=1, 19 cells excluded from training.
+#> iter=1, 20 cells excluded from training.
 #> iter=2, 20 cells excluded from training.
-#> Threshold found:0.716
-#> 19 (3.7%) doublets called
+#> Threshold found:0.382
+#> 20 (3.9%) doublets called
 table(truth=sce$type, call=sce$scDblFinder.class)
 #>          call
 #> truth     singlet doublet
-#>   singlet     500       0
+#>   singlet     499       1
 #>   doublet       0      19
 ```

@@ -116,8 +116,9 @@ A DataFrame containing one row per cell and the following fields:
 - `predicted`, a logical field indicating whether this cell is a
   predicted intra-sample doublet.
 
-The `metadata` contains `intra`, a numeric scalar containing the
-expected number of intra-sample doublets.
+The [`metadata`](https://rdrr.io/pkg/S4Vectors/man/Annotated-class.html)
+contains `intra`, a numeric scalar containing the expected number of
+intra-sample doublets.
 
 ## Details
 

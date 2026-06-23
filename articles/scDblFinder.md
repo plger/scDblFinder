@@ -59,11 +59,11 @@ sce <- scDblFinder(sce, dbr=0.1)
 
     ## Training model...
 
-    ## iter=0, 36 cells excluded from training.
+    ## iter=0, 37 cells excluded from training.
 
-    ## iter=1, 25 cells excluded from training.
+    ## iter=1, 26 cells excluded from training.
 
-    ## iter=2, 27 cells excluded from training.
+    ## iter=2, 28 cells excluded from training.
 
     ## Threshold found:0.382
 
@@ -691,7 +691,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.4          SingleCellExperiment_1.35.1
+    ##  [1] scDblFinder_1.27.5          SingleCellExperiment_1.35.1
     ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
     ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
     ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           
