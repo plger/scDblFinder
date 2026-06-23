@@ -24,6 +24,7 @@ scDblFinder(
   propMarkers = 0,
   aggregateFeatures = FALSE,
   returnType = c("sce", "table", "full", "counts", "scores"),
+  BNPARAM = NULL,
   score = c("xgb", "weighted", "ratio"),
   processing = "default",
   metric = "logloss",

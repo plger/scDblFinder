@@ -1,3 +1,6 @@
+Changes in version 1.26.5 (2026-06-23)
++ Changed default kNN method to Kmknn, with argument to set
+
 Changes in version 1.26.4 (2026-06-11)
 + Fixed deprecation warnings -> moved to scrapper
 + scDblFinder results when using propMarkers>0 will not be identical.

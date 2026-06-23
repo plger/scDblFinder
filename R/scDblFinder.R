@@ -204,7 +204,7 @@ scDblFinder <- function(
   knownDoublets=NULL, knownUse=c("discard","positive"), dbr=NULL, dbr.sd=NULL, 
   dbr.per1k=0.008, nfeatures=1352, dims=20, k=NULL, removeUnidentifiable=TRUE,
   includePCs=19, propRandom=0, propMarkers=0, aggregateFeatures=FALSE,
-  returnType=c("sce","table","full","counts","scores"),
+  returnType=c("sce","table","full","counts","scores"), BNPARAM=NULL,
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
@@ -480,7 +480,7 @@ scDblFinder <- function(
                                                    dbr.per1k=dbr.per1k)
 
   if(verbose) message("Evaluating kNN...")
-  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k)
+  d <- .evaluateKNN(pca, ctype, ado2, expected=ex, k=k, BNPARAM=BNPARAM)
 
   #if(characterize) knn <- d$knn   ## experimental
   d <- d$d
@@ -525,9 +525,8 @@ scDblFinder <- function(
   .scDblAddCD(orig, d)
 }
 
-#' @importFrom BiocNeighbors AnnoyParam
-.evaluateKNN <- function(pca, ctype, origins, expected=NULL, k){
-  knn <- suppressWarnings(findKNN(as.matrix(pca), max(k), BNPARAM=AnnoyParam()))
+.evaluateKNN <- function(pca, ctype, origins, expected=NULL, k, BNPARAM=NULL){
+  knn <- suppressWarnings(findKNN(as.matrix(pca), max(k), BNPARAM=BNPARAM))
   hasOrigins <- length(unique(origins))>1
   knn$type <- matrix(as.integer(ctype)[knn$index]-1L, nrow=nrow(knn$index))
   if(hasOrigins) knn$orig <- matrix(origins[knn$index], nrow=nrow(knn[[1]]))

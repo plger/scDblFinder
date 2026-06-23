@@ -38,7 +38,7 @@ For the SingleCellExperiment method, additional arguments to pass to the Summari
 For the ANY method, these arguments are ignored.}
 
 \item{clusters}{A vector of length equal to \code{ncol(x)}, containing cluster identities for all cells.
-If \code{x} is a SingleCellExperiment, this is taken from \code{\link{colLabels}(x)} by default.}
+If \code{x} is a SingleCellExperiment, this is taken from \code{\link[SingleCellExperiment]{colLabels}(x)} by default.}
 
 \item{subset.row}{Integer, logical or character vector specifying the subset of rows of \code{x} to use.}
 
@@ -49,7 +49,7 @@ If \code{x} is a SingleCellExperiment, this is taken from \code{\link{colLabels}
 \item{assay.type}{A string specifying which assay values to use, e.g., \code{"counts"} or \code{"logcounts"}.}
 }
 \value{
-A \linkS4class{DataFrame} containing one row per query cluster with the following fields:
+A \linkS4class[S4Vectors]{DataFrame} containing one row per query cluster with the following fields:
 \describe{
 \item{\code{source1}:}{String specifying the identity of the first source cluster.}
 \item{\code{source2}:}{String specifying the identity of the second source cluster.}

@@ -61,13 +61,13 @@ Only used when \code{transposed=FALSE}.}
 \code{\link[SingleCellExperiment]{reducedDims}(x)} should be used.}
 }
 \value{
-A \linkS4class{DataFrame} containing one row per cell and the following fields:
+A \linkS4class[S4Vectors]{DataFrame} containing one row per cell and the following fields:
 \itemize{
 \item \code{proportion}, a numeric field containing the proportion of neighbors that are doublets.
 \item \code{known}, a logical field indicating whether this cell is a known inter-sample doublet.
 \item \code{predicted}, a logical field indicating whether this cell is a predicted intra-sample doublet.
 }
-The \code{\link{metadata}} contains \code{intra}, a numeric scalar containing the expected number of intra-sample doublets.
+The \code{\link[S4Vectors]{metadata}} contains \code{intra}, a numeric scalar containing the expected number of intra-sample doublets.
 }
 \description{
 Recover intra-sample doublets that are neighbors to known inter-sample doublets in a multiplexed experiment.
