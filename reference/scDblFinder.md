@@ -186,6 +186,10 @@ scDblFinder(
   attributes including artificial doublets), or "full" (returns an SCE
   object containing both the real and artificial cells).
 
+- BNPARAM:
+
+  Optional BiocNeighbors params used for kNN computation.
+
 - score:
 
   Score to use for final classification.

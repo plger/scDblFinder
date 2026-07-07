@@ -222,7 +222,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.5          scater_1.41.1              
+    ##  [1] scDblFinder_1.27.6          scater_1.41.1              
     ##  [3] ggplot2_4.0.3               scuttle_1.23.1             
     ##  [5] scrapper_1.7.3              ensembldb_2.37.3           
     ##  [7] AnnotationFilter_1.37.0     GenomicFeatures_1.65.0     

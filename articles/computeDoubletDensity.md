@@ -190,7 +190,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] scater_1.41.1               ggplot2_4.0.3              
-    ##  [3] scuttle_1.23.1              scDblFinder_1.27.5         
+    ##  [3] scuttle_1.23.1              scDblFinder_1.27.6         
     ##  [5] scrapper_1.7.3              ensembldb_2.37.3           
     ##  [7] AnnotationFilter_1.37.0     GenomicFeatures_1.65.0     
     ##  [9] AnnotationDbi_1.75.0        scRNAseq_2.27.0            
