@@ -116,6 +116,7 @@
 #' @param verbose Logical; whether to print messages and the thresholding plot.
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
+#' @param BNPARAM Optional BiocNeighbors params used for kNN computation.
 #' @param ... further arguments passed to \code{\link{getArtificialDoublets}}.
 #'
 #' @return The \code{sce} object with several additional colData columns, in

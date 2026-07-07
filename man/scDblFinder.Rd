@@ -141,6 +141,8 @@ doublet calls for each barcode), "table" (to return the table of cell
 attributes including artificial doublets), or "full" (returns an SCE
 object containing both the real and artificial cells).}
 
+\item{BNPARAM}{Optional BiocNeighbors params used for kNN computation.}
+
 \item{score}{Score to use for final classification.}
 
 \item{processing}{Counts (real and artificial) processing before KNN. Either
