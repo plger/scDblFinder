@@ -69,8 +69,8 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     w <- seq_len(ncol(sce))
   }
   
-  clusters <- droplevels(as.factor(scDblFinder:::.checkColArg(sce, clusters)[w]))
-  samples <- scDblFinder:::.checkColArg(sce, samples)[w]
+  clusters <- droplevels(as.factor(.checkColArg(sce, clusters)[w]))
+  samples <- .checkColArg(sce, samples)[w]
   nSamples <- length(unique(samples))
   
   if(is.null(nArtificial))
@@ -90,11 +90,6 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   ad <- assay(out)[,w]
   label <- out$origin[w]
   ad <- t(ad)/colSums(ad)
-  
-  # ag <- betterChromVAR:::.fastColAgg(t(ad), label)
-  # ag <- t(ag)/colSums(ag)
-  # cl <- kmeans(t(ag), 30)
-  # ag2 <- betterChromVAR:::.fastColAgg(ad, cl$cluster)
   
   dtrain <- xgb.DMatrix(data = ad, label = as.integer(label) - 1L)
   
