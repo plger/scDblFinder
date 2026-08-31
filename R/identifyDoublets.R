@@ -27,6 +27,7 @@
 #'    - predictions : the per-class probabilities on `doublets`
 #'    - features : the ordered features (i.e. genes) needed to run the model.
 #' @export
+#' @importFrom xgboost xgb.train
 #'
 #' @examples
 #' # we generate a random dataset
