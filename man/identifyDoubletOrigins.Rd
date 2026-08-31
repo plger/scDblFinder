@@ -12,9 +12,8 @@ identifyDoubletOrigins(
   balance = TRUE,
   nArtificial = NULL,
   verbose = TRUE,
-  xgb.param = list(booster = "gbtree", objective = "multi:softprob", num_class =
-    num_classes, eval_metric = "mlogloss", subsample = 0.8, colsample_bytree = 0.7, eta =
-    0.1, max_depth = 8),
+  xgb.param = list(booster = "gbtree", objective = "multi:softprob", eval_metric =
+    "mlogloss", subsample = 0.8, colsample_bytree = 0.7, eta = 0.1, max_depth = 8),
   max_rounds = 300,
   nthread = 1
 )
@@ -55,9 +54,13 @@ A list with:
    - features : the ordered features (i.e. genes) needed to run the model.
 }
 \description{
-Trains a classifier to identify the origins of doublets.
+Trains a classifier based on artificial doublets to identify the origins of 
+doublets.
 }
 \examples{
-sce <- mockDoubletSCE()
-res <- identifyDoubletOrigins(sce, "cluster")
+# we generate a random dataset
+sce <- mockDoubletSCE(ncells = c(20,30,40), ngenes = 500)
+# to have the example run fast, we set a low number of artificial doublets 
+# and a low maximum learning rounds
+res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
 }

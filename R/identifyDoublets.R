@@ -1,6 +1,7 @@
 #' identifyDoubletOrigins
 #' 
-#' Trains a classifier to identify the origins of doublets.
+#' Trains a classifier based on artificial doublets to identify the origins of 
+#' doublets.
 #'
 #' @param sce A SingleCellExperiment object with a 'counts' assay.
 #' @param clusters A vector of cluster labels for each column of `sce`, or the 
@@ -28,8 +29,11 @@
 #' @export
 #'
 #' @examples
-#' sce <- mockDoubletSCE()
-#' res <- identifyDoubletOrigins(sce, "cluster")
+#' # we generate a random dataset
+#' sce <- mockDoubletSCE(ncells = c(20,30,40), ngenes = 500)
+#' # to have the example run fast, we set a low number of artificial doublets 
+#' # and a low maximum learning rounds
+#' res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
 identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                    balance=TRUE, nArtificial=NULL, verbose=TRUE,
                                    xgb.param=list(
@@ -70,8 +74,13 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   
   clusters <- droplevels(as.factor(.checkColArg(sce, clusters)[w]))
   samples <- .checkColArg(sce, samples)[w]
-  nSamples <- length(unique(samples))
-  
+  if(is.null(samples)){
+    nSamples <- 1L
+  }else{
+    samples <- droplevels(as.factor(samples))
+    nSamples <- length(unique(samples))
+  }
+
   if(is.null(nArtificial))
     nArtificial <- min((100/nSamples)*length(levels(clusters))^2, 20000/nSamples)
   
@@ -89,7 +98,7 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   ad <- assay(out)[,w]
   label <- droplevels(as.factor(out$origin[w]))
   ad <- t(ad)/colSums(ad)
-  xgb.param$num_class <- length(unique(labels))
+  xgb.param$num_class <- length(unique(label))
   
   dtrain <- xgb.DMatrix(data = ad, label = as.integer(label) - 1L)
   
@@ -116,12 +125,11 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     verbose = verbose,
   )
   
-  if(verbose) message("Testing on artifical doublets:")
   preds1 <- predict(model, ad, type="class")
   tt <- unclass(table(label, apply(preds1, 1, which.max)))
   colnames(tt) <- levels(out$origin)
   ac <- sum(diag(tt))/sum(tt)
-  message("Accuracy: ", round(ac,2))
+  if(verbose) message("Accuracy on artifical doublets:", round(ac,4))
   if(ac<.9) warning("Low classifier accuracy on training data!")
   
   colnames(tt) <- levels(out$origin)
