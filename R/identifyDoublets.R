@@ -35,7 +35,6 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                    xgb.param=list(
                                      booster = "gbtree",
                                      objective = "multi:softprob",
-                                     num_class = num_classes,
                                      eval_metric = "mlogloss",
                                      subsample = 0.8,
                                      colsample_bytree = 0.7,
@@ -88,8 +87,9 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   
   w <- which(out$type=="doublet" & !is.na(out$origin))
   ad <- assay(out)[,w]
-  label <- out$origin[w]
+  label <- droplevels(as.factor(out$origin[w]))
   ad <- t(ad)/colSums(ad)
+  xgb.param$num_class <- length(unique(labels))
   
   dtrain <- xgb.DMatrix(data = ad, label = as.integer(label) - 1L)
   
