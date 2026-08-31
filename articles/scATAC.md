@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 08:25:29 AM - Splitting and subsetting barcodes...
+    ## 07:02:14 PM - Splitting and subsetting barcodes...
 
-    ## 08:25:29 AM - Obtaining overlaps...
+    ## 07:02:14 PM - Obtaining overlaps...
 
 ``` r
 
@@ -207,55 +207,55 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 08:25:30 AM - Reading full fragments...
+    ## 07:02:15 PM - Reading full fragments...
 
-    ## 08:25:30 AM - Splitting and subsetting barcodes...
+    ## 07:02:15 PM - Splitting and subsetting barcodes...
 
-    ## 08:25:30 AM - Computing coverages
+    ## 07:02:15 PM - Computing coverages
 
-    ## 08:25:30 AM - Obtaining windows
+    ## 07:02:15 PM - Obtaining windows
 
-    ## 08:25:30 AM - Obtaining window counts
+    ## 07:02:15 PM - Obtaining window counts
 
-    ## 08:25:30 AM - Aggregating features
+    ## 07:02:15 PM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 08:25:30 AM - Computing features for artificial doublets
+    ## 07:02:15 PM - Computing features for artificial doublets
 
-    ## 08:25:30 AM - Counting overlaps for real cells
+    ## 07:02:15 PM - Counting overlaps for real cells
 
-    ## 08:25:30 AM - Counting overlaps for artificial doublets
+    ## 07:02:15 PM - Counting overlaps for artificial doublets
 
-    ## 08:25:30 AM - Scoring network
+    ## 07:02:16 PM - Scoring network
 
-    ## 08:25:30 AM - Iterative training
+    ## 07:02:16 PM - Iterative training
 
     ## iter=0, 0 cells excluded from training.
 
     ## iter=1, 0 cells excluded from training.
 
-    ## 08:25:30 AM Done!
+    ## 07:02:16 PM Done!
 
 ``` r
 
 d
 ```
 
-    ##          total nAbove2 total.nAbove2 weighted ratio.k2 include.in.training
-    ## barcode1    21       1             1        1      1.0                TRUE
-    ## barcode2    13       0             0      NaN      0.5                TRUE
-    ## barcode3     9       1             1        0      0.0                TRUE
-    ## barcode4     7       0             0      NaN      0.5                TRUE
-    ## barcode5    15       6             6        1      1.0                TRUE
+    ##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training
+    ## barcode1    21       1             1 0.6180713      0.5                TRUE
+    ## barcode2    13       0             0       NaN      0.5                TRUE
+    ## barcode3     9       1             1 1.0000000      1.0                TRUE
+    ## barcode4     7       0             0       NaN      0.5                TRUE
+    ## barcode5    15       6             6 0.7225234      0.5                TRUE
     ##              score
-    ## barcode1 0.5625595
-    ## barcode2 0.2530172
-    ## barcode3 0.2530172
-    ## barcode4 0.2530172
-    ## barcode5 0.4696436
+    ## barcode1 0.4633364
+    ## barcode2 0.4633364
+    ## barcode3 0.4633364
+    ## barcode4 0.4633364
+    ## barcode5 0.4633364
 
 The score can then be interpreted as for `scDblFinder`. We however note
 that this method proved *inferior to alternatives*.

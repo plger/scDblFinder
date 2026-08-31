@@ -172,8 +172,8 @@ follows:</p>
 <span><span class="co"># we then launch the method</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amulet.html">amulet</a></span><span class="op">(</span><span class="va">fragfile</span>, regionsToExclude<span class="op">=</span><span class="va">toExclude</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:29 AM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:29 AM - Obtaining overlaps...</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:14 PM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:14 PM - Obtaining overlaps...</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">##          nFrags uniqFrags nAbove2 total.nAbove2     p.value     q.value</span></span>
@@ -243,37 +243,37 @@ particular <code><a href="../reference/getFragmentOverlaps.html">?getFragmentOve
 have to adjust the arguments for an example to run:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clamulet.html">clamulet</a></span><span class="op">(</span><span class="va">fragfile</span>, k<span class="op">=</span><span class="fl">2</span>, nfeatures<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 08:25:30 AM - Reading full fragments...</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Splitting and subsetting barcodes...</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Computing coverages</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Obtaining windows</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Obtaining window counts</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Aggregating features</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Reading full fragments...</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Splitting and subsetting barcodes...</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Computing coverages</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Obtaining windows</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Obtaining window counts</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Aggregating features</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =</span></span>
 <span><span class="co">## TRUE, : You're computing too large a percentage of total singular values, use a</span></span>
 <span><span class="co">## standard svd instead.</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Computing features for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Counting overlaps for real cells</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Counting overlaps for artificial doublets</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Scoring network</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM - Iterative training</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Computing features for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Counting overlaps for real cells</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:15 PM - Counting overlaps for artificial doublets</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:16 PM - Scoring network</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:16 PM - Iterative training</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 0 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=1, 0 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## 08:25:30 AM Done!</span></span></code></pre>
+<pre><code><span><span class="co">## 07:02:16 PM Done!</span></span></code></pre>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span></span></code></pre></div>
-<pre><code><span><span class="co">##          total nAbove2 total.nAbove2 weighted ratio.k2 include.in.training</span></span>
-<span><span class="co">## barcode1    21       1             1        1      1.0                TRUE</span></span>
-<span><span class="co">## barcode2    13       0             0      NaN      0.5                TRUE</span></span>
-<span><span class="co">## barcode3     9       1             1        0      0.0                TRUE</span></span>
-<span><span class="co">## barcode4     7       0             0      NaN      0.5                TRUE</span></span>
-<span><span class="co">## barcode5    15       6             6        1      1.0                TRUE</span></span>
+<pre><code><span><span class="co">##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training</span></span>
+<span><span class="co">## barcode1    21       1             1 0.6180713      0.5                TRUE</span></span>
+<span><span class="co">## barcode2    13       0             0       NaN      0.5                TRUE</span></span>
+<span><span class="co">## barcode3     9       1             1 1.0000000      1.0                TRUE</span></span>
+<span><span class="co">## barcode4     7       0             0       NaN      0.5                TRUE</span></span>
+<span><span class="co">## barcode5    15       6             6 0.7225234      0.5                TRUE</span></span>
 <span><span class="co">##              score</span></span>
-<span><span class="co">## barcode1 0.5625595</span></span>
-<span><span class="co">## barcode2 0.2530172</span></span>
-<span><span class="co">## barcode3 0.2530172</span></span>
-<span><span class="co">## barcode4 0.2530172</span></span>
-<span><span class="co">## barcode5 0.4696436</span></span></code></pre>
+<span><span class="co">## barcode1 0.4633364</span></span>
+<span><span class="co">## barcode2 0.4633364</span></span>
+<span><span class="co">## barcode3 0.4633364</span></span>
+<span><span class="co">## barcode4 0.4633364</span></span>
+<span><span class="co">## barcode5 0.4633364</span></span></code></pre>
 <p>The score can then be interpreted as for <code>scDblFinder</code>. We
 however note that this method proved <em>inferior to
 alternatives</em>.</p>
