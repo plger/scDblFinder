@@ -501,7 +501,9 @@ scDblFinder <- function(
   d <- d$d
   if(!is.null(clusters)){
     d$cluster <- NA
-    d[colnames(sce),"cluster"] <- clusters
+    # a factor assigned into the NA column would be stored as its integer codes,
+    # which no longer match the origin labels built from the level names
+    d[colnames(sce),"cluster"] <- if(is.factor(clusters)) as.character(clusters) else clusters
   }else{
     d$cluster <- NULL
   }
