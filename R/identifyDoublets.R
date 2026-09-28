@@ -41,10 +41,11 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                      booster = "gbtree",
                                      objective = "multi:softprob",
                                      eval_metric = "mlogloss",
-                                     subsample = 0.8,
-                                     colsample_bytree = 0.7,
-                                     eta = 0.1,
-                                     max_depth = 8
+                                     subsample = 0.5,
+                                     colsample_bytree = 0.4,
+                                     eta = 0.25,
+                                     lambda = 200,
+                                     alpha = 2
                                    ), max_rounds=300, nthread=1){
   
   stopifnot(inherits(sce, "SingleCellExperiment"))
@@ -100,6 +101,7 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   label <- droplevels(as.factor(out$origin[w]))
   ad <- t(ad)/colSums(ad)
   xgb.param$num_class <- length(unique(label))
+  xgb.param$max_depth <- pmax(3,pmin(round(sqrt(xgb.param$num_class)), 7))
   
   dtrain <- xgb.DMatrix(data = ad, label = as.integer(label) - 1L)
   
@@ -113,9 +115,18 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     verbose = verbose
   )
   best_nrounds <- cv$early_stop$best_iteration
+  
+  e <- cv$evaluation_log
+  testm <- grep("test.+mean", colnames(e))
+  best <- which.min(e[,testm])
+  ac <- e[[testm]][best] + e[[grep("test.+std", colnames(e))]][best]
+  best_nrounds <- min(which(e[[grep("test.+mean", colnames(e))]] <= ac))
+  
   if(is.null(best_nrounds)){
     warning("Cross-validation did not reach plateau, using max rounds")
     best_nrounds <- max_rounds
+  }else if(verbose){
+    message("Will use ", best_nrounds, " rounds")
   }
   
   if(verbose) message("Training final model...")
