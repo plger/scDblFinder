@@ -313,9 +313,9 @@ scDblFinder <- function(
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers, trainingFeatures=trainingFeatures,
                     returnType=ifelse(returnType=="counts","counts","table"),
-                    threshold=threshold, score=ifelse(isSplitMode,score,"weighted"),
+                    score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
-                    aggregateFeatures=aggregateFeatures,
+                    aggregateFeatures=aggregateFeatures, threshold=threshold, 
                     xgb.nthreads=xgb.nthreads, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
@@ -332,9 +332,9 @@ scDblFinder <- function(
       ## score and thresholding
       d <- .scDblscore(d, scoreType=score, threshold=threshold, dbr=dbr,
                        dbr.sd=dbr.sd, dbr.per1k=dbr.per1k, max_depth=max_depth,
-                       nrounds=nrounds, iter=iter, BPPARAM=BPPARAM, 
-                       features=trainingFeatures, unident.th=unident.th,
-                       metric=metric, filterUnidentifiable=removeUnidentifiable,
+                       nrounds=nrounds, iter=iter, features=trainingFeatures,
+                       unident.th=unident.th, metric=metric,
+                       filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE, xgb.nthreads=xgb.nthreads, 
                        verbose=verbose)
@@ -519,7 +519,7 @@ scDblFinder <- function(
                    dbr.per1k=dbr.per1k, max_depth=max_depth, iter=iter,
                    features=trainingFeatures, verbose=verbose, metric=metric,
                    filterUnidentifiable=removeUnidentifiable,
-                   unident.th=unident.th, BPPARAM=BPPARAM)
+                   unident.th=unident.th)
 
   #if(characterize) d <- .callDblType(d, pca, knn=knn, origins=ado2)
   if(returnType=="table") return(d)
