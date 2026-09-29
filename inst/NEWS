@@ -1,3 +1,8 @@
+Changes in version 1.27.3 (2026-09-29)
++ added option to manually set threshold
++ added kNN-based score smoothing function
++ added option to set xgboost nthreads
+
 Changes in version 1.26.5 (2026-06-23)
 + Changed default kNN method to Kmknn, with argument to set
 

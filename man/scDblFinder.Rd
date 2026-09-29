@@ -37,6 +37,7 @@ scDblFinder(
   threshold = TRUE,
   verbose = TRUE,
   BPPARAM = SerialParam(progressbar = verbose),
+  xgb.nthreads = 1,
   ...
 )
 }
@@ -180,12 +181,18 @@ heterogeneity across samples), "singleModel", "singleModelSplitThres", or
 "asOne" (see details below).}
 
 \item{threshold}{Logical; whether to threshold scores into binary doublet
-calls}
+calls. If TRUE (default), this uses the optimization-based thresholding.
+Alternatively, if a value between 0 and 1 is provided, this will be used as
+threshold at each iteration.}
 
 \item{verbose}{Logical; whether to print messages and the thresholding plot.}
 
 \item{BPPARAM}{Used for multithreading when splitting by samples (i.e. when
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.}
+
+\item{xgb.nthreads}{Number of threads used for xgboost. This is the best way
+to multithread, it's very efficient as it does not increase memory 
+consumption much.}
 
 \item{...}{further arguments passed to \code{\link{getArtificialDoublets}}.}
 }

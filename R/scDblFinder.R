@@ -108,7 +108,9 @@
 #' cells that would be called as doublets are excluding from the training, and
 #' new scores are calculated. Recommended values are 1 or 2.
 #' @param threshold Logical; whether to threshold scores into binary doublet
-#' calls
+#'  calls. If TRUE (default), this uses the optimization-based thresholding.
+#'  Alternatively, if a value between 0 and 1 is provided, this will be used as
+#'  threshold at each iteration.
 #' @param aggregateFeatures Whether to perform feature aggregation (recommended
 #'  for ATAC). Can also be a positive integer, in which case this will indicate
 #'  the number of components to use for feature aggregation (if TRUE, `dims`
@@ -117,6 +119,9 @@
 #' @param BPPARAM Used for multithreading when splitting by samples (i.e. when
 #' `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.
 #' @param BNPARAM Optional BiocNeighbors params used for kNN computation.
+#' @param xgb.nthreads Number of threads used for xgboost. This is the best way
+#'  to multithread, it's very efficient as it does not increase memory 
+#'  consumption much.
 #' @param ... further arguments passed to \code{\link{getArtificialDoublets}}.
 #'
 #' @return The \code{sce} object with several additional colData columns, in
@@ -209,7 +214,8 @@ scDblFinder <- function(
   score=c("xgb","weighted","ratio"), processing="default", metric="logloss",
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
-  threshold=TRUE, verbose=TRUE, BPPARAM=SerialParam(progressbar=verbose), ...){
+  threshold=TRUE, verbose=TRUE, BPPARAM=SerialParam(progressbar=verbose), 
+  xgb.nthreads=1, ...){
 
   multiSampleMode <- match.arg(multiSampleMode)
 
@@ -246,6 +252,9 @@ scDblFinder <- function(
   .checkPropArg(dbr.per1k)
   .checkPropArg(dbr, acceptNull=TRUE)
   processing <- .checkProcArg(processing)
+  stopifnot(isTRUE(threshold) || !isFALSE(threshold) ||
+              (length(threshold)==1 & threshold>0 & threshold<1))
+  stopifnot(length(xgb.nthreads)==1 && xgb.nthreads>=1)
 
   if(!bpisup(BPPARAM)){
     ## pre-start params for independent seeds between bplapply calls
@@ -304,9 +313,10 @@ scDblFinder <- function(
                     propRandom=propRandom, includePCs=includePCs,
                     propMarkers=propMarkers, trainingFeatures=trainingFeatures,
                     returnType=ifelse(returnType=="counts","counts","table"),
-                    threshold=isSplitMode, score=ifelse(isSplitMode,score,"weighted"),
+                    threshold=threshold, score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
-                    aggregateFeatures=aggregateFeatures, ...),
+                    aggregateFeatures=aggregateFeatures,
+                    xgb.nthreads=xgb.nthreads, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
@@ -326,7 +336,8 @@ scDblFinder <- function(
                        features=trainingFeatures, unident.th=unident.th,
                        metric=metric, filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
-                       includeSamples=TRUE, verbose=verbose)
+                       includeSamples=TRUE, xgb.nthreads=xgb.nthreads, 
+                       verbose=verbose)
     }
     if(returnType=="table") return(d)
     if(returnType=="scores")
@@ -606,7 +617,7 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         dbr.per1k=dbr.per1k, features=NULL, addVals=NULL,
                         filterUnidentifiable=TRUE, metric="logloss", eta=0.3,
-                        BPPARAM=SerialParam(), includeSamples=FALSE, 
+                        xgb.nthreads=1, includeSamples=FALSE, 
                         perSample=TRUE, unident.th=0.1, ...){
   gdbr <- .gdbr(d, dbr, dbr.per1k=dbr.per1k)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
@@ -685,7 +696,7 @@ scDblFinder <- function(
       d$score <- tryCatch({
         fit <- .xgbtrain(preds[-w,], d$type[-w], nrounds, metric=metric,
                          max_depth=max_depth, eta=eta, #base_score=gdbr,
-                         nthreads=BiocParallel::bpnworkers(BPPARAM))
+                         nthreads=xgb.nthreads)
         predict(fit, as.matrix(preds))
       }, error=function(e) d$score)
       if(!is.null(d$mostLikelyOrigin)){
@@ -714,9 +725,13 @@ scDblFinder <- function(
     }
   }
   d <- DataFrame(d)
-  if(threshold){
-    th <- doubletThresholding( d, dbr=dbr, dbr.sd=dbr.sd, dbr.per1k=dbr.per1k,
-                               perSample=perSample, ... )
+  if(!isFALSE(threshold)){
+    if(isTRUE(threshold)){
+      th <- doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, dbr.per1k=dbr.per1k,
+                                perSample=perSample, ... )
+    }else{
+      th <- threshold
+    }
     if(!is.null(d$sample) && length(th)>1){
       d$class <- ifelse(d$score >= th[d$sample], "doublet", "singlet")
     }else{
