@@ -300,6 +300,7 @@ scDblFinder <- function(
       #if(bpnworkers(BPPARAM)==1) message("Sample ", n)
       x <- cs[[n]]
       if(!is.null(clusters) && length(clusters)>1) clusters <- clusters[x]
+      if(is.factor(clusters)) clusters <- droplevels(clusters)
       if(!is.null(knownDoublets) && length(knownDoublets)>1){
         knownDoublets <- knownDoublets[x]
         if(!any(knownDoublets)) knownDoublets <- NULL
@@ -406,6 +407,7 @@ scDblFinder <- function(
     characterize <- FALSE
   }
   cl <- clusters
+  if(is.factor(cl)) cl <- droplevels(cl)
 
   ## feature selection
   if(length(sel_features)>nfeatures)
