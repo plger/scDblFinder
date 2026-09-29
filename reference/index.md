@@ -54,3 +54,5 @@
   : scDblFinder
 - [`selFeatures()`](https://plger.github.io/scDblFinder/reference/selFeatures.md)
   : selFeatures
+- [`smoothDoubletScores()`](https://plger.github.io/scDblFinder/reference/smoothDoubletScores.md)
+  : Smooth Doublet Scores

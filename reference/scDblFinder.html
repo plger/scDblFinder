@@ -9,7 +9,7 @@ using cluster-based generation of artificial doublets."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +83,7 @@ using cluster-based generation of artificial doublets.</p>
 <span>  threshold <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span>progressbar <span class="op">=</span> <span class="va">verbose</span><span class="op">)</span>,</span>
+<span>  xgb.nthreads <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -289,7 +290,9 @@ heterogeneity across samples), "singleModel", "singleModelSplitThres", or
 
 <dt id="arg-threshold">threshold<a class="anchor" aria-label="anchor" href="#arg-threshold"></a></dt>
 <dd><p>Logical; whether to threshold scores into binary doublet
-calls</p></dd>
+calls. If TRUE (default), this uses the optimization-based thresholding.
+Alternatively, if a value between 0 and 1 is provided, this will be used as
+threshold at each iteration.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -299,6 +302,12 @@ calls</p></dd>
 <dt id="arg-bpparam">BPPARAM<a class="anchor" aria-label="anchor" href="#arg-bpparam"></a></dt>
 <dd><p>Used for multithreading when splitting by samples (i.e. when
 `samples!=NULL`); otherwise passed to eventual PCA and K/SNN calculations.</p></dd>
+
+
+<dt id="arg-xgb-nthreads">xgb.nthreads<a class="anchor" aria-label="anchor" href="#arg-xgb-nthreads"></a></dt>
+<dd><p>Number of threads used for xgboost. This is the best way
+to multithread, it's very efficient as it does not increase memory
+consumption much.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
