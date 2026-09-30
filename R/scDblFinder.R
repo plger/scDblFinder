@@ -406,8 +406,9 @@ scDblFinder <- function(
   }else{
     characterize <- FALSE
   }
+  if(is.integer(clusters) | (is.character(clusters) & length(clusters)>1))
+    clusters <- factor(clusters)
   cl <- clusters
-  if(is.factor(cl)) cl <- droplevels(cl)
 
   ## feature selection
   if(length(sel_features)>nfeatures)
