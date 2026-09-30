@@ -8,11 +8,14 @@ smoothDoubletScores(
   x,
   knn = NULL,
   coords = "PCA",
-  k = 30,
+  k = 20,
   alpha = 0.5,
-  gamma = 2,
+  gamma = 1,
+  weights = TRUE,
+  decayByDistance = c("linear", "exp", "none"),
   scoreColumn = "scDblFinder.score",
-  outColumn = "smoothedDoubletScore"
+  outColumn = "smoothedDoubletScore",
+  ...
 )
 }
 \arguments{
@@ -40,12 +43,22 @@ score (0) and the neighborhood consensus (1). Defaults to 0.5.}
 above 1 exponentially amplify clusters of high-probability cells. Defaults
  to 2.0.}
 
+\item{weights}{Logical. If \code{TRUE} (default), uses adaptive Gaussian 
+kernel weighting based on continuous distance. If \code{FALSE}, 
+applies uniform weights across all neighbors.}
+
+\item{decayByDistance}{Whether (and how) to reduce the importance of the
+neighborhood for isolated cells (based on the first neighbor distance),
+forcing them to rely primarily on their own raw score. Default 'linear'.}
+
 \item{scoreColumn}{Character. The column name in \code{colData(x)} 
 containing the raw doublet scores. Defaults to \code{"scDblFinder.score"}.}
 
 \item{outColumn}{Character. The column name to store the smoothed scores if 
 \code{x} is a \code{SingleCellExperiment}. Defaults to 
 \code{"smoothedDoubletScore"}.}
+
+\item{...}{Passed to \code{\link[BiocNeighbors](findKNN)}.}
 }
 \value{
 If \code{x} is a \code{SingleCellExperiment}, returns the object with 
