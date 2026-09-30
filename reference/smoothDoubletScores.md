@@ -11,11 +11,14 @@ smoothDoubletScores(
   x,
   knn = NULL,
   coords = "PCA",
-  k = 30,
+  k = 20,
   alpha = 0.5,
-  gamma = 2,
+  gamma = 1,
+  weights = TRUE,
+  decayByDistance = c("linear", "exp", "none"),
   scoreColumn = "scDblFinder.score",
-  outColumn = "smoothedDoubletScore"
+  outColumn = "smoothedDoubletScore",
+  ...
 )
 ```
 
@@ -55,6 +58,18 @@ smoothDoubletScores(
   exponentially amplify clusters of high-probability cells. Defaults to
   2.0.
 
+- weights:
+
+  Logical. If `TRUE` (default), uses adaptive Gaussian kernel weighting
+  based on continuous distance. If `FALSE`, applies uniform weights
+  across all neighbors.
+
+- decayByDistance:
+
+  Whether (and how) to reduce the importance of the neighborhood for
+  isolated cells (based on the first neighbor distance), forcing them to
+  rely primarily on their own raw score. Default 'linear'.
+
 - scoreColumn:
 
   Character. The column name in `colData(x)` containing the raw doublet
@@ -64,6 +79,10 @@ smoothDoubletScores(
 
   Character. The column name to store the smoothed scores if `x` is a
   `SingleCellExperiment`. Defaults to `"smoothedDoubletScore"`.
+
+- ...:
+
+  Passed to `(findKNN)`.
 
 ## Value
 

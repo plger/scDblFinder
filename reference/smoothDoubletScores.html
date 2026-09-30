@@ -11,7 +11,7 @@ suppressing isolated noisy predictions."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,11 +57,14 @@ suppressing isolated noisy predictions.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  knn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coords <span class="op">=</span> <span class="st">"PCA"</span>,</span>
-<span>  k <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>  gamma <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  gamma <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  weights <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  decayByDistance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"linear"</span>, <span class="st">"exp"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  scoreColumn <span class="op">=</span> <span class="st">"scDblFinder.score"</span>,</span>
-<span>  outColumn <span class="op">=</span> <span class="st">"smoothedDoubletScore"</span></span>
+<span>  outColumn <span class="op">=</span> <span class="st">"smoothedDoubletScore"</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,6 +108,18 @@ above 1 exponentially amplify clusters of high-probability cells. Defaults
  to 2.0.</p></dd>
 
 
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
+<dd><p>Logical. If <code>TRUE</code> (default), uses adaptive Gaussian
+kernel weighting based on continuous distance. If <code>FALSE</code>,
+applies uniform weights across all neighbors.</p></dd>
+
+
+<dt id="arg-decaybydistance">decayByDistance<a class="anchor" aria-label="anchor" href="#arg-decaybydistance"></a></dt>
+<dd><p>Whether (and how) to reduce the importance of the
+neighborhood for isolated cells (based on the first neighbor distance),
+forcing them to rely primarily on their own raw score. Default 'linear'.</p></dd>
+
+
 <dt id="arg-scorecolumn">scoreColumn<a class="anchor" aria-label="anchor" href="#arg-scorecolumn"></a></dt>
 <dd><p>Character. The column name in <code>colData(x)</code>
 containing the raw doublet scores. Defaults to <code>"scDblFinder.score"</code>.</p></dd>
@@ -114,6 +129,10 @@ containing the raw doublet scores. Defaults to <code>"scDblFinder.score"</code>.
 <dd><p>Character. The column name to store the smoothed scores if
 <code>x</code> is a <code>SingleCellExperiment</code>. Defaults to
 <code>"smoothedDoubletScore"</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Passed to <code>(findKNN)</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
