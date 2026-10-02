@@ -56,19 +56,19 @@ A data.frame with the columns
 x <- sample(head(LETTERS), 100, replace=TRUE)
 getCellPairs(x, n=6)
 #>    cell1 cell2 orig.clusters
-#> 1     14    15           A+B
-#> 2     62    39           A+C
-#> 3     76    30           B+C
-#> 4    100    11           A+D
-#> 5     43    41           B+D
-#> 6     90    64           C+D
-#> 7     70    55           A+E
-#> 8     25    83           B+E
-#> 9     49    80           C+E
-#> 10    19     6           D+E
-#> 11    14    44           A+F
-#> 12    98    45           B+F
-#> 13    49    44           C+F
-#> 14    56    58           D+F
-#> 15    92    42           E+F
+#> 1     71    84           A+B
+#> 2     68    76           A+C
+#> 3     25    22           B+C
+#> 4     59    58           A+D
+#> 5     25    30           B+D
+#> 6      7    41           C+D
+#> 7     83    21           A+E
+#> 8     85    46           B+E
+#> 9     40    74           C+E
+#> 10    39    31           D+E
+#> 11    35    54           A+F
+#> 12    93    13           B+F
+#> 13     9    63           C+F
+#> 14    51    63           D+F
+#> 15    95    47           E+F
 ```

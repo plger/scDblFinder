@@ -130,7 +130,7 @@ sce <- scDblFinder(sce, clusters="cluster")
 
     ## iter=2, 24 cells excluded from training.
 
-    ## Threshold found:0.998
+    ## Threshold found:0.995
 
     ## 24 (4.6%) doublets called
 
