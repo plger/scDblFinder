@@ -1,3 +1,7 @@
+Changes in version 1.27.8 (2026-10-01)
++ fixed bug that led to wrong labeling of doublet origins
++ changed the default dbr.sd, and set its importance to decay across iterations
+
 Changes in version 1.27.3 (2026-09-29)
 + added option to manually set threshold
 + added kNN-based score smoothing function

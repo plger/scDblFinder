@@ -48,10 +48,11 @@
 #' @param dbr.sd The uncertainty range in the doublet rate, interpreted as
 #' a +/- around `dbr`. During thresholding, deviation from the expected doublet
 #' rate will be calculated from these boundaries, and will be considered null
-#' within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
-#'  disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
-#'  any expectation of the number of doublets (thus letting the thresholding be
-#'  entirely driven by the misclassification of artificial doublets).
+#' within these boundaries. If NULL, will be 40\% of `dbr` (minimum 0.02). Set 
+#' to `dbr.sd=0` to disable the uncertainty around the doublet rate (not 
+#' recommended!), or to `dbr.sd=1` to disable any expectation of the number of 
+#' doublets (thus letting the thresholding be entirely driven by the 
+#' misclassification of artificial doublets, which typically works well enough).
 #' @param dbr.per1k This is an alternative way of providing the expected doublet
 #'  rate as a fraction of the number of (the thousands of) cells captured. The 
 #'  default, 0.008 (e.g. 3.2\% doublets among 4000 cells), is appropriate for 
@@ -215,7 +216,7 @@ scDblFinder <- function(
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=TRUE, BPPARAM=SerialParam(progressbar=verbose), 
-  xgb.nthreads=1, ...){
+  xgb.nthreads=1, decayDbr=TRUE, ...){
 
   multiSampleMode <- match.arg(multiSampleMode)
 
@@ -317,7 +318,7 @@ scDblFinder <- function(
                     score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
                     aggregateFeatures=aggregateFeatures, threshold=threshold, 
-                    xgb.nthreads=xgb.nthreads, ...),
+                    xgb.nthreads=xgb.nthreads, decayDbr=decayDbr, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
@@ -338,7 +339,7 @@ scDblFinder <- function(
                        filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE, xgb.nthreads=xgb.nthreads, 
-                       verbose=verbose)
+                       decayDbr=decayDbr, verbose=verbose)
     }
     if(returnType=="table") return(d)
     if(returnType=="scores")
@@ -620,11 +621,11 @@ scDblFinder <- function(
                         threshold=TRUE, verbose=TRUE, dbr=NULL, dbr.sd=NULL,
                         dbr.per1k=dbr.per1k, features=NULL, addVals=NULL,
                         filterUnidentifiable=TRUE, metric="logloss", eta=0.3,
-                        xgb.nthreads=1, includeSamples=FALSE, 
+                        xgb.nthreads=1, includeSamples=FALSE, decayDbr=TRUE, 
                         perSample=TRUE, unident.th=0.1, ...){
   gdbr <- .gdbr(d, dbr, dbr.per1k=dbr.per1k)
   if(!is.null(d$sample) && length(unique(d$sample))==1) d$sample <- NULL
-  if(is.null(dbr.sd)) dbr.sd <- 0.3*gdbr+0.025
+  if(is.null(dbr.sd)) dbr.sd <- 0.5*gdbr+0.025
   if(scoreType=="xgb"){
     if(verbose) message("Training model...")
     d$score <- NULL
@@ -674,17 +675,24 @@ scDblFinder <- function(
       d$score <- (d$cxds_score + d[[ratio]]/max(d[[ratio]]))/2
     }
     max.iter <-  iter
+    dbr.importance <- 1
     while(iter>0){
       # remove cells with a high chance of being doublets from the training,
       # as well as unidentifiable artificial doublets
       w1 <- which(d$type=="real" &
                   doubletThresholding(d, dbr=dbr, dbr.sd=dbr.sd, stringency=0.7,
                                       dbr.per1k=dbr.per1k, perSample=perSample,
-                                      returnType="call")=="doublet")
+                                      returnType="call",
+                                      dbr.importance=dbr.importance)=="doublet"
+                  )
       if(length(w1) > sum(d$type=="real")/3){
+        if(verbose)
+          warning("Too many cells look like doublets and would be excluded ",
+                  "from training; capping doublet ratio.")
         # enforce max prop excluded
+        maxDblRatio <- pmin(0.5, (0.2/dbr.importance))
         w1 <- head(order(d$type!="real", -d$score),
-                   floor(0.2*sum(d$type=="real")))
+                   floor(maxDblRatio*sum(d$type=="real")))
       }
       w2 <- which(d$type=="doublet" & d$score<unident.th & filterUnidentifiable)
       if(filterUnidentifiable && length(w2) > sum(d$type=="doublet")/4){
@@ -713,6 +721,7 @@ scDblFinder <- function(
           d <- .filterUnrecognizableDoublets(d)
       }
       iter <- iter-1
+      if(decayDbr) dbr.importance <- dbr.importance/2
     }
     d$include.in.training[w] <- FALSE
     ########################
@@ -879,3 +888,4 @@ scDblFinder <- function(
   k <- c(3,10,15,20,25,50,kmax)
   unique(k[k<=kmax])
 }
+

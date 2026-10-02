@@ -11,6 +11,8 @@
 #' @param dbr.sd The standard deviation of the doublet rate, representing the
 #' uncertainty in the estimate. Ignored if `method!="optim"`.
 #' @param dbr.per1k The expected proportion of doublets per 1000 cells.
+#' @param dbr.importance A scalar between 0 and 1 indicating the importance of 
+#'  the expected doublet rate (0=ignored, 1=as important as the other metrics).
 #' @param stringency A numeric value >0 and <1 which controls the relative weight of false
 #'  positives (i.e. real cells) and false negatives (artificial doublets) in setting the
 #'  threshold. A value of 0.5 gives equal weight to both; a higher value (e.g. 0.7) gives
@@ -40,13 +42,13 @@
 #' @importFrom stats mad qnorm setNames
 #' @export
 doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, dbr.per1k=0.008,
-                                 stringency=0.5, p=0.1,
+                                 stringency=0.5, p=0.1, dbr.importance=1,
                                  method=c("auto","optim","dbr","griffiths"),
                                  perSample=TRUE, returnType=c("threshold","call")){
   method <- match.arg(method)
   returnType <- match.arg(returnType)
   if(is.null(d$src)) d$src <- d$type
-  if(is.null(dbr.sd)) dbr.sd <- mean(0.4*.gdbr(d,dbr))
+  if(is.null(dbr.sd)) dbr.sd <- max(0.02,mean(0.4*.gdbr(d,dbr)))
   dbr <- .estimateHeterotypicDbRate(d, .checkPropArg(dbr))
   if(!is.data.frame(d) && !is(d,"DFrame"))
     stop("`d` should be a data.frame with minimally the 'score' column.")
@@ -74,11 +76,14 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, dbr.per1k=0.008,
       }
       th <- sapply(setNames(names(si),names(si)), FUN=function(s){
         .optimThreshold(d[si[[s]],c("type","src","score","cluster","include.in.training")],
-                        dbr=dbr[[s]], dbr.sd=dbr.sd, stringency=stringency)
+                        dbr=dbr[[s]], dbr.sd=dbr.sd, stringency=stringency,
+                        dbr.importance=dbr.importance)
       })
       ret <- as.factor(d$score > th[d$sample])
     }else{
-      th <- .optimThreshold(d, dbr=.gdbr(d,dbr), dbr.sd=dbr.sd, stringency=stringency)
+      th <- .optimThreshold(d, dbr=.gdbr(d,dbr), dbr.sd=dbr.sd,
+                            stringency=stringency,
+                            dbr.importance=dbr.importance)
       ret <- as.factor(d$score>th)
     }
     if(returnType=="threshold") return(th)
@@ -115,7 +120,8 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, dbr.per1k=0.008,
 }
 
 # dbr should be already corrected for homotypy
-.optimThreshold <- function(d, dbr=NULL, dbr.sd=NULL, ths=NULL, stringency=0.5){
+.optimThreshold <- function(d, dbr=NULL, dbr.sd=NULL, ths=NULL, stringency=0.5,
+                            dbr.importance=1){
   if(!(stringency > 0) || !(stringency<1))
     stop("`stringency` should be >0 and <1.")
   if(is.null(dbr)) dbr <- .gdbr(d, dbr=.estimateHeterotypicDbRate(d))
@@ -129,7 +135,7 @@ doubletThresholding <- function( d, dbr=NULL, dbr.sd=NULL, dbr.per1k=0.008,
     propHomotypic(d$cluster[d$src=="real"])
   if(length(unique(d$cluster))==1) eFN <- 0
   totfn <- function(x){
-    edev <- .prop.dev(d$type,d$score,expected,x)^2
+    edev <- dbr.importance*.prop.dev(d$type,d$score,expected,x)^2
     y <- edev + 2*(1-stringency)*.FNR(d$type, d$score, x, expectedFN=eFN)
     if(!is.null(fdr.include))
       y <- y + .FPR(d$type[fdr.include], d$score[fdr.include], x)*2*stringency

@@ -11,6 +11,7 @@ doubletThresholding(
   dbr.per1k = 0.008,
   stringency = 0.5,
   p = 0.1,
+  dbr.importance = 1,
   method = c("auto", "optim", "dbr", "griffiths"),
   perSample = TRUE,
   returnType = c("threshold", "call")
@@ -36,6 +37,9 @@ higher weight to the false positives, and a lower to artificial doublets.  Ignor
 `method!="optim"`.}
 
 \item{p}{The p-value threshold determining the deviation in doublet score.}
+
+\item{dbr.importance}{A scalar between 0 and 1 indicating the importance of 
+the expected doublet rate (0=ignored, 1=as important as the other metrics).}
 
 \item{method}{The thresholding method to use, either 'auto' (default, automatic
 selection depending on the available fields), 'optim' (optimization of

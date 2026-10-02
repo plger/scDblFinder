@@ -38,6 +38,7 @@ scDblFinder(
   verbose = TRUE,
   BPPARAM = SerialParam(progressbar = verbose),
   xgb.nthreads = 1,
+  decayDbr = TRUE,
   ...
 )
 }
@@ -96,10 +97,11 @@ on the `dbr.per1k` argument and the number of cells.}
 \item{dbr.sd}{The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
 rate will be calculated from these boundaries, and will be considered null
-within these boundaries. If NULL, will be 40\% of `dbr`. Set to `dbr.sd=0` to
- disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
- any expectation of the number of doublets (thus letting the thresholding be
- entirely driven by the misclassification of artificial doublets).}
+within these boundaries. If NULL, will be 40\% of `dbr` (minimum 0.02). Set 
+to `dbr.sd=0` to disable the uncertainty around the doublet rate (not 
+recommended!), or to `dbr.sd=1` to disable any expectation of the number of 
+doublets (thus letting the thresholding be entirely driven by the 
+misclassification of artificial doublets, which typically works well enough).}
 
 \item{dbr.per1k}{This is an alternative way of providing the expected doublet
 rate as a fraction of the number of (the thousands of) cells captured. The 
