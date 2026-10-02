@@ -56,22 +56,24 @@ A table of significances for each combination.
 ``` r
 sce <- mockDoubletSCE()
 sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
-#> Warning: Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out
 #> Clustering cells...
-#> 3 clusters
+#> 4 clusters
 #> Creating ~500 artificial doublets...
 #> Dimensional reduction
 #> Evaluating kNN...
 #> Training model...
-#> iter=0, 30 cells excluded from training.
-#> iter=1, 30 cells excluded from training.
-#> iter=2, 30 cells excluded from training.
-#> Threshold found:0.979
-#> 30 (5.7%) doublets called
+#> iter=0, 19 cells excluded from training.
+#> iter=1, 19 cells excluded from training.
+#> iter=2, 22 cells excluded from training.
+#> Threshold found:0.827
+#> 23 (4.3%) doublets called
 doubletPairwiseEnrichment(sce)
-#> theta=0.0506911951506394
-#>   combination log2enrich     p.value         FDR
-#> 1         1+2  0.7807124 0.001969218 0.005907653
-#> 2         1+3  0.1896547 0.224538828 0.449077656
-#> 3         2+3 -1.7913750 1.000000000 1.000000000
+#> theta=0.0522644304279938
+#>   combination log2enrich      p.value          FDR
+#> 1         1+2  2.1712385 9.877137e-11 5.926282e-10
+#> 3         2+3 -1.1429288 1.000000e+00 1.000000e+00
+#> 2         1+3 -0.9147971 1.000000e+00 1.000000e+00
+#> 4         1+4 -0.8701050 1.000000e+00 1.000000e+00
+#> 5         2+4 -0.8328621 1.000000e+00 1.000000e+00
+#> 6         3+4 -0.6037463 1.000000e+00 1.000000e+00
 ```

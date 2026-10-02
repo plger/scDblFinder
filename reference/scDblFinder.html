@@ -84,6 +84,7 @@ using cluster-based generation of artificial doublets.</p>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span>progressbar <span class="op">=</span> <span class="va">verbose</span><span class="op">)</span>,</span>
 <span>  xgb.nthreads <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  decayDbr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -163,10 +164,11 @@ on the `dbr.per1k` argument and the number of cells.</p></dd>
 <dd><p>The uncertainty range in the doublet rate, interpreted as
 a +/- around `dbr`. During thresholding, deviation from the expected doublet
 rate will be calculated from these boundaries, and will be considered null
-within these boundaries. If NULL, will be 40% of `dbr`. Set to `dbr.sd=0` to
- disable the uncertainty around the doublet rate, or to `dbr.sd=1` to disable
- any expectation of the number of doublets (thus letting the thresholding be
- entirely driven by the misclassification of artificial doublets).</p></dd>
+within these boundaries. If NULL, will be 40% of `dbr` (minimum 0.02). Set
+to `dbr.sd=0` to disable the uncertainty around the doublet rate (not
+recommended!), or to `dbr.sd=1` to disable any expectation of the number of
+doublets (thus letting the thresholding be entirely driven by the
+misclassification of artificial doublets, which typically works well enough).</p></dd>
 
 
 <dt id="arg-dbr-per-k">dbr.per1k<a class="anchor" aria-label="anchor" href="#arg-dbr-per-k"></a></dt>

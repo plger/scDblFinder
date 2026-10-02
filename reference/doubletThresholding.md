@@ -13,6 +13,7 @@ doubletThresholding(
   dbr.per1k = 0.008,
   stringency = 0.5,
   p = 0.1,
+  dbr.importance = 1,
   method = c("auto", "optim", "dbr", "griffiths"),
   perSample = TRUE,
   returnType = c("threshold", "call")
@@ -54,6 +55,11 @@ doubletThresholding(
 
   The p-value threshold determining the deviation in doublet score.
 
+- dbr.importance:
+
+  A scalar between 0 and 1 indicating the importance of the expected
+  doublet rate (0=ignored, 1=as important as the other metrics).
+
 - method:
 
   The thresholding method to use, either 'auto' (default, automatic
@@ -81,7 +87,8 @@ vector of thresholds) if \`returnType=="threshold"\`.
 ``` r
 sce <- mockDoubletSCE()
 d <- scDblFinder(sce, verbose=FALSE, returnType="table")
+#> Warning: Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out
 th <- doubletThresholding(d, dbr=0.05)
 th
-#> [1] 0.5854748
+#> [1] 0.5847242
 ```

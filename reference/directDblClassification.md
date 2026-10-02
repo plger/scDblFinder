@@ -79,7 +79,7 @@ with the additional \`colData\` column \`directDoubletScore\`.
 ``` r
 sce <- directDblClassification(mockDoubletSCE(), artificialDoublets=1)
 #> Creating ~525 artificial doublets...
-#> Round 1: 2 excluded from training.
-#> Round 2: 31 excluded from training.
+#> Round 1: 25 excluded from training.
+#> Round 2: 25 excluded from training.
 boxplot(sce$directDoubletScore~sce$type)
 ```

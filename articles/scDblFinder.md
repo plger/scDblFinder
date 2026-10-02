@@ -15,8 +15,9 @@ neighborhood of real cells and artificial doublets.
 has two main modes of operation: cluster-based or not. Both perform
 quite well (see [Germain et al.,
 2021](https://f1000research.com/articles/10-979)). In general, we
-recommend the cluster-based approach in datasets with a very clear
-cluster structure, and the random approach in more complex datasets.
+recommend the cluster-based approach (e.g. setting `clusters=TRUE` or
+passing your own clusters) in datasets with a very clear cluster
+structure, and the random approach in more complex datasets.
 
 ### Installation
 
@@ -71,7 +72,8 @@ sce <- scDblFinder(sce, dbr=0.1)
 
 For 10x data, it is usually safe to leave the `dbr` empty, and it will
 be automatically estimated. (If using a chip other than the standard
-10X, you might have to adjust it or the related `dbr.per1k` argument.
+10X, you might have to adjust it or the related `dbr.per1k` argument).
+If you don’t know what the expected doublet rate is, set `dbr.sd=1`.
 
 `scDblFinder` will add a number of columns to the colData of `sce`
 prefixed with ‘scDblFinder’, the most important of which are:
@@ -161,7 +163,8 @@ You can do this by simply providing a vector of the sample ids to the
 `samples` parameter of `scDblFinder` or, if these are stored in a column
 of `colData`, the name of the column. In this case, you might also
 consider multithreading it using the `BPPARAM` parameter (assuming
-you’ve got enough RAM!). For example:
+you’ve got enough RAM! see the [multithreading section](#multithread)).
+For example:
 
 ``` r
 
@@ -364,7 +367,7 @@ doublets will not depend much on the expected rate. **If you are unsure
 about the doublet rate, you might consider increasing `dbr.sd`**: with a
 high value (e.g. 1), the thresholding will be entirely based on the
 misclassification error (without any assumption about an expected
-doublet rate).
+doublet rate). This typically works well enough.
 
 #### Number of artificial doublets
 
@@ -528,7 +531,8 @@ runs (e.g. see [this
 issue](https://github.com/plger/scDblFinder/issues/106)). There are good
 reasons to believe that these are `homotypic doublets` (if doublets at
 all), and if you worry chiefly about hetertypic doublets, you may
-concentrate on those that are reprocibly called across runs.
+concentrate on those that are reproducibly called across runs (or
+average scores across runs).
 
 #### Can I use this in combination with Seurat or other tools?
 
@@ -607,6 +611,23 @@ from the command line and save the results to a csv:
     write.table(res, "output.csv", row.names=FALSE, quote=FALSE)
     '
 
+#### How should I multithread this?
+
+Multithreading can be done at two levels:
+
+1.  when inputting multiple samples, these can be multithreaded using
+    the `BPPARAM` argument. This is the most efficient, however it can
+    lead to a large memory consumption as samples are loaded in memory
+    and processed in parallel, and there have been reports of this not
+    working well in some setups.
+2.  the xgboost computation can be multithreaded very efficiently
+    through the `xgb.nthreads` argument, at virtually no cost in memory,
+    although this multithreads only part of the process.
+
+Note that both types of multithreading are nested, i.e. if you use
+`BPARAM=MulticoreParam(5)`, and then use `xgb.nthreads=5`, this will
+result in up to 5\*5=25 threads.
+
 #### Can this be used with scATACseq data?
 
 Yes, see the [scATAC
@@ -633,19 +654,11 @@ shouldn’t be!), it’s unlikely to make a big difference.
 Contamination by ambiant RNA has emerged as an important confounder in
 single-cell (and especially single-nuclei) RNAseq data, which prompts
 the question of whether that should be run prior or after doublet
-detection. Unfortunately, we do not currently have good evidence
-pointing in either direction, and arguments can be made for both.
-Low-quality doublets, or doublets from an experiment with a large
-dominant celltype, can easily look like contamination, and likewise a
-high amount of contamination can easily look like a doublet because it
-includes RNA from other cell types. There is a possibility that a
-decontamination package sees an actual doublet as contamination, and
-attempts to clean it, which it will necessarily do imperfectly (because
-while the decontamination is a mixture of all cells, a doublet isn’t),
-but perhaps sufficiently so that it can’t be accurately detected as a
-doublet anymore. This would therefore be an argument for running doublet
-calling first. However, it’s also possible that decontamination, because
-it makes the cells cleaner, makes the doublet detection task easier.
+detection. While there are in principle arguments going both ways,
+upcoming work by Michelle Meier from the Oschlack lab indicates that
+prior decontamination (especially with DecontX) decreases the accuracy
+of doublet identification, so this should be avoided (this was instead
+not much of a problem with cellbender).
 
 #### Can I combine this method with others?
 
@@ -654,11 +667,15 @@ results. In our benchmark, the combination of scDblFinder with
 DoubletFinder, for instance, did yield an improvement in most (though
 not all) datasets (see [the results
 here](https://github.com/plger/scDblFinder/issues/67#issuecomment-1353590091)),
-although of a small magnitude. The simplest way is to do an average of
-the scores (assuming that the scores are on a similar scale, and that a
-higher score has the same interpretation across methods), which for
-instance gave similar results to using a Fisher p-value combination on
-1-score (interpreted as a probability).
+although of a small magnitude. In fact, improvement of a similarly small
+magnitude can be obtained just by running scDblFinder twice and
+averaging the scores (see
+[here](https://www.biorxiv.org/content/10.64898/2026.08.12.744148v1.full)).
+The simplest way is to do an average of the scores (assuming that the
+scores are on a similar scale, and that a higher score has the same
+interpretation across methods), which for instance gave similar results
+to using a Fisher p-value combination on 1-score (interpreted as a
+probability).
 
 ## Session information
 

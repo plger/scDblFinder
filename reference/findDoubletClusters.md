@@ -209,12 +209,12 @@ dbl
 #> DataFrame with 3 rows and 9 columns
 #>              source1     source2    num.de median.de        best      p.value
 #>          <character> <character> <integer> <integer> <character>    <numeric>
-#> cluster2    cluster3    cluster1        48        48     gene119 8.93987e-109
-#> cluster1    cluster3    cluster2        49        49      gene28 5.15131e-123
-#> cluster3    cluster2    cluster1        57        57      gene32  9.19366e-86
+#> cluster3    cluster2    cluster1        41        41      gene89  8.94297e-80
+#> cluster1    cluster3    cluster2        56        56      gene14 7.79571e-109
+#> cluster2    cluster3    cluster1        60        60      gene30 2.51283e-117
 #>          lib.size1 lib.size2      prop
 #>          <numeric> <numeric> <numeric>
-#> cluster2  0.984791  1.036122  0.421622
-#> cluster1  0.950459  0.965138  0.308108
-#> cluster3  1.015444  1.052124  0.270270
+#> cluster3  1.255507  1.057269  0.264901
+#> cluster1  0.945833  1.187500  0.301987
+#> cluster2  0.796491  0.842105  0.433113
 ```

@@ -84,9 +84,10 @@ doublet detection approaches, training an iterative classifier on the
 neighborhood of real cells and artificial doublets.</p>
 <p><code><a href="../reference/scDblFinder.html">scDblFinder()</a></code> has two main modes of operation:
 cluster-based or not. Both perform quite well (see <a href="https://f1000research.com/articles/10-979" class="external-link">Germain et al.,
-2021</a>). In general, we recommend the cluster-based approach in
-datasets with a very clear cluster structure, and the random approach in
-more complex datasets.</p>
+2021</a>). In general, we recommend the cluster-based approach
+(e.g. setting <code>clusters=TRUE</code> or passing your own clusters)
+in datasets with a very clear cluster structure, and the random approach
+in more complex datasets.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
@@ -127,7 +128,8 @@ approach) can be launched as follows :</p>
 <p>For 10x data, it is usually safe to leave the <code>dbr</code> empty,
 and it will be automatically estimated. (If using a chip other than the
 standard 10X, you might have to adjust it or the related
-<code>dbr.per1k</code> argument.</p>
+<code>dbr.per1k</code> argument). If you don’t know what the expected
+doublet rate is, set <code>dbr.sd=1</code>.</p>
 <p><code>scDblFinder</code> will add a number of columns to the colData
 of <code>sce</code> prefixed with ‘scDblFinder’, the most important of
 which are:</p>
@@ -194,8 +196,8 @@ You can do this by simply providing a vector of the sample ids to the
 <code>samples</code> parameter of <code>scDblFinder</code> or, if these
 are stored in a column of <code>colData</code>, the name of the column.
 In this case, you might also consider multithreading it using the
-<code>BPPARAM</code> parameter (assuming you’ve got enough RAM!). For
-example:</p>
+<code>BPPARAM</code> parameter (assuming you’ve got enough RAM! see the
+<a href="#multithread">multithreading section</a>). For example:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Bioconductor/BiocParallel" class="external-link">BiocParallel</a></span><span class="op">)</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scDblFinder.html">scDblFinder</a></span><span class="op">(</span><span class="va">sce</span>, samples<span class="op">=</span><span class="st">"sample_id"</span>, BPPARAM<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/MulticoreParam-class.html" class="external-link">MulticoreParam</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
@@ -406,7 +408,8 @@ doublets will not depend much on the expected rate. <strong>If you are
 unsure about the doublet rate, you might consider increasing
 <code>dbr.sd</code></strong>: with a high value (e.g. 1), the
 thresholding will be entirely based on the misclassification error
-(without any assumption about an expected doublet rate).</p>
+(without any assumption about an expected doublet rate). This typically
+works well enough.</p>
 </div>
 <div class="section level4">
 <h4 id="number-of-artificial-doublets">Number of artificial doublets<a class="anchor" aria-label="anchor" href="#number-of-artificial-doublets"></a>
@@ -573,7 +576,7 @@ score) in only one of the runs (e.g. see <a href="https://github.com/plger/scDb
 There are good reasons to believe that these are
 <code>homotypic doublets</code> (if doublets at all), and if you worry
 chiefly about hetertypic doublets, you may concentrate on those that are
-reprocibly called across runs.</p>
+reproducibly called across runs (or average scores across runs).</p>
 </div>
 <div class="section level4">
 <h4 id="can-i-use-this-in-combination-with-seurat-or-other-tools">Can I use this in combination with Seurat or other tools?<a class="anchor" aria-label="anchor" href="#can-i-use-this-in-combination-with-seurat-or-other-tools"></a>
@@ -643,6 +646,25 @@ write.table(res, "output.csv", row.names=FALSE, quote=FALSE)
 '</code></pre>
 </div>
 <div class="section level4">
+<h4 id="multithread">How should I multithread this?<a class="anchor" aria-label="anchor" href="#multithread"></a>
+</h4>
+<p>Multithreading can be done at two levels:</p>
+<ol style="list-style-type: decimal">
+<li>when inputting multiple samples, these can be multithreaded using
+the <code>BPPARAM</code> argument. This is the most efficient, however
+it can lead to a large memory consumption as samples are loaded in
+memory and processed in parallel, and there have been reports of this
+not working well in some setups.</li>
+<li>the xgboost computation can be multithreaded very efficiently
+through the <code>xgb.nthreads</code> argument, at virtually no cost in
+memory, although this multithreads only part of the process.</li>
+</ol>
+<p>Note that both types of multithreading are nested, i.e. if you use
+<code>BPARAM=MulticoreParam(5)</code>, and then use
+<code>xgb.nthreads=5</code>, this will result in up to 5*5=25
+threads.</p>
+</div>
+<div class="section level4">
 <h4 id="can-this-be-used-with-scatacseq-data">Can this be used with scATACseq data?<a class="anchor" aria-label="anchor" href="#can-this-be-used-with-scatacseq-data"></a>
 </h4>
 <p>Yes, see the <a href="scATAC.html">scATAC vignette</a> specifically
@@ -671,19 +693,11 @@ difference.</p>
 <p>Contamination by ambiant RNA has emerged as an important confounder
 in single-cell (and especially single-nuclei) RNAseq data, which prompts
 the question of whether that should be run prior or after doublet
-detection. Unfortunately, we do not currently have good evidence
-pointing in either direction, and arguments can be made for both.
-Low-quality doublets, or doublets from an experiment with a large
-dominant celltype, can easily look like contamination, and likewise a
-high amount of contamination can easily look like a doublet because it
-includes RNA from other cell types. There is a possibility that a
-decontamination package sees an actual doublet as contamination, and
-attempts to clean it, which it will necessarily do imperfectly (because
-while the decontamination is a mixture of all cells, a doublet isn’t),
-but perhaps sufficiently so that it can’t be accurately detected as a
-doublet anymore. This would therefore be an argument for running doublet
-calling first. However, it’s also possible that decontamination, because
-it makes the cells cleaner, makes the doublet detection task easier.</p>
+detection. While there are in principle arguments going both ways,
+upcoming work by Michelle Meier from the Oschlack lab indicates that
+prior decontamination (especially with DecontX) decreases the accuracy
+of doublet identification, so this should be avoided (this was instead
+not much of a problem with cellbender).</p>
 </div>
 </div>
 <div class="section level4">
@@ -693,11 +707,14 @@ it makes the cells cleaner, makes the doublet detection task easier.</p>
 the results. In our benchmark, the combination of scDblFinder with
 DoubletFinder, for instance, did yield an improvement in most (though
 not all) datasets (see <a href="https://github.com/plger/scDblFinder/issues/67#issuecomment-1353590091" class="external-link">the
-results here</a>), although of a small magnitude. The simplest way is to
-do an average of the scores (assuming that the scores are on a similar
-scale, and that a higher score has the same interpretation across
-methods), which for instance gave similar results to using a Fisher
-p-value combination on 1-score (interpreted as a probability).</p>
+results here</a>), although of a small magnitude. In fact, improvement
+of a similarly small magnitude can be obtained just by running
+scDblFinder twice and averaging the scores (see <a href="https://www.biorxiv.org/content/10.64898/2026.08.12.744148v1.full" class="external-link">here</a>).
+The simplest way is to do an average of the scores (assuming that the
+scores are on a similar scale, and that a higher score has the same
+interpretation across methods), which for instance gave similar results
+to using a Fisher p-value combination on 1-score (interpreted as a
+probability).</p>
 </div>
 </div>
 </div>
