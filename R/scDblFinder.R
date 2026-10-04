@@ -216,7 +216,7 @@ scDblFinder <- function(
   nrounds=0.25, max_depth=4, iter=3, trainingFeatures=NULL, unident.th=NULL, 
   multiSampleMode=c("split","singleModel","singleModelSplitThres","asOne"),
   threshold=TRUE, verbose=TRUE, BPPARAM=SerialParam(progressbar=verbose), 
-  xgb.nthreads=1, decayDbr=TRUE, ...){
+  xgb.nthreads=1, ...){
 
   multiSampleMode <- match.arg(multiSampleMode)
 
@@ -318,7 +318,7 @@ scDblFinder <- function(
                     score=ifelse(isSplitMode,score,"weighted"),
                     removeUnidentifiable=removeUnidentifiable, verbose=FALSE,
                     aggregateFeatures=aggregateFeatures, threshold=threshold, 
-                    xgb.nthreads=xgb.nthreads, decayDbr=decayDbr, ...),
+                    xgb.nthreads=xgb.nthreads, ...),
                error=function(e){
                  stop("An error occured while processing sample '",n,"':\n", e)
                })
@@ -339,7 +339,7 @@ scDblFinder <- function(
                        filterUnidentifiable=removeUnidentifiable,
                        perSample=multiSampleMode=="singleModelSplitThres",
                        includeSamples=TRUE, xgb.nthreads=xgb.nthreads, 
-                       decayDbr=decayDbr, verbose=verbose)
+                       verbose=verbose)
     }
     if(returnType=="table") return(d)
     if(returnType=="scores")
