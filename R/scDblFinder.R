@@ -504,7 +504,7 @@ scDblFinder <- function(
     d$cluster <- NA_character_
     d[colnames(sce),"cluster"] <- as.character(clusters)
     if(is.factor(clusters)){
-      d[colnames(sce),"cluster"] <- factor(d[colnames(sce),"cluster"], levels(clusters))
+      d$cluster <- factor(d$cluster, levels(clusters))
     }
   }else{
     d$cluster <- NULL
