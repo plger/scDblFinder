@@ -350,11 +350,10 @@ indicates a doublet rate of roughly 0.8% per 1000 cells captured, which
 is the default value of `dbr.per1k`. This means that unless `dbr` is
 manually set, with 5000 cells, (0.008\*5)\*5000 = 200 doublets are
 expected, and the default expected doublet rate will be set to this
-value (with a default standard deviation of 0.015). Note however that
-different protocols may vary in the expected proportion of doublets. For
-example, the high-throughput (HT) 10X kit has an expected doublet rate
-of half the standard, i.e. 0.4% per 1000 cells, so if using that kit,
-set `dbr.per1k=0.004`.
+value. Note however that different protocols may vary in the expected
+proportion of doublets. For example, the high-throughput (HT) 10X kit
+has an expected doublet rate of half the standard, i.e. 0.4% per 1000
+cells, so if using that kit, set `dbr.per1k=0.004`.
 
 Also note that strictly speaking, the proportion of doublets depends
 more on the number of cells inputted than that recovered. If your

@@ -40,7 +40,6 @@ scDblFinder(
   verbose = TRUE,
   BPPARAM = SerialParam(progressbar = verbose),
   xgb.nthreads = 1,
-  decayDbr = TRUE,
   ...
 )
 ```
