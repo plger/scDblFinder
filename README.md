@@ -10,6 +10,7 @@ For a brief overview of the methods, see the [introductory vignette](https://plg
 ### Important notes/updates
 
 - **if you are using xgboost version 3.1 or higher, make sure that your version of scDblFinder is up-to-date, otherwise results might be suboptimal. For Bioc 3.22 users, version >1.24.7 is correct; for devel/later users, 1.25.4 on is fixed.**
+- in versions prior to 1.27.8, a bug was causing the most-likely-origin of the doublets (i.e. which cell types it came from) to be wrong most of the time.
 
 <br/><br/>
 
@@ -51,13 +52,14 @@ There are several additional columns containing further information (e.g. the mo
 ### Multiple samples
 
 If you have multiple samples (understood as different cell captures, i.e. for multiplexed samples with cell hashes, rather use the batch), then it is preferable to provide `scDblFinder` with this information in order to take into consideration batch/sample-specific doublet rates. You can do this by simply providing a vector of the sample ids to the `samples` parameter of scDblFinder or, if these are stored in a column of `colData`, the name of the column. With default settings, the this will result in samples being processed separately, which appears to be faster, more robust to batch effects, and as accurate as training a single model (see the `multiSampleMode` argument for other options).
-In such cases, you might also consider multithreading it using the `BPPARAM` parameter. For example:
 
 ```r
 library(BiocParallel)
-sce <- scDblFinder(sce, samples="sample_id", BPPARAM=MulticoreParam(3))
+sce <- scDblFinder(sce, samples="sample_id")
 table(sce$scDblFinder.class)
 ```
+
+(For multithreading, see the [main vignette](https://plger.github.io/scDblFinder/articles/scDblFinder.html))
 
 ### Cluster-based detection
 
@@ -67,7 +69,13 @@ We suggest using the cluster-based approach when the datasets are segregated int
 
 ### Expected proportion of doublets
 
-The expected proportion of doublets has little impact on the score, but a very strong impact on where the threshold will be placed (the thresholding procedure simultaneously minimizes classification error and departure from the expected doublet rate). It is specified through the `dbr` parameter and the `dbr.sd` parameter (the latter specifies the standard deviation of `dbr`, i.e. the uncertainty in the expected doublet rate). For 10x data, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 1\% per 1000 cells captures (so with 5000 cells, (0.01\*5)\*5000 = 250 doublets), and the default expected doublet rate will be set to this value (with a default standard deviation of 0.015). Note however that different protocols may create considerably more doublets, and that this should be updated accordingly. If you are unsure about the doublet rate, set `dbr.sd=1` and the thresholding will be entirely based on the misclassification rates.
+The expected proportion of doublets has little impact on the score, but a very strong impact on where the threshold will be placed 
+(the thresholding procedure simultaneously minimizes classification error and departure from the expected doublet rate). 
+It is specified through the `dbr` parameter, and the `dbr.sd` parameter indicates the uncertainty in the expected doublet rate).
+For most droplet-based methods, the more cells you capture the higher the chance of creating a doublet, and Chromium documentation indicates a doublet rate of roughly 0.8\% per 1000 cells captures (so with 5000 cells, (0.008\*5)\*5000 = 200 doublets),
+and the default expected doublet rate will be set to this value. Note however that different protocols may create more or fewer doublets, and that this should be updated accordingly.
+If you are unsure about the doublet rate, set `dbr.sd=1` and the thresholding will be entirely based on the misclassification rates.
+
 
 ## Single-cell ATACseq
 
@@ -88,4 +96,4 @@ The figure below compares some of the methods implemented in this package (in bo
 
 <br/><br/>
 
-Rather a <b>python</b> person? You can have a look at [vaeda](https://github.com/kostkalab/vaeda), another doublet finding method which appears to have performances close to those of scDblFinder. Alternatively, run scDblFinder [from the command line](https://plger.github.io/scDblFinder/articles/scDblFinder.html#how-can-i-call-scdblfinder-from-the-command-line).
+Rather a <b>python</b> person? You can run scDblFinder [from the command line](https://plger.github.io/scDblFinder/articles/scDblFinder.html#how-can-i-call-scdblfinder-from-the-command-line), or alternatively use one of the [python re-implementation](https://www.biorxiv.org/content/10.64898/2026.08.12.744148v1.full), although these will not be as feature-rich and up-to-date.

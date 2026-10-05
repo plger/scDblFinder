@@ -14,17 +14,18 @@
 #'   taken from `sce$scDblFinder.class` if present; if not, only training is
 #'   performed.
 #' @param balance Logical; whether to balance doublet types (default TRUE).
-#' @param nArtificial Number of artificial doublets. If omitted, 100 per cluster
-#'   combination will be used, up to a maximum of 20000.
+#' @param nArtificial Number of artificial doublets. If omitted, 100 per 
+#'   cluster combination will be used, up to a maximum of 20000.
 #' @param verbose Logical; whether to output progress messages.
 #' @param xgb.param A named list of parameters passed to xgboost.
 #' @param max_rounds The maximum training round during cross-validation.
 #' @param nthread The number of threads.
 #'
 #' @returns A list with:
-#'    - model : the xgboost model,
+#'    - model : the xgboost model
 #'    - train_contigency : the contingency matrix on the training data
-#'    - predictions : the per-class probabilities on `doublets`
+#'    - predictions : the per-class probabilities on `doublets` (if given)
+#'    - calls : the origin calls on `doublets` (if given)
 #'    - features : the ordered features (i.e. genes) needed to run the model.
 #' @export
 #' @importFrom xgboost xgb.train
@@ -35,6 +36,8 @@
 #' # to have the example run fast, we set a low number of artificial doublets 
 #' # and a low maximum learning rounds
 #' res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
+#' # if desired, we could then re-run the same classifier on a new sample:
+#' 
 identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                    balance=TRUE, nArtificial=NULL, verbose=TRUE,
                                    xgb.param=list(
@@ -43,9 +46,9 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                      eval_metric = "mlogloss",
                                      subsample = 0.5,
                                      colsample_bytree = 0.4,
-                                     eta = 0.25,
-                                     lambda = 200,
-                                     alpha = 2
+                                     eta = 0.5,
+                                     lambda = 100,
+                                     alpha = 1
                                    ), max_rounds=300, nthread=1){
   
   stopifnot(inherits(sce, "SingleCellExperiment"))
@@ -84,7 +87,8 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   }
 
   if(is.null(nArtificial))
-    nArtificial <- min((100/nSamples)*length(levels(clusters))^2, 20000/nSamples)
+    nArtificial <- min((100/nSamples)*length(levels(clusters))^2,
+                       20000/nSamples)
   
   if(verbose) message("Generating ", nArtificial*nSamples,
                       " artificial doublets.")
@@ -146,18 +150,55 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   
   colnames(tt) <- levels(out$origin)
   
-  preds2 <- NULL
+  stats <- calls <- preds2 <- NULL
   if(!is.null(doublets)){
     if(verbose) message("Predicting origins of real doublets")
     doublets <- t(doublets)/colSums(doublets)
-    preds2 <- predict(model, doublets, type="class")
+    preds2 <- predict(model, doublets)
     colnames(preds2) <- levels(out$origin)
+    calls <- factor(apply(preds2, 1, which.max),
+                    seq_len(ncol(preds2)), colnames(preds2))
+    row.names(preds2) <- names(calls) <- row.names(doublets)
+    if(!is.null(metadata(sce)$scDblFinder.stats))
+      stats <- .updateDoubletOriginsStats(sce, setNames(tabulate(calls),
+                                                        levels(out$origin)))
   }
   
   list(
     model=model,
     train_contigency=tt,
     predictions=preds2,
+    calls=calls,
+    stats=stats,
     features=colnames(ad))
   
+}
+
+
+.updateDoubletOriginsStats <- function(s, new_observed) {
+  if(is(s, "SingleCellExperiment")) s <- metadata(s)$scDblFinder.stats
+  
+  .update_one <- function(df, obs) {
+    stopifnot(
+      is.numeric(obs),
+      length(obs) == nrow(df),
+      all(obs >= 0)
+    )
+    if(!is.null(names(obs))){
+      obs <- obs[as.character(df$combination)]
+    }
+    df$observed     <- obs
+    df$deviation    <- abs(df$expected - df$observed)
+    df$prop.deviation <- df$deviation / sum(df$expected)
+    df
+  }
+  
+  if (is.list(s) && !is.data.frame(s)) {
+    stopifnot(is.list(new_observed), identical(names(new_observed), names(s)))
+    s <- mapply(.update_one, df = s, obs = new_observed, SIMPLIFY = FALSE)
+  } else {
+    s <- .update_one(s, new_observed)
+  }
+  
+  s
 }

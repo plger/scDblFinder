@@ -316,31 +316,33 @@ createDoublets <- function(x, dbl.idx, clusters=NULL, resamp=0.5,
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
   if(halfSize>1 || halfSize<0)
       stop("`adjustSize` should be a logical or a number between 0 and 1.")
-  wAd <- sample.int(nrow(dbl.idx), size=round(adjustSize*nrow(dbl.idx)))
-  wNad <- setdiff(seq_len(nrow(dbl.idx)),wAd)
-  x1 <- x[,dbl.idx[wNad,1],drop=FALSE]+x[,dbl.idx[wNad,2],drop=FALSE]
-  if(length(wAd)>1){
+  npairs <- nrow(dbl.idx)
+  wAd <- sample.int(npairs, size=round(adjustSize*npairs))
+  # sum every pair in the input order; the size-adjusted pairs are then replaced
+  # in place, so that column i is always pair i (the caller assigns the origins
+  # by position)
+  x1 <- x[,dbl.idx[,1],drop=FALSE]+x[,dbl.idx[,2],drop=FALSE]
+  if(length(wAd)>0){
     if(is.null(clusters)) stop("If `adjustSize=TRUE`, clusters must be given.")
-    dbl.idx <- as.data.frame(dbl.idx[wAd,,drop=FALSE])
+    adj <- as.data.frame(dbl.idx[wAd,,drop=FALSE])
     ls <- Matrix::colSums(x)
     csz <- vapply(split(ls,clusters), FUN=median, FUN.VALUE=numeric(1))
-    dbl.idx$ls.ratio <- ls[dbl.idx[,1]]/(ls[dbl.idx[,1]]+ls[dbl.idx[,2]])
-    ls1 <- csz[as.character(clusters[dbl.idx[,1]])]
-    ls2 <- csz[as.character(clusters[dbl.idx[,2]])]
-    dbl.idx$factor <- (dbl.idx$ls.ratio+ls1/(ls1+ls2))/2
-    dbl.idx$factor[dbl.idx$factor>0.8] <- 0.8
-    dbl.idx$factor[dbl.idx$factor<0.2] <- 0.2
-    dbl.idx$ls <- (ls[dbl.idx[,1]]+ls[dbl.idx[,2]])
-    x2 <- x[,dbl.idx[,1]]*dbl.idx$factor+x[,dbl.idx[,2]]*(1-dbl.idx$factor)
-    x2 <- tryCatch(x2 %*% diag(dbl.idx$ls/Matrix::colSums(x2)),
-                   error=function(e) t(t(x2)/Matrix::colSums(x2)))
-    x1 <- cbind(x1,x2)
+    adj$ls.ratio <- ls[adj[,1]]/(ls[adj[,1]]+ls[adj[,2]])
+    ls1 <- csz[as.character(clusters[adj[,1]])]
+    ls2 <- csz[as.character(clusters[adj[,2]])]
+    adj$factor <- (adj$ls.ratio+ls1/(ls1+ls2))/2
+    adj$factor[adj$factor>0.8] <- 0.8
+    adj$factor[adj$factor<0.2] <- 0.2
+    adj$ls <- (ls[adj[,1]]+ls[adj[,2]])
+    x2 <- x[,adj[,1],drop=FALSE]*adj$factor+x[,adj[,2],drop=FALSE]*(1-adj$factor)
+    x2 <- x2 %*% Matrix::Diagonal(x=adj$ls/Matrix::colSums(x2))
+    x1[,wAd] <- x2
     rm(x2)
   }
   x <- x1
   rm(x1)
   if(halfSize>0){
-    wAd <- sample.int(nrow(dbl.idx), size=ceiling(halfSize*nrow(dbl.idx)))
+    wAd <- sample.int(npairs, size=ceiling(halfSize*npairs))
     if(length(wAd)>0)    x[,wAd] <- x[,wAd]/2
   }
   if(resamp>0){

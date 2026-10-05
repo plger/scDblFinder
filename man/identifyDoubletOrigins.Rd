@@ -13,7 +13,8 @@ identifyDoubletOrigins(
   nArtificial = NULL,
   verbose = TRUE,
   xgb.param = list(booster = "gbtree", objective = "multi:softprob", eval_metric =
-    "mlogloss", subsample = 0.8, colsample_bytree = 0.7, eta = 0.1, max_depth = 8),
+    "mlogloss", subsample = 0.5, colsample_bytree = 0.4, eta = 0.5, lambda = 100, alpha =
+    1),
   max_rounds = 300,
   nthread = 1
 )
@@ -35,8 +36,8 @@ performed.}
 
 \item{balance}{Logical; whether to balance doublet types (default TRUE).}
 
-\item{nArtificial}{Number of artificial doublets. If omitted, 100 per cluster
-combination will be used, up to a maximum of 20000.}
+\item{nArtificial}{Number of artificial doublets. If omitted, 100 per 
+cluster combination will be used, up to a maximum of 20000.}
 
 \item{verbose}{Logical; whether to output progress messages.}
 
@@ -48,9 +49,10 @@ combination will be used, up to a maximum of 20000.}
 }
 \value{
 A list with:
-   - model : the xgboost model,
+   - model : the xgboost model
    - train_contigency : the contingency matrix on the training data
-   - predictions : the per-class probabilities on `doublets`
+   - predictions : the per-class probabilities on `doublets` (if given)
+   - calls : the origin calls on `doublets` (if given)
    - features : the ordered features (i.e. genes) needed to run the model.
 }
 \description{
@@ -63,4 +65,6 @@ sce <- mockDoubletSCE(ncells = c(20,30,40), ngenes = 500)
 # to have the example run fast, we set a low number of artificial doublets 
 # and a low maximum learning rounds
 res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
+# if desired, we could then re-run the same classifier on a new sample:
+
 }

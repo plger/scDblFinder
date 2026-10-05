@@ -23,6 +23,7 @@
 #'
 #' @export
 #' @importFrom stats aggregate
+#' @importFrom rlang check_installed
 plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
                            addSizes=TRUE, col=NULL, column_title="Clusters",
                            row_title="Clusters", column_title_side="bottom",
@@ -33,6 +34,7 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
     s <- metadata(sce)$scDblFinder.stats
   }
   if(is.null(s)) stop("Could not find doublet metadata. Was scDblFinder run?")
+  rlang::check_installed("ComplexHeatmap")
   if(isMultiSample <- is(s,"list")) s <- dplyr::bind_rows(s, .id="sample")
   s$enrichment <- log2((s$observed+1)/(s$expected+1))
   colorBy <- match.arg(colorBy, colnames(s))
@@ -88,6 +90,7 @@ plotDoubletMap <- function(sce, colorBy="enrichment", labelBy="observed",
 #' @export
 plotThresholds <- function(d, ths=(0:100)/100, dbr=NULL, dbr.sd=NULL,
                            do.plot=TRUE){
+  check_installed("ggplot2")
   ths <- vapply(ths, FUN.VALUE=numeric(1), acceptNull=FALSE, FUN=.checkPropArg)
   dbr <- .checkPropArg(dbr)
   dbr <- .gdbr(d, .estimateHeterotypicDbRate(d, dbr=dbr))
