@@ -65,6 +65,6 @@ sce <- mockDoubletSCE(ncells = c(20,30,40), ngenes = 500)
 # to have the example run fast, we set a low number of artificial doublets 
 # and a low maximum learning rounds
 res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
-# if desired, we could then re-run the same classifier on a new sample:
-
+# if desired, we could then re-run the same classifier on a new sample using
+# predictDoubletOrigins()
 }

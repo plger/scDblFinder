@@ -9,7 +9,7 @@
 #'   probabilities.
 #' @param knn Optional k nearest neighbors. A list containing \code{index} and 
 #'   \code{distance} matrices, typically the output of 
-#'   \code{\link[BiocNeighbors](findKNN)}. If \code{NULL}, the kNN graph will 
+#'   \code{\link[BiocNeighbors]{findKNN}}. If \code{NULL}, the kNN graph will 
 #'   be computed.
 #' @param coords Either a character scalar indicating the name of the reduced 
 #'   dimension to use for kNN computation, or a matrix of such reduced 
@@ -33,7 +33,7 @@
 #' @param outColumn Character. The column name to store the smoothed scores if 
 #'   \code{x} is a \code{SingleCellExperiment}. Defaults to 
 #'   \code{"smoothedDoubletScore"}.
-#' @param ... Passed to \code{\link[BiocNeighbors](findKNN)}.
+#' @param ... Passed to \code{\link[BiocNeighbors]{findKNN}}.
 #'
 #' @return If \code{x} is a \code{SingleCellExperiment}, returns the object with 
 #'   an added \code{colData} column containing the smoothed scores. If \code{x} 

@@ -35,8 +35,8 @@ Identifying doublet origins requires running `scDblFinder()` on your data passin
 ```{r, scDblFinder}
 # we first generate example data:
 sce <- mockDoubletSCE(ncells=c(100,150,200), ngenes=500, dbl.rate=0.15)
-# we call doublets:
-sce <- scDblFinder(sce, clusters="cluster")
+# we call doublets (somewhat quickly):
+sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster")
 ```
 
 Ran in this fashion, the output already includes a rough kNN-based guess of the doublet origin:
@@ -48,18 +48,12 @@ table(call=sce$scDblFinder.class,
 
 Note that since this is independent of the classifier (and based purely on the kNN),
 some non-doublets may have a combination of clusters as their `mostLikelyOrigin`,
-we recommend ignoring those.
-
-The output also contains information about whether the call is ambiguous or not:
-
-```{r}
-table(prediction=sce$scDblFinder.mostLikelyOrigin,
-      ambiguous=sce$scDblFinder.originAmbiguous)
-```
+we recommend ignoring those. (`scDblFinder.originAmbiguous` in colData also 
+contains information about whether the call is ambiguous or not)
 
 We can compare this to the ground truth (focusing on actual doublets):
 
-```{r}
+```{r, compareKnn}
 isDoublet <- which(sce$type=="doublet")
 table(prediction=sce$scDblFinder.mostLikelyOrigin[isDoublet],
       truth=sce$origin[isDoublet])
@@ -79,10 +73,12 @@ origins from artificial doublets, which can then be used to predict doublet orig
 clf <- identifyDoubletOrigins(sce, clusters="cluster", max_rounds = 20, verbose = FALSE)
 ```
 
+Here the function uses the `sce$scDblFinder.class` doublets, but one could specify manually for which cells predictions should be made.
+
 We can compare the predictions to the ground truth:
 
 ```{r compareClassifier}
-table(prediction=clf$calls, truth=sce$origin[isDoublet])
+table(prediction=clf$calls, truth=colData(sce)[names(clf$calls), "origin"])
 ```
 
 Note that in real data, due to the very large variations in library sizes, it is not uncommon for doublets to contain a large fraction of reads from one cell type, and conversely a small fraction from the other cell type. In those circumstances, while one of the two originating cell type is clear, the other can however be mis-assigned.

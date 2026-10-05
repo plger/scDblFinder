@@ -36,8 +36,8 @@
 #' # to have the example run fast, we set a low number of artificial doublets 
 #' # and a low maximum learning rounds
 #' res <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
-#' # if desired, we could then re-run the same classifier on a new sample:
-#' 
+#' # if desired, we could then re-run the same classifier on a new sample using
+#' # predictDoubletOrigins()
 identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
                                    balance=TRUE, nArtificial=NULL, verbose=TRUE,
                                    xgb.param=list(
@@ -172,6 +172,37 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     stats=stats,
     features=colnames(ad))
   
+}
+
+#' predictDoubletOrigins : run an origins classifier on new cells
+#'
+#' @param model The output of \code{\link{identifyDoubletOrigins}}.
+#' @param doublets A `SingleCellExperiment` or counts matrix of doublets.
+#' @param ret Either 'call' (origin call, default) or 'probs' (per-class 
+#'   probabilities).
+#'
+#' @returns Either a factor (for `ret="call"`) or a matrix of probabilities.
+#' @export
+#'
+#' @examples
+#' # we generate a random dataset
+#' sce <- mockDoubletSCE(ncells = c(20,30,40), ngenes = 500)
+#' # to have the example run fast, we set a low number of artificial doublets 
+#' # and a low maximum learning rounds
+#' clf <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
+#' # we run on a new set of doublets:
+#' isDoublet <- which(sce$type=="doublet")
+#' res <- predictDoubletOrigins(clf, sce[,isDoublet])
+#' table(true=sce$origin[isDoublet], res)
+predictDoubletOrigins <- function(model, doublets, ret=c("call","probs")){
+  ret <- match.arg(ret)
+  stopifnot(is.list(model) && all(c("model", "features") %in% names(model)))
+  if(is(doublets, "SingleCellExperiment")) doublets <- counts(doublets)
+  doublets <- t(doublets[model$features,])
+  res <- predict(model$model, newdata=t(doublets))
+  colnames(res) <- colnames(clf$train_contigency)
+  if(ret=="probs") return(res)
+  factor(apply(res, 1, which.max), seq_len(ncol(res)), colnames(res))
 }
 
 
