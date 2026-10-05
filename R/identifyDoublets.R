@@ -148,8 +148,6 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   if(verbose) message("Accuracy on artifical doublets:", round(ac,4))
   if(ac<.9) warning("Low classifier accuracy on training data!")
   
-  colnames(tt) <- levels(out$origin)
-  
   stats <- calls <- preds2 <- NULL
   if(!is.null(doublets)){
     if(verbose) message("Predicting origins of real doublets")
