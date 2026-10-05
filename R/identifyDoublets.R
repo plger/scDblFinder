@@ -200,7 +200,7 @@ predictDoubletOrigins <- function(model, doublets, ret=c("call","probs")){
   if(is(doublets, "SingleCellExperiment")) doublets <- counts(doublets)
   doublets <- t(doublets[model$features,])
   res <- predict(model$model, newdata=doublets)
-  colnames(res) <- colnames(clf$train_contigency)
+  colnames(res) <- colnames(model$train_contigency)
   if(ret=="probs") return(res)
   factor(apply(res, 1, which.max), seq_len(ncol(res)), colnames(res))
 }
