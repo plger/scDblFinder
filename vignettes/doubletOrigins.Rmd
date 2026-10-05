@@ -1,0 +1,123 @@
+---
+title: "Doublet origins"
+author:
+- name: Pierre-Luc Germain
+  affiliation: University and ETH Zürich
+package: scDblFinder
+output:
+  BiocStyle::html_document
+abstract: |
+  Functions to identify the origins of doublets, i.e. the cell types composing 
+  them, and perform analysis on these origins.
+vignette: |
+  %\VignetteIndexEntry{7_doubletOrigins}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r load, include=FALSE, echo=FALSE}
+library(scDblFinder)
+```
+
+# Introduction
+
+This vignette addresses the question of doublet origins, i.e. identifying which combination of cell-types or clusters generated a given doublet.
+The first part of the vignette concerns the identifying doublet origins, while the second part covers test for enrichment in specific kinds of doublets.
+
+# Identifying doublet origins
+
+As a preliminary, note that *doublet origins called in versions prior to 1.27.8 were mostly wrong*.
+
+## kNN-based approach
+
+Identifying doublet origins requires running `scDblFinder()` on your data passing your cell type labels, i.e. using the `clusters` argument of `scDblFinder()` to pass cluster labels (the cluster labels of doublets will be ignored, so no need to worry about those). For example:
+
+```{r, scDblFinder}
+# we first generate example data:
+sce <- mockDoubletSCE(ncells=c(100,150,200), ngenes=500, dbl.rate=0.15)
+# we call doublets:
+sce <- scDblFinder(sce, clusters="cluster")
+```
+
+Ran in this fashion, the output already includes a rough kNN-based guess of the doublet origin:
+
+```{r, mostLikely1}
+table(call=sce$scDblFinder.class,
+      mostLikelyOrigin=sce$scDblFinder.mostLikelyOrigin)
+```
+
+Note that since this is independent of the classifier (and based purely on the kNN),
+some non-doublets may have a combination of clusters as their `mostLikelyOrigin`,
+we recommend ignoring those.
+
+The output also contains information about whether the call is ambiguous or not:
+
+```{r}
+table(prediction=sce$scDblFinder.mostLikelyOrigin,
+      ambiguous=sce$scDblFinder.originAmbiguous)
+```
+
+We can compare this to the ground truth (focusing on actual doublets):
+
+```{r}
+isDoublet <- which(sce$type=="doublet")
+table(prediction=sce$scDblFinder.mostLikelyOrigin[isDoublet],
+      truth=sce$origin[isDoublet])
+```
+
+In this easy case, all true doublet origins are accurately identified. 
+However, a slightly more powerful approach is to identify doublets using a 
+specific multi-label classifier.
+
+## Multi-label classifier
+
+The `identifyDoubletOrigins()` function trains a multi-label classifier on doublet
+origins from artificial doublets, which can then be used to predict doublet origins.
+
+```{r classifier}
+# to keep things quick here, with cap it to 20 rounds: 
+clf <- identifyDoubletOrigins(sce, clusters="cluster", max_rounds = 20, verbose = FALSE)
+```
+
+We can compare the predictions to the ground truth:
+
+```{r compareClassifier}
+table(prediction=clf$calls, truth=sce$origin[isDoublet])
+```
+
+Note that in real data, due to the very large variations in library sizes, it is not uncommon for doublets to contain a large fraction of reads from one cell type, and conversely a small fraction from the other cell type. In those circumstances, while one of the two originating cell type is clear, the other can however be mis-assigned.
+
+# Doublet enrichment analysis
+
+Doublet enrichment analysis aims to investigate whether certain doublet types are found more often than would be expected by chance. Such enrichment could, for instance, indicate cell-to-cell interactions.
+
+When ran with the `clusters` argument, `scDblFinder()` saves some stats on the doublet
+origins in `metadata(sce)$scDblFinder.stats`. Similarly, the output of `identifyDoubletOrigins()` contains a `stats` slot:
+
+```{r}
+clf$stats
+```
+
+This table contains the observed and expected types of doublets, along with the difficulty of their identification. The `plotDoubletMap()` function can be used to visualize enrichment. Most importantly, these compiled statistics can then be used to test for enrichment.
+
+Specifically, we define two forms of doublet enrichment, each with their own testing function:
+
+* The `clusterStickiness()` function tests whether each cluster forms more doublet than would be expected given its abundance, by default using a single quasi-binomial model fitted across all doublet types. (Only applicable with >=4 clusters)
+* The `doubletPairwiseEnrichment()` function separately tests whether each specific doublet type (i.e. combination of clusters) is more abundant than expected, by default using a poisson model.
+
+For example:
+
+```{r}
+doubletPairwiseEnrichment(clf$stats)
+```
+
+This shows no significant enrichment in any of the doublet types, which makes sense because they were randomly generated.
+
+For more detail, see the appropriate section of [Germain et al., 2022](https://f1000research.com/articles/10-979).
+
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
