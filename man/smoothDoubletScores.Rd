@@ -25,7 +25,7 @@ probabilities.}
 
 \item{knn}{Optional k nearest neighbors. A list containing \code{index} and 
 \code{distance} matrices, typically the output of 
-\code{\link[BiocNeighbors](findKNN)}. If \code{NULL}, the kNN graph will 
+\code{\link[BiocNeighbors]{findKNN}}. If \code{NULL}, the kNN graph will 
 be computed.}
 
 \item{coords}{Either a character scalar indicating the name of the reduced 
@@ -58,7 +58,7 @@ containing the raw doublet scores. Defaults to \code{"scDblFinder.score"}.}
 \code{x} is a \code{SingleCellExperiment}. Defaults to 
 \code{"smoothedDoubletScore"}.}
 
-\item{...}{Passed to \code{\link[BiocNeighbors](findKNN)}.}
+\item{...}{Passed to \code{\link[BiocNeighbors]{findKNN}}.}
 }
 \value{
 If \code{x} is a \code{SingleCellExperiment}, returns the object with 

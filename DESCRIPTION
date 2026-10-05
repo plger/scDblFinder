@@ -26,6 +26,7 @@ Imports:
     BiocParallel, 
     BiocNeighbors, 
     BiocSingular,
+    rlang,
     S4Vectors,
     SummarizedExperiment, 
     scater, 

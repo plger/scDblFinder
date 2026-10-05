@@ -1,6 +1,8 @@
-Changes in version 1.27.8 (2026-10-01)
+Changes in version 1.27.9 (2026-10-05)
 + fixed bug that led to wrong labeling of doublet origins
 + changed the default dbr.sd, and set the importance of the expected doublet rate to decay across iterations
++ added classifier for doublet origins, and a specialized vignette
+
 
 Changes in version 1.27.3 (2026-09-29)
 + added option to manually set threshold
