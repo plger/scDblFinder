@@ -141,9 +141,10 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     verbose = verbose,
   )
   
-  preds1 <- predict(model, ad, type="class")
-  tt <- unclass(table(label, apply(preds1, 1, which.max)))
-  colnames(tt) <- levels(out$origin)
+  preds1 <- .xgpreds(predict(model, ad, type="class"), levels(label))
+  tt <- unclass(table(label, factor(apply(preds1, 1, which.max),
+                                    seq_len(ncol(preds1)),
+                                    levels(label))))
   ac <- sum(diag(tt))/sum(tt)
   if(verbose) message("Accuracy on artifical doublets:", round(ac,4))
   if(ac<.9) warning("Low classifier accuracy on training data!")
@@ -152,14 +153,13 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   if(!is.null(doublets)){
     if(verbose) message("Predicting origins of real doublets")
     doublets <- t(doublets)/colSums(doublets)
-    preds2 <- predict(model, doublets)
-    colnames(preds2) <- levels(out$origin)
+    preds2 <- .xgpreds(predict(model, doublets), levels(label))
     calls <- factor(apply(preds2, 1, which.max),
                     seq_len(ncol(preds2)), colnames(preds2))
     row.names(preds2) <- names(calls) <- row.names(doublets)
     if(!is.null(metadata(sce)$scDblFinder.stats))
-      stats <- .updateDoubletOriginsStats(sce, setNames(tabulate(calls),
-                                                        levels(out$origin)))
+      stats <- .updateDoubletOriginsStats(sce, setNames(tabulate(calls, nlevels(calls)),
+                                                        levels(label)))
   }
   
   list(
@@ -170,6 +170,15 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     stats=stats,
     features=colnames(ad))
   
+}
+
+.xgpreds <- function(pred, clnames){
+  if(is.vector(pred)) {
+    pred <- matrix(pred, ncol=length(clnames), byrow=TRUE)
+  }
+  stopifnot(ncol(pred) == length(clnames))
+  colnames(pred) <- clnames
+  pred
 }
 
 #' predictDoubletOrigins : run an origins classifier on new cells
