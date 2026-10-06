@@ -17,6 +17,7 @@ vignette: |
 
 ```{r load, include=FALSE, echo=FALSE}
 library(scDblFinder)
+set.seed(123)
 ```
 
 # Introduction
@@ -36,7 +37,7 @@ Identifying doublet origins requires running `scDblFinder()` on your data passin
 # we first generate example data:
 sce <- mockDoubletSCE(ncells=c(100,150,200), ngenes=500, dbl.rate=0.15)
 # we call doublets (somewhat quickly):
-sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster")
+sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster", threshold=0.5)
 ```
 
 Ran in this fashion, the output already includes a rough kNN-based guess of the doublet origin:
