@@ -33,7 +33,7 @@ so no need to worry about those). For example:
 # we first generate example data:
 sce <- mockDoubletSCE(ncells=c(100,150,200), ngenes=500, dbl.rate=0.15)
 # we call doublets (somewhat quickly):
-sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster")
+sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster", threshold=0.5)
 ```
 
     ## 3 clusters
@@ -46,15 +46,15 @@ sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster")
 
     ## Training model...
 
-    ## iter=0, 30 cells excluded from training.
+    ## iter=0, 16 cells excluded from training.
 
-    ## iter=1, 0 cells excluded from training.
+    ## iter=1, 8 cells excluded from training.
 
-    ## iter=2, 30 cells excluded from training.
+    ## iter=2, 7 cells excluded from training.
 
-    ## Threshold found:0.997
+    ## Threshold found:0.5
 
-    ## 0 (0%) doublets called
+    ## 11 (2.2%) doublets called
 
 Ran in this fashion, the output already includes a rough kNN-based guess
 of the doublet origin:
@@ -67,7 +67,8 @@ table(call=sce$scDblFinder.class,
 
     ##          mostLikelyOrigin
     ## call      cluster1+cluster2 cluster1+cluster3 cluster2+cluster3
-    ##   singlet                 8                12                12
+    ##   singlet                16                15                13
+    ##   doublet                 5                 4                 2
 
 Note that since this is independent of the classifier (and based purely
 on the kNN), some non-doublets may have a combination of clusters as
@@ -86,9 +87,9 @@ table(prediction=sce$scDblFinder.mostLikelyOrigin[isDoublet],
 
     ##                    truth
     ## prediction          cluster1+cluster2 cluster1+cluster3 cluster2+cluster3
-    ##   cluster1+cluster2                 6                 0                 0
-    ##   cluster1+cluster3                 0                12                 0
-    ##   cluster2+cluster3                 0                 0                12
+    ##   cluster1+cluster2                17                 0                 0
+    ##   cluster1+cluster3                 0                14                 0
+    ##   cluster2+cluster3                 0                 0                15
 
 In this easy case, all true doublet origins are accurately identified.
 However, a slightly more powerful approach is to identify doublets using
@@ -117,7 +118,11 @@ We can compare the predictions to the ground truth:
 table(prediction=clf$calls, truth=colData(sce)[names(clf$calls), "origin"])
 ```
 
-    ## < table of extent 3 x 0 >
+    ##                    truth
+    ## prediction          cluster1+cluster2 cluster1+cluster3 cluster2+cluster3
+    ##   cluster1+cluster2                 5                 0                 0
+    ##   cluster1+cluster3                 0                 4                 0
+    ##   cluster2+cluster3                 0                 0                 2
 
 Note that in real data, due to the very large variations in library
 sizes, it is not uncommon for doublets to contain a large fraction of
@@ -143,10 +148,14 @@ contains a `stats` slot:
 clf$stats
 ```
 
-    ##         combination observed expected deviation prop.deviation FNR  difficulty
-    ## 1 cluster1+cluster2        0 0.305856  0.305856      0.2544864   1 0.004511416
-    ## 2 cluster1+cluster3        0 0.377600  0.377600      0.3141807   1 0.004511416
-    ## 3 cluster2+cluster3        0 0.518400  0.518400      0.4313329   1 0.004511416
+    ##         combination observed expected deviation prop.deviation        FNR
+    ## 1 cluster1+cluster2        5  0.34584   4.65416       3.599394 0.00000000
+    ## 2 cluster1+cluster3        4  0.41920   3.58080       2.769288 0.01075269
+    ## 3 cluster2+cluster3        2  0.52800   1.47200       1.138403 0.00000000
+    ##   difficulty
+    ## 1 0.05194089
+    ## 2 0.05148621
+    ## 3 0.04395504
 
 This table contains the observed and expected types of doublets, along
 with the difficulty of their identification. The
@@ -176,13 +185,12 @@ For example:
 doubletPairwiseEnrichment(clf$stats)
 ```
 
-    ## Warning in .getThetaDist(x$observed, x$expected, verbose = verbose): Not enough
-    ## dispersion (theta diverges to infinity) - switching to poisson.
+    ## theta=0.188806055483142
 
-    ##         combination    log2enrich p.value FDR
-    ## 3 cluster2+cluster3 -1.449608e-10       1   1
-    ## 2 cluster1+cluster3 -1.055888e-10       1   1
-    ## 1 cluster1+cluster2 -8.552700e-11       1   1
+    ##         combination  log2enrich    p.value       FDR
+    ## 1 cluster1+cluster2  0.55183959 0.09357226 0.2807168
+    ## 2 cluster1+cluster3  0.06689129 0.32700281 0.6540056
+    ## 3 cluster2+cluster3 -1.08032686 1.00000000 1.0000000
 
 This shows no significant enrichment in any of the doublet types, which
 makes sense because they were randomly generated.
@@ -221,7 +229,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.8          SingleCellExperiment_1.35.1
+    ##  [1] scDblFinder_1.27.9          SingleCellExperiment_1.35.1
     ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
     ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
     ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           
