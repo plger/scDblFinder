@@ -173,6 +173,10 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
 }
 
 .xgpreds <- function(pred, clnames){
+  # no cells to predict (e.g. no doublets called): xgboost returns an empty object
+  if(length(pred)==0L)
+    return(matrix(numeric(0), nrow=0, ncol=length(clnames),
+                  dimnames=list(NULL, clnames)))
   if(is.vector(pred)) {
     pred <- matrix(pred, ncol=length(clnames), byrow=TRUE)
   }
