@@ -32,8 +32,9 @@ smoothDoubletScores(
 - knn:
 
   Optional k nearest neighbors. A list containing `index` and `distance`
-  matrices, typically the output of `(findKNN)`. If `NULL`, the kNN
-  graph will be computed.
+  matrices, typically the output of
+  [`findKNN`](https://rdrr.io/pkg/BiocNeighbors/man/findKNN.html). If
+  `NULL`, the kNN graph will be computed.
 
 - coords:
 
@@ -82,7 +83,8 @@ smoothDoubletScores(
 
 - ...:
 
-  Passed to `(findKNN)`.
+  Passed to
+  [`findKNN`](https://rdrr.io/pkg/BiocNeighbors/man/findKNN.html).
 
 ## Value
 

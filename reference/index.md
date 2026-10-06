@@ -40,12 +40,16 @@
   : getExpectedDoublets
 - [`getFragmentOverlaps()`](https://plger.github.io/scDblFinder/reference/getFragmentOverlaps.md)
   : getFragmentOverlaps
+- [`identifyDoubletOrigins()`](https://plger.github.io/scDblFinder/reference/identifyDoubletOrigins.md)
+  : identifyDoubletOrigins
 - [`mockDoubletSCE()`](https://plger.github.io/scDblFinder/reference/mockDoubletSCE.md)
   : mockDoubletSCE
 - [`plotDoubletMap()`](https://plger.github.io/scDblFinder/reference/plotDoubletMap.md)
   : plotDoubletMap
 - [`plotThresholds()`](https://plger.github.io/scDblFinder/reference/plotThresholds.md)
   : plotThresholds
+- [`predictDoubletOrigins()`](https://plger.github.io/scDblFinder/reference/predictDoubletOrigins.md)
+  : predictDoubletOrigins : run an origins classifier on new cells
 - [`propHomotypic()`](https://plger.github.io/scDblFinder/reference/propHomotypic.md)
   : propHomotypic
 - [`recoverDoublets()`](https://plger.github.io/scDblFinder/reference/recoverDoublets.md)

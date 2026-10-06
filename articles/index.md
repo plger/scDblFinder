@@ -4,6 +4,8 @@
 
 - [Scoring potential doublets from simulated
   densities](https://plger.github.io/scDblFinder/articles/computeDoubletDensity.md):
+- [Doublet
+  origins](https://plger.github.io/scDblFinder/articles/doubletOrigins.md):
 - [Detecting clusters of doublet cells with DE
   analyses](https://plger.github.io/scDblFinder/articles/findDoubletClusters.md):
 - [Introduction to the scDblFinder

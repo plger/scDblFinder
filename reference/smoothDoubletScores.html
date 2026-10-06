@@ -24,6 +24,7 @@ suppressing isolated noisy predictions."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/computeDoubletDensity.html">Scoring potential doublets from simulated densities</a></li>
+    <li><a class="dropdown-item" href="../articles/doubletOrigins.html">Doublet origins</a></li>
     <li><a class="dropdown-item" href="../articles/findDoubletClusters.html">Detecting clusters of doublet cells with DE analyses</a></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to the scDblFinder package</a></li>
     <li><a class="dropdown-item" href="../articles/recoverDoublets.html">Recovering intra-sample doublets</a></li>
@@ -81,7 +82,7 @@ probabilities.</p></dd>
 <dt id="arg-knn">knn<a class="anchor" aria-label="anchor" href="#arg-knn"></a></dt>
 <dd><p>Optional k nearest neighbors. A list containing <code>index</code> and
 <code>distance</code> matrices, typically the output of
-<code>(findKNN)</code>. If <code>NULL</code>, the kNN graph will
+<code><a href="https://rdrr.io/pkg/BiocNeighbors/man/findKNN.html" class="external-link">findKNN</a></code>. If <code>NULL</code>, the kNN graph will
 be computed.</p></dd>
 
 
@@ -132,7 +133,7 @@ containing the raw doublet scores. Defaults to <code>"scDblFinder.score"</code>.
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to <code>(findKNN)</code>.</p></dd>
+<dd><p>Passed to <code><a href="https://rdrr.io/pkg/BiocNeighbors/man/findKNN.html" class="external-link">findKNN</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
