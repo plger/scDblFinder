@@ -348,15 +348,16 @@ cxds2 <- function(x, whichDbls=c(), ntop=500, binThresh=NULL){
   marker.args <- list()
   mm <- scoreMarkers(e, clusters, compute.cohens.d=FALSE,
                      compute.delta.mean=FALSE, compute.group.mean=FALSE)$auc
-  if(is.null(ntot)){
+  if(!is.null(ntot)){
     targetPerCluster <- ceiling(1.5*ntot/length(mm))
   }else{
     targetPerCluster <- nper
   }
   mm <- lapply(mm, function(x){
-    x <- rowMeans(as.matrix(x))[,1:4]
+    x <- rowMeans(as.matrix(x)[,1:4])
     x <- x[order(-x)]
     if(!is.null(auc.min)) x <- x[x>=auc.min]
+    x <- names(x)
     if(length(x)<targetPerCluster)
       x <- c(x, rep(NA_character_, targetPerCluster-length(x)))
     head(x, targetPerCluster)
