@@ -65,5 +65,5 @@ table(call=x$amuletFromCounts.q<0.05, truth=x$type)
 #>        truth
 #> call    singlet doublet
 #>   FALSE     500       0
-#>   TRUE        0      22
+#>   TRUE        0      29
 ```

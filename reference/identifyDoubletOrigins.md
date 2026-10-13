@@ -76,8 +76,15 @@ identifyDoubletOrigins(
 A list with: - model : the xgboost model - train_contigency : the
 contingency matrix on the training data - predictions : the per-class
 probabilities on \`doublets\` (if given) - calls : the origin calls on
-\`doublets\` (if given) - features : the ordered features (i.e. genes)
-needed to run the model.
+\`doublets\` (if given) - stats : the observed and expected number of
+doublets of each type (and other related statistics), updated using the
+classifier's calls (if \`doublets\` is given and \`sce\` contains
+\`scDblFinder\` statistics). When multiple samples are present, this is
+aggregated across samples. - stats.per.sample : same as \`stats\`, but
+with a row per combination and sample (identified in the \`sample\`
+column). Only available when the statistics of \`sce\` are
+sample-specific. - features : the ordered features (i.e. genes) needed
+to run the model.
 
 ## Examples
 

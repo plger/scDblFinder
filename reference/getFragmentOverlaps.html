@@ -140,6 +140,18 @@ them with Tabix; in this case each chromosome will be read and processed
 separately, leading to a considerably lower memory footprint.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># here we use a dummy fragment file for example:</span></span></span>
+<span class="r-in"><span><span class="va">fragfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span> <span class="st">"extdata"</span>, <span class="st">"example_fragments.tsv.gz"</span>,</span></span>
+<span class="r-in"><span>                         package<span class="op">=</span><span class="st">"scDblFinder"</span> <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">getFragmentOverlaps</span><span class="op">(</span><span class="va">fragfile</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 12:45:16 PM - Splitting and subsetting barcodes...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 12:45:16 PM - Obtaining overlaps...</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

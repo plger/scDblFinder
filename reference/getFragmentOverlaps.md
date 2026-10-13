@@ -93,3 +93,15 @@ memory footprint since the overlaps are performed in memory. It is
 therefore recommended to compress the fragment files using bgzip and
 index them with Tabix; in this case each chromosome will be read and
 processed separately, leading to a considerably lower memory footprint.
+
+## Examples
+
+``` r
+# here we use a dummy fragment file for example:
+fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
+                         package="scDblFinder" )
+res <- getFragmentOverlaps(fragfile)
+#> Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
+#> 12:45:16 PM - Splitting and subsetting barcodes...
+#> 12:45:16 PM - Obtaining overlaps...
+```
