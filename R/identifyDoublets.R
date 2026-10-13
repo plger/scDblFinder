@@ -26,6 +26,13 @@
 #'    - train_contigency : the contingency matrix on the training data
 #'    - predictions : the per-class probabilities on `doublets` (if given)
 #'    - calls : the origin calls on `doublets` (if given)
+#'    - stats : the observed and expected number of doublets of each type (and
+#'      other related statistics), updated using the classifier's calls (if 
+#'      `doublets` is given and `sce` contains `scDblFinder` statistics). When 
+#'      multiple samples are present, this is aggregated across samples.
+#'    - stats.per.sample : same as `stats`, but with a row per combination and
+#'      sample (identified in the `sample` column). Only available when the 
+#'      statistics of `sce` are sample-specific.
 #'    - features : the ordered features (i.e. genes) needed to run the model.
 #' @export
 #' @importFrom xgboost xgb.train
@@ -63,11 +70,19 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
       doublets <- which(sce$scDblFinder.class=="doublet")
     }
   }
+  allSamples <- .checkColArg(sce, samples)
+  dblSamples <- NULL
   if(!is.null(doublets)){
     if(inherits(doublets, "SingleCellExperiment")){
       doublets <- assay(doublets, "counts")
     }
     if(!is.array(doublets)){
+      # `doublets` indexes the columns of `sce`, so we know their samples
+      if(!is.null(allSamples)){
+        idx <- if(is.character(doublets)) match(doublets, colnames(sce)) else
+          seq_len(ncol(sce))[doublets]
+        dblSamples <- as.character(allSamples[idx])
+      }
       doublets <- assay(sce, "counts")[,doublets]
     }
   }
@@ -149,7 +164,7 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
   if(verbose) message("Accuracy on artifical doublets:", round(ac,4))
   if(ac<.9) warning("Low classifier accuracy on training data!")
   
-  stats <- calls <- preds2 <- NULL
+  stats <- stats.per.sample <- calls <- preds2 <- NULL
   if(!is.null(doublets)){
     if(verbose) message("Predicting origins of real doublets")
     doublets <- t(doublets)/colSums(doublets)
@@ -157,9 +172,11 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     calls <- factor(apply(preds2, 1, which.max),
                     seq_len(ncol(preds2)), colnames(preds2))
     row.names(preds2) <- names(calls) <- row.names(doublets)
-    if(!is.null(metadata(sce)$scDblFinder.stats))
-      stats <- .updateDoubletOriginsStats(sce, setNames(tabulate(calls, nlevels(calls)),
-                                                        levels(label)))
+    if(!is.null(metadata(sce)$scDblFinder.stats)){
+      st <- .updateDoubletOriginsStats(sce, calls, dblSamples)
+      stats <- st$stats
+      stats.per.sample <- st$per.sample
+    }
   }
   
   list(
@@ -168,6 +185,7 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     predictions=preds2,
     calls=calls,
     stats=stats,
+    stats.per.sample=stats.per.sample,
     features=colnames(ad))
   
 }
@@ -217,30 +235,58 @@ predictDoubletOrigins <- function(model, doublets, ret=c("call","probs")){
 }
 
 
-.updateDoubletOriginsStats <- function(s, new_observed) {
+# updates the doublet statistics of `sce` using the multi-label classifier 
+# results. Returns a list with `stats` (aggregated across samples)
+# and `per.sample` (if relevant).
+.updateDoubletOriginsStats <- function(s, calls, samples=NULL) {
   if(is(s, "SingleCellExperiment")) s <- metadata(s)$scDblFinder.stats
+  s <- as.data.frame(s)
   
-  .update_one <- function(df, obs) {
-    stopifnot(
-      is.numeric(obs),
-      length(obs) == nrow(df),
-      all(obs >= 0)
-    )
-    if(!is.null(names(obs))){
-      obs <- obs[as.character(df$combination)]
-    }
-    df$observed     <- obs
-    df$deviation    <- abs(df$expected - df$observed)
+  .update_one <- function(df, calls){
+    obs <- tabulate(calls, nlevels(calls))
+    names(obs) <- levels(calls)
+    df$observed <- as.numeric(obs[as.character(df$combination)])
+    df$deviation <- abs(df$expected - df$observed)
     df$prop.deviation <- df$deviation / sum(df$expected)
     df
   }
   
-  if (is.list(s) && !is.data.frame(s)) {
-    stopifnot(is.list(new_observed), identical(names(new_observed), names(s)))
-    s <- mapply(.update_one, df = s, obs = new_observed, SIMPLIFY = FALSE)
-  } else {
-    s <- .update_one(s, new_observed)
+  if(is.null(s$sample)){
+    return(list(stats=.update_one(s, calls), per.sample=NULL))
   }
   
-  s
+  cols <- setdiff(colnames(s), "sample")
+  s$sample <- as.character(s$sample)
+  ss <- split(s, factor(s$sample, unique(s$sample)))
+  per.sample <- NULL
+  if(!is.null(samples)){
+    samples <- as.character(samples)
+    if(!all(samples %in% names(ss))){
+      warning("The sample labels do not match those of the existing doublet ",
+              "statistics; per-sample statistics were not updated.")
+    }else{
+      per.sample <- do.call(rbind, lapply(names(ss), FUN=function(n){
+        data.frame(sample=n, .update_one(ss[[n]][,colnames(s)!="sample"],
+                                         calls[which(samples==n)]),
+                   row.names=NULL)
+      }))
+      rownames(per.sample) <- NULL
+    }
+  }
+  
+  other <- setdiff(colnames(s), c("sample","combination","observed","expected",
+                                  "deviation","prop.deviation"))
+  s <- do.call(rbind, lapply(split(s, factor(s$combination, 
+                                              unique(s$combination))), 
+                             FUN=function(x){
+    w <- if(sum(x$expected)>0) x$expected else rep(1,nrow(x))
+    y <- data.frame(combination=x$combination[1], observed=NA_real_,
+                    expected=sum(x$expected))
+    for(f in other) y[[f]] <- weighted.mean(x[[f]], w, na.rm=TRUE)
+    y
+  }))
+  s <- .update_one(s, calls)
+  s <- s[,intersect(cols, colnames(s))]
+  rownames(s) <- NULL
+  list(stats=s, per.sample=per.sample)
 }

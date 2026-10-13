@@ -847,6 +847,12 @@ scDblFinder <- function(
       return(NULL)
     th
   })
+  # per-sample doublet origin stats
+  sts <- lapply(d, FUN=function(x){
+    if(!is(x,"DFrame")) return(NULL)
+    metadata(x)$scDblFinder.stats
+  })
+  sts <- sts[!vapply(sts, FUN.VALUE=logical(1), FUN=is.null)]
   cn <- table(unlist(lapply(d, colnames)))
   cn <- c(names(cn)[cn==length(d)], "total.prop.real")
   if(!is.null(keep.col)) cn <- intersect(cn, keep.col)
@@ -858,6 +864,8 @@ scDblFinder <- function(
   if(!is.null(d$cluster)) d$cluster <- as.factor(d$cluster)
   if(!is.null(d$sample)) d$sample <- as.factor(d$sample)
   metadata(d)$scDblFinder.threshold <- ths
+  if(length(sts)>0)
+    metadata(d)$scDblFinder.stats <- dplyr::bind_rows(sts, .id="sample")
   d
 }
 

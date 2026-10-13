@@ -37,6 +37,12 @@
 #'
 #' @return A data.frame with counts and overlap statistics for each barcode.
 #' 
+#' @examples
+#' # here we use a dummy fragment file for example:
+#' fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
+#'                          package="scDblFinder" )
+#' res <- getFragmentOverlaps(fragfile)
+#' 
 #' @importFrom GenomicRanges reduce GRanges granges GRangesList
 #' @importFrom BiocGenerics score
 #' @importFrom S4Vectors mcols

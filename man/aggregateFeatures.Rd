@@ -56,3 +56,12 @@ An aggregated version of `x` (either an array or a
 \description{
 Aggregates similar features (rows).
 }
+\examples{
+# a random sparse count matrix of 2000 regions across 300 cells:
+m <- Matrix::rsparsematrix(1000, 300, density=0.05, 
+                           rand.x=function(n) rpois(n, 2)+1)
+row.names(m) <- paste0("region", seq_len(nrow(m)))
+agg <- aggregateFeatures(m, k=50)
+dim(agg)
+
+}

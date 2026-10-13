@@ -70,3 +70,10 @@ is therefore recommended to compress the fragment files using bgzip and index
 them with Tabix; in this case each chromosome will be read and processed 
 separately, leading to a considerably lower memory footprint.
 }
+\examples{
+# here we use a dummy fragment file for example:
+fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
+                         package="scDblFinder" )
+res <- getFragmentOverlaps(fragfile)
+
+}

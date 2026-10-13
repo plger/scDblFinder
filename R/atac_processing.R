@@ -54,6 +54,14 @@ TFIDF <- function(x, sf=10000){
 #' `SingleCellExperiment`, the feature clusters will also be stored in 
 #' `metadata(x)$featureGroups`
 #'
+#' @examples
+#' # a random sparse count matrix of 2000 regions across 300 cells:
+#' m <- Matrix::rsparsematrix(1000, 300, density=0.05, 
+#'                            rand.x=function(n) rpois(n, 2)+1)
+#' row.names(m) <- paste0("region", seq_len(nrow(m)))
+#' agg <- aggregateFeatures(m, k=50)
+#' dim(agg)
+#'
 #' @importFrom BiocSingular runPCA IrlbaParam
 #' @export
 aggregateFeatures <- function(x, dims.use=seq(2L,12L), k=1000, num_init=3,
