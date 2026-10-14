@@ -712,7 +712,11 @@ scDblFinder <- function(
                          max_depth=max_depth, eta=eta, #base_score=gdbr,
                          nthreads=xgb.nthreads)
         predict(fit, as.matrix(preds))
-      }, error=function(e) d$score)
+      }, error=function(e){
+        warning("A training iteration failed with the error:\n", e,
+                "Returning the previous iteration, which is likely suboptimal.")
+        d$score
+      })
       if(!is.null(d$mostLikelyOrigin)){
         wO <- which(d$type!="real" & !is.na(d$mostLikelyOrigin))
         class.diff <- vapply( split(d$score[wO], d$mostLikelyOrigin[wO]),
