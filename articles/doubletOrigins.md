@@ -108,6 +108,10 @@ artificial doublets, which can then be used to predict doublet origins.
 clf <- identifyDoubletOrigins(sce, clusters="cluster", max_rounds = 20, verbose = FALSE)
 ```
 
+    ## Warning in throw_err_or_depr_msg("Passed unrecognized parameters: ",
+    ## paste(head(names_unrecognized), : Passed unrecognized parameters: eval_set.
+    ## This warning will become an error in a future version.
+
 Here the function uses the `sce$scDblFinder.class` doublets, but one
 could specify manually for which cells predictions should be made.
 

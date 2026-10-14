@@ -40,6 +40,7 @@ clf <- identifyDoubletOrigins(sce, "cluster", nArtificial=100, max_rounds=10)
 #> Generating 100 artificial doublets.
 #> Warning: scDblFinder might not work well with very low numbers of cells.
 #> Running cross-validation...
+#> Warning: Passed unrecognized parameters: eval_set. This warning will become an error in a future version.
 #> Multiple eval metrics are present. Will use test_mlogloss for early stopping.
 #> Will train until test_mlogloss hasn't improved in 2 rounds.
 #> 
