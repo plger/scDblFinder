@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 07:26:47 AM - Splitting and subsetting barcodes...
+    ## 07:36:26 AM - Splitting and subsetting barcodes...
 
-    ## 07:26:47 AM - Obtaining overlaps...
+    ## 07:36:26 AM - Obtaining overlaps...
 
 ``` r
 
@@ -207,37 +207,37 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 07:26:48 AM - Reading full fragments...
+    ## 07:36:27 AM - Reading full fragments...
 
-    ## 07:26:48 AM - Splitting and subsetting barcodes...
+    ## 07:36:27 AM - Splitting and subsetting barcodes...
 
-    ## 07:26:49 AM - Computing coverages
+    ## 07:36:27 AM - Computing coverages
 
-    ## 07:26:49 AM - Obtaining windows
+    ## 07:36:27 AM - Obtaining windows
 
-    ## 07:26:49 AM - Obtaining window counts
+    ## 07:36:28 AM - Obtaining window counts
 
-    ## 07:26:49 AM - Aggregating features
+    ## 07:36:28 AM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 07:26:49 AM - Computing features for artificial doublets
+    ## 07:36:28 AM - Computing features for artificial doublets
 
-    ## 07:26:49 AM - Counting overlaps for real cells
+    ## 07:36:28 AM - Counting overlaps for real cells
 
-    ## 07:26:49 AM - Counting overlaps for artificial doublets
+    ## 07:36:28 AM - Counting overlaps for artificial doublets
 
-    ## 07:26:49 AM - Scoring network
+    ## 07:36:28 AM - Scoring network
 
-    ## 07:26:49 AM - Iterative training
+    ## 07:36:28 AM - Iterative training
 
     ## iter=0, 0 cells excluded from training.
 
     ## iter=1, 0 cells excluded from training.
 
-    ## 07:26:49 AM Done!
+    ## 07:36:28 AM Done!
 
 ``` r
 
