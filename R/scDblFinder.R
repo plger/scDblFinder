@@ -713,7 +713,7 @@ scDblFinder <- function(
                          nthreads=xgb.nthreads)
         predict(fit, as.matrix(preds))
       }, error=function(e){
-        warning("A training iteration failed with the error:\n", e,
+        warning("A training iteration failed with the error:\n", e, "\n",
                 "Returning the previous iteration, which is likely suboptimal.")
         d$score
       })
