@@ -839,7 +839,6 @@ scDblFinder <- function(
     learning_rate=eta,
     subsample=subsample,
     tree_method=tree_method,
-    early_stopping_rounds=2,
     nthreads=nthreads,
     ...
   )

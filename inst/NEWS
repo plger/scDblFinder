@@ -3,6 +3,8 @@ Changes in version 1.27.9 (2026-10-05)
 + changed the default dbr.sd, and set the importance of the expected doublet rate to decay across iterations
 + added classifier for doublet origins, and a specialized vignette
 + fixed multi-sample doublet stats
++ made fallback on failed training not silent
++ fixed issue with xgboost >=3.4
 
 Changes in version 1.27.3 (2026-09-29)
 + added option to manually set threshold
