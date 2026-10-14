@@ -131,6 +131,7 @@ identifyDoubletOrigins <- function(sce, clusters, samples=NULL, doublets=NULL,
     nrounds = max_rounds,
     nfold = 5,
     early_stopping_rounds = 2,
+    eval_set = 0.2,
     verbose = verbose
   )
   best_nrounds <- cv$early_stop$best_iteration
