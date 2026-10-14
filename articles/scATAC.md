@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 07:36:26 AM - Splitting and subsetting barcodes...
+    ## 07:51:09 AM - Splitting and subsetting barcodes...
 
-    ## 07:36:26 AM - Obtaining overlaps...
+    ## 07:51:09 AM - Obtaining overlaps...
 
 ``` r
 
@@ -207,37 +207,37 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 07:36:27 AM - Reading full fragments...
+    ## 07:51:10 AM - Reading full fragments...
 
-    ## 07:36:27 AM - Splitting and subsetting barcodes...
+    ## 07:51:10 AM - Splitting and subsetting barcodes...
 
-    ## 07:36:27 AM - Computing coverages
+    ## 07:51:10 AM - Computing coverages
 
-    ## 07:36:27 AM - Obtaining windows
+    ## 07:51:10 AM - Obtaining windows
 
-    ## 07:36:28 AM - Obtaining window counts
+    ## 07:51:10 AM - Obtaining window counts
 
-    ## 07:36:28 AM - Aggregating features
+    ## 07:51:11 AM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 07:36:28 AM - Computing features for artificial doublets
+    ## 07:51:11 AM - Computing features for artificial doublets
 
-    ## 07:36:28 AM - Counting overlaps for real cells
+    ## 07:51:11 AM - Counting overlaps for real cells
 
-    ## 07:36:28 AM - Counting overlaps for artificial doublets
+    ## 07:51:11 AM - Counting overlaps for artificial doublets
 
-    ## 07:36:28 AM - Scoring network
+    ## 07:51:11 AM - Scoring network
 
-    ## 07:36:28 AM - Iterative training
+    ## 07:51:11 AM - Iterative training
 
     ## iter=0, 0 cells excluded from training.
 
     ## iter=1, 0 cells excluded from training.
 
-    ## 07:36:28 AM Done!
+    ## 07:51:11 AM Done!
 
 ``` r
 
@@ -330,7 +330,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.11         SingleCellExperiment_1.35.1
+    ##  [1] scDblFinder_1.27.12         SingleCellExperiment_1.35.1
     ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
     ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
     ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           
