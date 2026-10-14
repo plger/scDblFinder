@@ -9,7 +9,7 @@ For a brief overview of the methods, see the [introductory vignette](https://plg
 
 ### Important notes/updates
 
-- **if you are using xgboost version 3.1 or higher, make sure that your version of scDblFinder is up-to-date, otherwise results might be suboptimal. For Bioc 3.22 users, version >1.24.7 is correct; for devel/later users, 1.25.4 on is fixed.**
+- **if you are using xgboost version 3.1 or higher, make sure that your version of scDblFinder is up-to-date, otherwise results might be suboptimal!**
 - in versions prior to 1.27.8, a bug was causing the most-likely-origin of the doublets (i.e. which cell types it came from) to be wrong most of the time.
 
 <br/><br/>
