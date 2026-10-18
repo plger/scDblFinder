@@ -637,11 +637,12 @@ shouldn’t be!), it’s unlikely to make a big difference.
 Contamination by ambiant RNA has emerged as an important confounder in
 single-cell (and especially single-nuclei) RNAseq data, which prompts
 the question of whether that should be run prior or after doublet
-detection. While there are in principle arguments going both ways,
-upcoming work by Michelle Meier from the Oschlack lab indicates that
-prior decontamination (especially with DecontX) decreases the accuracy
-of doublet identification, so this should be avoided (this was instead
-not much of a problem with cellbender).
+detection. While there are in principle arguments going both ways, a
+[recent
+study](https://www.biorxiv.org/content/10.64898/2026.10.13.758369v1)
+indicates that prior decontamination (especially with DecontX) decreases
+the accuracy of doublet identification, so this should be avoided (this
+was instead not much of a problem with cellbender).
 
 #### Can I combine this method with others?
 

@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 08:10:10 AM - Splitting and subsetting barcodes...
+    ## 04:24:50 PM - Splitting and subsetting barcodes...
 
-    ## 08:10:10 AM - Obtaining overlaps...
+    ## 04:24:50 PM - Obtaining overlaps...
 
 ``` r
 
@@ -207,37 +207,37 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 08:10:11 AM - Reading full fragments...
+    ## 04:24:51 PM - Reading full fragments...
 
-    ## 08:10:11 AM - Splitting and subsetting barcodes...
+    ## 04:24:51 PM - Splitting and subsetting barcodes...
 
-    ## 08:10:11 AM - Computing coverages
+    ## 04:24:51 PM - Computing coverages
 
-    ## 08:10:11 AM - Obtaining windows
+    ## 04:24:51 PM - Obtaining windows
 
-    ## 08:10:11 AM - Obtaining window counts
+    ## 04:24:51 PM - Obtaining window counts
 
-    ## 08:10:11 AM - Aggregating features
+    ## 04:24:51 PM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 08:10:11 AM - Computing features for artificial doublets
+    ## 04:24:51 PM - Computing features for artificial doublets
 
-    ## 08:10:11 AM - Counting overlaps for real cells
+    ## 04:24:51 PM - Counting overlaps for real cells
 
-    ## 08:10:11 AM - Counting overlaps for artificial doublets
+    ## 04:24:51 PM - Counting overlaps for artificial doublets
 
-    ## 08:10:11 AM - Scoring network
+    ## 04:24:51 PM - Scoring network
 
-    ## 08:10:11 AM - Iterative training
+    ## 04:24:51 PM - Iterative training
 
     ## iter=0, 0 cells excluded from training.
 
     ## iter=1, 0 cells excluded from training.
 
-    ## 08:10:11 AM Done!
+    ## 04:24:51 PM Done!
 
 ``` r
 
@@ -245,7 +245,7 @@ d
 ```
 
     ##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training
-    ## barcode1    18       1             1 0.6218601      0.5                TRUE
+    ## barcode1    18       1             1 0.5829799      0.5                TRUE
     ## barcode2    16       0             0       NaN      1.0                TRUE
     ## barcode3     9       1             1 1.0000000      1.0                TRUE
     ## barcode4     8       0             0       NaN      0.5                TRUE
