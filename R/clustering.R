@@ -66,7 +66,6 @@ fastcluster <- function( x, k=NULL, rdname="PCA", nstart=3, iter.max=50,
 #' @import SingleCellExperiment
 .prepSCE <- function(sce, ndims=30, nfeatures=1000, ...){
     if(!("logcounts" %in% assayNames(sce))){
-      cs <- Matrix::colSums(counts(sce))
       if(!is.null(ls <- sizeFactors(sce)) && any(is.na(ls) | ls==0)){
         stop("Some of the size factors are invalid. Consider removing",
              "cells with sizeFactors of zero, or filling in the",
