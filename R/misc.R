@@ -663,7 +663,15 @@ logNormCounts <- function(x, sf=NULL){
     return(x)
   }
   if(is.null(sf)) sf <- centerSizeFactors(Matrix::colSums(x))
-  normalizeCounts(x, sf)
+  if(is(x, "dgCMatrix")){
+    # direct log-normalization of the non-zero entries (no delayed layer)
+    x@x <- log1p(x@x / rep(sf, diff(x@p))) / log(2)
+    return(x)
+  }
+  x <- normalizeCounts(x, sf)
+  if(!is(x, "DelayedMatrix")) return(x)
+  if(DelayedArray::is_sparse(x)) return(as(x, "dgCMatrix"))
+  x  
 }
 
 # transition from old scuttle-based functions to scrapper...
