@@ -668,10 +668,7 @@ logNormCounts <- function(x, sf=NULL){
     x@x <- log1p(x@x / rep(sf, diff(x@p))) / log(2)
     return(x)
   }
-  x <- normalizeCounts(x, sf)
-  if(!is(x, "DelayedMatrix")) return(x)
-  if(DelayedArray::is_sparse(x)) return(as(x, "CsparseMatrix"))
-  x  
+  normalizeCounts(x, sf, delayed=FALSE)
 }
 
 # transition from old scuttle-based functions to scrapper...
