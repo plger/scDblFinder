@@ -670,7 +670,7 @@ logNormCounts <- function(x, sf=NULL){
   }
   x <- normalizeCounts(x, sf)
   if(!is(x, "DelayedMatrix")) return(x)
-  if(DelayedArray::is_sparse(x)) return(as(x, "dgCMatrix"))
+  if(DelayedArray::is_sparse(x)) return(as(x, "CsparseMatrix"))
   x  
 }
 
