@@ -48,13 +48,13 @@ sce <- scDblFinder(sce, artificialDoublets = 300, clusters="cluster", threshold=
 
     ## iter=0, 16 cells excluded from training.
 
-    ## iter=1, 8 cells excluded from training.
+    ## iter=1, 6 cells excluded from training.
 
     ## iter=2, 7 cells excluded from training.
 
     ## Threshold found:0.5
 
-    ## 11 (2.2%) doublets called
+    ## 10 (2%) doublets called
 
 Ran in this fashion, the output already includes a rough kNN-based guess
 of the doublet origin:
@@ -67,8 +67,8 @@ table(call=sce$scDblFinder.class,
 
     ##          mostLikelyOrigin
     ## call      cluster1+cluster2 cluster1+cluster3 cluster2+cluster3
-    ##   singlet                16                15                13
-    ##   doublet                 5                 4                 2
+    ##   singlet                17                15                13
+    ##   doublet                 4                 4                 2
 
 Note that since this is independent of the classifier (and based purely
 on the kNN), some non-doublets may have a combination of clusters as
@@ -124,7 +124,7 @@ table(prediction=clf$calls, truth=colData(sce)[names(clf$calls), "origin"])
 
     ##                    truth
     ## prediction          cluster1+cluster2 cluster1+cluster3 cluster2+cluster3
-    ##   cluster1+cluster2                 5                 0                 0
+    ##   cluster1+cluster2                 4                 0                 0
     ##   cluster1+cluster3                 0                 4                 0
     ##   cluster2+cluster3                 0                 0                 2
 
@@ -152,14 +152,10 @@ contains a `stats` slot:
 clf$stats
 ```
 
-    ##         combination observed expected deviation prop.deviation        FNR
-    ## 1 cluster1+cluster2        5  0.34584   4.65416       3.599394 0.00000000
-    ## 2 cluster1+cluster3        4  0.41920   3.58080       2.769288 0.01075269
-    ## 3 cluster2+cluster3        2  0.52800   1.47200       1.138403 0.00000000
-    ##   difficulty
-    ## 1 0.05194089
-    ## 2 0.05148621
-    ## 3 0.04395504
+    ##         combination observed expected deviation prop.deviation FNR difficulty
+    ## 1 cluster1+cluster2        4  0.34584   3.65416       2.826022   0 0.04264617
+    ## 2 cluster1+cluster3        4  0.41920   3.58080       2.769288   0 0.03450420
+    ## 3 cluster2+cluster3        2  0.52800   1.47200       1.138403   0 0.04001329
 
 This table contains the observed and expected types of doublets, along
 with the difficulty of their identification. The
@@ -189,12 +185,12 @@ For example:
 doubletPairwiseEnrichment(clf$stats)
 ```
 
-    ## theta=0.188806055483142
+    ## theta=0.231654903696564
 
-    ##         combination  log2enrich    p.value       FDR
-    ## 1 cluster1+cluster2  0.55183959 0.09357226 0.2807168
-    ## 2 cluster1+cluster3  0.06689129 0.32700281 0.6540056
-    ## 3 cluster2+cluster3 -1.08032686 1.00000000 1.0000000
+    ##         combination  log2enrich   p.value       FDR
+    ## 1 cluster1+cluster2  0.43760418 0.1358741 0.4076222
+    ## 2 cluster1+cluster3  0.07556811 0.3214530 0.6429060
+    ## 3 cluster2+cluster3 -0.81654120 1.0000000 1.0000000
 
 This shows no significant enrichment in any of the doublet types, which
 makes sense because they were randomly generated.
@@ -233,7 +229,7 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] scDblFinder_1.27.12         SingleCellExperiment_1.35.1
+    ##  [1] scDblFinder_1.27.13         SingleCellExperiment_1.35.1
     ##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             
     ##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              
     ##  [7] IRanges_2.47.2              S4Vectors_0.51.3           

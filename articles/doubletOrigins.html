@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,10 +111,10 @@ example:</p>
 <pre><code><span><span class="co">## Evaluating kNN...</span></span></code></pre>
 <pre><code><span><span class="co">## Training model...</span></span></code></pre>
 <pre><code><span><span class="co">## iter=0, 16 cells excluded from training.</span></span></code></pre>
-<pre><code><span><span class="co">## iter=1, 8 cells excluded from training.</span></span></code></pre>
+<pre><code><span><span class="co">## iter=1, 6 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## iter=2, 7 cells excluded from training.</span></span></code></pre>
 <pre><code><span><span class="co">## Threshold found:0.5</span></span></code></pre>
-<pre><code><span><span class="co">## 11 (2.2%) doublets called</span></span></code></pre>
+<pre><code><span><span class="co">## 10 (2%) doublets called</span></span></code></pre>
 <p>Ran in this fashion, the output already includes a rough kNN-based
 guess of the doublet origin:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -122,8 +122,8 @@ guess of the doublet origin:</p>
 <span>      mostLikelyOrigin<span class="op">=</span><span class="va">sce</span><span class="op">$</span><span class="va">scDblFinder.mostLikelyOrigin</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          mostLikelyOrigin</span></span>
 <span><span class="co">## call      cluster1+cluster2 cluster1+cluster3 cluster2+cluster3</span></span>
-<span><span class="co">##   singlet                16                15                13</span></span>
-<span><span class="co">##   doublet                 5                 4                 2</span></span></code></pre>
+<span><span class="co">##   singlet                17                15                13</span></span>
+<span><span class="co">##   doublet                 4                 4                 2</span></span></code></pre>
 <p>Note that since this is independent of the classifier (and based
 purely on the kNN), some non-doublets may have a combination of clusters
 as their <code>mostLikelyOrigin</code>, we recommend ignoring those.
@@ -164,7 +164,7 @@ should be made.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>prediction<span class="op">=</span><span class="va">clf</span><span class="op">$</span><span class="va">calls</span>, truth<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">clf</span><span class="op">$</span><span class="va">calls</span><span class="op">)</span>, <span class="st">"origin"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                    truth</span></span>
 <span><span class="co">## prediction          cluster1+cluster2 cluster1+cluster3 cluster2+cluster3</span></span>
-<span><span class="co">##   cluster1+cluster2                 5                 0                 0</span></span>
+<span><span class="co">##   cluster1+cluster2                 4                 0                 0</span></span>
 <span><span class="co">##   cluster1+cluster3                 0                 4                 0</span></span>
 <span><span class="co">##   cluster2+cluster3                 0                 0                 2</span></span></code></pre>
 <p>Note that in real data, due to the very large variations in library
@@ -188,14 +188,10 @@ interactions.</p>
 slot:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clf</span><span class="op">$</span><span class="va">stats</span></span></code></pre></div>
-<pre><code><span><span class="co">##         combination observed expected deviation prop.deviation        FNR</span></span>
-<span><span class="co">## 1 cluster1+cluster2        5  0.34584   4.65416       3.599394 0.00000000</span></span>
-<span><span class="co">## 2 cluster1+cluster3        4  0.41920   3.58080       2.769288 0.01075269</span></span>
-<span><span class="co">## 3 cluster2+cluster3        2  0.52800   1.47200       1.138403 0.00000000</span></span>
-<span><span class="co">##   difficulty</span></span>
-<span><span class="co">## 1 0.05194089</span></span>
-<span><span class="co">## 2 0.05148621</span></span>
-<span><span class="co">## 3 0.04395504</span></span></code></pre>
+<pre><code><span><span class="co">##         combination observed expected deviation prop.deviation FNR difficulty</span></span>
+<span><span class="co">## 1 cluster1+cluster2        4  0.34584   3.65416       2.826022   0 0.04264617</span></span>
+<span><span class="co">## 2 cluster1+cluster3        4  0.41920   3.58080       2.769288   0 0.03450420</span></span>
+<span><span class="co">## 3 cluster2+cluster3        2  0.52800   1.47200       1.138403   0 0.04001329</span></span></code></pre>
 <p>This table contains the observed and expected types of doublets,
 along with the difficulty of their identification. The
 <code><a href="../reference/plotDoubletMap.html">plotDoubletMap()</a></code> function can be used to visualize
@@ -215,11 +211,11 @@ is more abundant than expected, by default using a poisson model.</li>
 <p>For example:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/doubletPairwiseEnrichment.html">doubletPairwiseEnrichment</a></span><span class="op">(</span><span class="va">clf</span><span class="op">$</span><span class="va">stats</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## theta=0.188806055483142</span></span></code></pre>
-<pre><code><span><span class="co">##         combination  log2enrich    p.value       FDR</span></span>
-<span><span class="co">## 1 cluster1+cluster2  0.55183959 0.09357226 0.2807168</span></span>
-<span><span class="co">## 2 cluster1+cluster3  0.06689129 0.32700281 0.6540056</span></span>
-<span><span class="co">## 3 cluster2+cluster3 -1.08032686 1.00000000 1.0000000</span></span></code></pre>
+<pre><code><span><span class="co">## theta=0.231654903696564</span></span></code></pre>
+<pre><code><span><span class="co">##         combination  log2enrich   p.value       FDR</span></span>
+<span><span class="co">## 1 cluster1+cluster2  0.43760418 0.1358741 0.4076222</span></span>
+<span><span class="co">## 2 cluster1+cluster3  0.07556811 0.3214530 0.6429060</span></span>
+<span><span class="co">## 3 cluster2+cluster3 -0.81654120 1.0000000 1.0000000</span></span></code></pre>
 <p>This shows no significant enrichment in any of the doublet types,
 which makes sense because they were randomly generated.</p>
 <p>For more detail, see the appropriate section of <a href="https://f1000research.com/articles/10-979" class="external-link">Germain et al.,
@@ -254,7 +250,7 @@ which makes sense because they were randomly generated.</p>
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] scDblFinder_1.27.12         SingleCellExperiment_1.35.1</span></span>
+<span><span class="co">##  [1] scDblFinder_1.27.13         SingleCellExperiment_1.35.1</span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.43.0 Biobase_2.73.1             </span></span>
 <span><span class="co">##  [5] GenomicRanges_1.65.0        Seqinfo_1.3.0              </span></span>
 <span><span class="co">##  [7] IRanges_2.47.2              S4Vectors_0.51.3           </span></span>

@@ -65,15 +65,15 @@ sce <- scDblFinder(sce, clusters=TRUE, artificialDoublets=500)
 #> iter=0, 19 cells excluded from training.
 #> iter=1, 19 cells excluded from training.
 #> iter=2, 22 cells excluded from training.
-#> Threshold found:0.827
+#> Threshold found:0.829
 #> 23 (4.3%) doublets called
 doubletPairwiseEnrichment(sce)
 #> theta=0.0522644304279938
 #>   combination log2enrich      p.value          FDR
-#> 1         1+2  2.1712385 9.877137e-11 5.926282e-10
-#> 3         2+3 -1.1429288 1.000000e+00 1.000000e+00
-#> 2         1+3 -0.9147971 1.000000e+00 1.000000e+00
-#> 4         1+4 -0.8701050 1.000000e+00 1.000000e+00
-#> 5         2+4 -0.8328621 1.000000e+00 1.000000e+00
-#> 6         3+4 -0.6037463 1.000000e+00 1.000000e+00
+#> 1         1+2  2.1275224 2.017412e-10 1.210447e-09
+#> 3         2+3 -1.1434806 1.000000e+00 1.000000e+00
+#> 4         1+4 -0.8889343 1.000000e+00 1.000000e+00
+#> 2         1+3 -0.8436797 1.000000e+00 1.000000e+00
+#> 5         2+4 -0.7885474 1.000000e+00 1.000000e+00
+#> 6         3+4 -0.5662302 1.000000e+00 1.000000e+00
 ```

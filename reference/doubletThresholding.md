@@ -90,5 +90,5 @@ d <- scDblFinder(sce, verbose=FALSE, returnType="table")
 #> Warning: Some cells in `sce` have an extremely low read counts; note that these could trigger errors and might best be filtered out
 th <- doubletThresholding(d, dbr=0.05)
 th
-#> [1] 0.5847242
+#> [1] 0.5788705
 ```

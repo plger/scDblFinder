@@ -31,6 +31,9 @@ we will showcase doublet detection using the fast and comprehensive
 - **if you are using xgboost version 3.1 or higher, make sure that your
   version of scDblFinder is up-to-date, otherwise results might be
   suboptimal!**
+- in versions 1.27.3 to 1.27.12 (inclusively), the port to `scrapper`
+  caused a conversion to a Delayed array that massively slowed the
+  package down. Please update to \>=1.27.13.
 - in versions prior to 1.27.8, a bug was causing the most-likely-origin
   of the doublets (i.e. which cell types it came from) to be wrong most
   of the time.

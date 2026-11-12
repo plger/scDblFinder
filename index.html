@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">scDblFinder</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.27.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@
 </h3>
 <ul>
 <li><strong>if you are using xgboost version 3.1 or higher, make sure that your version of scDblFinder is up-to-date, otherwise results might be suboptimal!</strong></li>
+<li>in versions 1.27.3 to 1.27.12 (inclusively), the port to <code>scrapper</code> caused a conversion to a Delayed array that massively slowed the package down. Please update to &gt;=1.27.13.</li>
 <li>in versions prior to 1.27.8, a bug was causing the most-likely-origin of the doublets (i.e. which cell types it came from) to be wrong most of the time.</li>
 </ul>
 <p><br><br></p>

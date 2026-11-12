@@ -353,8 +353,8 @@ sce <- scDblFinder(sce)
 #> Training model...
 #> iter=0, 23 cells excluded from training.
 #> iter=1, 20 cells excluded from training.
-#> iter=2, 20 cells excluded from training.
-#> Threshold found:0.382
+#> iter=2, 21 cells excluded from training.
+#> Threshold found:0.618
 #> 20 (3.9%) doublets called
 table(truth=sce$type, call=sce$scDblFinder.class)
 #>          call
