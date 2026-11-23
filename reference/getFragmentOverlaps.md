@@ -9,7 +9,7 @@ getFragmentOverlaps(
   x,
   barcodes = NULL,
   regionsToExclude = GRanges(c("M", "chrM", "MT", "X", "Y", "chrX", "chrY"), IRanges(1L,
-    width = 10^8)),
+    width = 536870912L)),
   minFrags = 500L,
   uniqueFrags = TRUE,
   maxFragSize = 1000L,
@@ -102,6 +102,6 @@ fragfile <- system.file( "extdata", "example_fragments.tsv.gz",
                          package="scDblFinder" )
 res <- getFragmentOverlaps(fragfile)
 #> Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
-#> 07:15:17 PM - Splitting and subsetting barcodes...
-#> 07:15:18 PM - Obtaining overlaps...
+#> 08:14:23 PM - Splitting and subsetting barcodes...
+#> 08:14:23 PM - Obtaining overlaps...
 ```

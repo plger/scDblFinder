@@ -111,7 +111,7 @@ fragfile <- system.file("extdata", "example_fragments.tsv.gz", package="scDblFin
 suppressPackageStartupMessages(library(GenomicRanges))
 repeats <- GRanges("chr6", IRanges(1000,2000))
 # it's better to combine these with mitochondrial and sex chromosomes
-otherChroms <- GRanges(c("M","chrM","MT","X","Y","chrX","chrY"),IRanges(1L,width=10^8))
+otherChroms <- GRanges(c("M","chrM","MT","X","Y","chrX","chrY"),IRanges(1L,width=536870912L))
 # here since I don't know what chromosome notation you'll be using I've just put them all,
 # although this will trigger a warning when combining them:
 toExclude <- suppressWarnings(c(repeats, otherChroms))
@@ -121,9 +121,9 @@ res <- amulet(fragfile, regionsToExclude=toExclude)
 
     ## Fragment file is not tabix-indexed, requiring thewhole file to be imported in memory.
 
-    ## 07:17:15 PM - Splitting and subsetting barcodes...
+    ## 08:16:48 PM - Splitting and subsetting barcodes...
 
-    ## 07:17:15 PM - Obtaining overlaps...
+    ## 08:16:48 PM - Obtaining overlaps...
 
 ``` r
 
@@ -207,37 +207,37 @@ to adjust the arguments for an example to run:
 d <- clamulet(fragfile, k=2, nfeatures=3)
 ```
 
-    ## 07:17:16 PM - Reading full fragments...
+    ## 08:16:49 PM - Reading full fragments...
 
-    ## 07:17:16 PM - Splitting and subsetting barcodes...
+    ## 08:16:49 PM - Splitting and subsetting barcodes...
 
-    ## 07:17:16 PM - Computing coverages
+    ## 08:16:49 PM - Computing coverages
 
-    ## 07:17:16 PM - Obtaining windows
+    ## 08:16:49 PM - Obtaining windows
 
-    ## 07:17:16 PM - Obtaining window counts
+    ## 08:16:50 PM - Obtaining window counts
 
-    ## 07:17:16 PM - Aggregating features
+    ## 08:16:50 PM - Aggregating features
 
     ## Warning in (function (A, nv = 5, nu = nv, maxit = 1000, work = nv + 7, reorth =
     ## TRUE, : You're computing too large a percentage of total singular values, use a
     ## standard svd instead.
 
-    ## 07:17:16 PM - Computing features for artificial doublets
+    ## 08:16:50 PM - Computing features for artificial doublets
 
-    ## 07:17:16 PM - Counting overlaps for real cells
+    ## 08:16:50 PM - Counting overlaps for real cells
 
-    ## 07:17:16 PM - Counting overlaps for artificial doublets
+    ## 08:16:50 PM - Counting overlaps for artificial doublets
 
-    ## 07:17:16 PM - Scoring network
+    ## 08:16:50 PM - Scoring network
 
-    ## 07:17:16 PM - Iterative training
+    ## 08:16:50 PM - Iterative training
 
     ## iter=0, 0 cells excluded from training.
 
     ## iter=1, 0 cells excluded from training.
 
-    ## 07:17:16 PM Done!
+    ## 08:16:50 PM Done!
 
 ``` r
 
@@ -245,7 +245,7 @@ d
 ```
 
     ##          total nAbove2 total.nAbove2  weighted ratio.k2 include.in.training
-    ## barcode1    18       1             1 0.6218601      0.5                TRUE
+    ## barcode1    18       1             1 0.5829799      0.5                TRUE
     ## barcode2    16       0             0       NaN      1.0                TRUE
     ## barcode3     9       1             1 1.0000000      1.0                TRUE
     ## barcode4     8       0             0       NaN      0.5                TRUE
