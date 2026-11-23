@@ -61,7 +61,7 @@ fragfile <- system.file("extdata", "example_fragments.tsv.gz", package="scDblFin
 suppressPackageStartupMessages(library(GenomicRanges))
 repeats <- GRanges("chr6", IRanges(1000,2000))
 # it's better to combine these with mitochondrial and sex chromosomes
-otherChroms <- GRanges(c("M","chrM","MT","X","Y","chrX","chrY"),IRanges(1L,width=10^8))
+otherChroms <- GRanges(c("M","chrM","MT","X","Y","chrX","chrY"),IRanges(1L,width=536870912L))
 # here since I don't know what chromosome notation you'll be using I've just put them all,
 # although this will trigger a warning when combining them:
 toExclude <- suppressWarnings(c(repeats, otherChroms))

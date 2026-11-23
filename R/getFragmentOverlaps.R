@@ -55,7 +55,7 @@
 #' @export
 getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   c("M","chrM","MT","X","Y","chrX","chrY"),
-  IRanges(1L,width=10^8)), 
+  IRanges(1L,width=536870912L)), 
   minFrags=500L, uniqueFrags=TRUE, 
   maxFragSize=1000L, removeHighOverlapSites=TRUE,
   fullInMemory=FALSE, BPPARAM=NULL, verbose=TRUE,
@@ -90,11 +90,23 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
       if(verbose) message(format(Sys.time(), "%X"),
                           " - Reading Tabix-indexed fragment file and ",
                           "computing overlaps")
-      x <- bplapply(seqnamesTabix(tf), BPPARAM=BPPARAM, FUN=function(x){
+      tbxSeqs <- seqnamesTabix(tf)
+      if(length(tbxSeqs)==0L) return(if(ret=="loci") GRanges() else emptyOutput)
+      if(!is.null(regionsToExclude) && length(regionsToExclude)>0L){
+        # Skip contigs already covered up to the .tbi coordinate limit (2^29)
+        exclRed <- reduce(regionsToExclude, ignore.strand=TRUE)
+        chrRanges <- GRanges(tbxSeqs, IRanges(1L, width=536870912L))
+        tbxSeqs <- tbxSeqs[!suppressWarnings(
+          overlapsAny(chrRanges, exclRed, type="within"))]
+      }
+      if(length(tbxSeqs)==0L) return(if(ret=="loci") GRanges() else emptyOutput)
+      x <- bplapply(tbxSeqs, BPPARAM=BPPARAM, FUN=function(x){
         if(verbose) cat(paste0(x,", "))
+        # 536870912L (= 2^29) is the max coordinate allowed by Tabix (.tbi);
+        # previously 10^8 truncated all fragments past 100 Mb on large chromosomes.
         getFragmentOverlaps(
           rtracklayer::import(tf, format="bed", 
-                              which=GRanges(x, IRanges(1,10^8))), 
+                              which=GRanges(x, IRanges(1L, 536870912L))), 
           barcodes, regionsToExclude=regionsToExclude, verbose=FALSE, 
           minFrags=0.00001, uniqueFrags=uniqueFrags, maxFragSize=maxFragSize,
           removeHighOverlapSites=removeHighOverlapSites, BPPARAM=NULL, ret=ret
@@ -145,6 +157,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
            the 'score' column containing the counts).")
     gr <- x
   }
+  if(length(gr)==0L) return(switch(ret, loci=GRanges(), coverages=list(), emptyOutput))
   if(!all(!is.na(seqlengths(gr))))
     seqlengths(gr) <- setNames(sapply(split(end(gr), seqnames(gr)), max)
                                [seqlevels(gr)], seqlevels(gr))
@@ -177,7 +190,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   }
   gr <- gr[gr$name %in% names(uniqFrags)]
   gr$name <- droplevels(gr$name)
-  if(length(gr)==0) return(emptyOutput)
+  if(length(gr)==0L) return(switch(ret, loci=GRanges(), coverages=list(), emptyOutput))
   if(isFALSE(uniqueFrags) && !is.null(score(gr))){
     i <- rep(seq_along(gr), as.integer(score(gr)))
     gr <- GenomicRanges::split(granges(gr)[i], gr$name[i])
@@ -217,7 +230,7 @@ getFragmentOverlaps <- function(x, barcodes=NULL, regionsToExclude=GRanges(
   ho <- reduce(gr, min.gapwidth=0L, with.revmap=TRUE)
   hol <- lengths(ho$revmap)
   ho$p <- ppois(hol, mean(hol), lower.tail=FALSE)
-  if(length(indices2remove <- unlist(ho$revmap[which(ho$p<0.01)]))>0)
+  if(length(indices2remove <- unlist(ho$revmap[which(ho$p<pthres)]))>0)
     gr <- gr[-indices2remove]
   if(retExclusionRanges) return(list(gr=gr, exclusion=granges(ho)))
   gr
